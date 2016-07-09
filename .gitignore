@@ -1,0 +1,5 @@
+*vcxproj*
+Release/*
+Debug*
+x64/*
+*.sln
