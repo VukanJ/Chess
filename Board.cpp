@@ -61,12 +61,22 @@ Board::Board(string fen)
 			blackPos |= pieces[p];
 		for (int p = 6; p < 12; p++)
 			whitePos |= pieces[p];
-		for (int i = 0; i < 12; ++i)
-			updateAttacks((piece)i);
+		updateAllAttacks();
 	}
 }
 
-void Board::updateAttacks(piece p)
+void Board::updateAllAttacks()
+{
+	for (int i = 0; i < 12; i++)
+		updateAttack((piece)i);
+	// Exclude pieces that attack pieces of same color
+	for (int i = 0; i < 6; i++)
+		attacks[i] = attacks[i] & ~blackPos;
+	for (int i = 6; i < 12; i++)
+		attacks[i] = attacks[i] & ~whitePos;
+}
+
+void Board::updateAttack(piece p)
 {
 	// Fill all the bits that are attacked by individual pieces
 	// including attacked enemy pieces
@@ -75,38 +85,66 @@ void Board::updateAttacks(piece p)
 	u64 mask = 0;
 	switch (p){
 		case bp: break;
-		case br: break;
+		case br: 
+			attacks[br] = 0x0;
+			for (int i = 0; i < 4;)
+				attacks[br] |= floodFill(pieces[br], ~(whitePos | blackPos), (dir)i++);
+			break;
 		case bn: 
 			mask = pieces[bn];
 			attacks[bn] = 0x0;
 			BITLOOP(pos,mask) attacks[bn] |= KNIGHT_ATTACKS[pos] & ~blackPos;
 			break;
-		case bb: break;
+		case bb:
+			attacks[bb] = 0x0;
+			for (int i = 4; i < 8;)
+				attacks[bb] |= floodFill(pieces[bb], ~(whitePos | blackPos), (dir)i++);
+			break;
 		case bk: break;
-		case bq: break;
-
+		case bq:
+			attacks[bq] = 0x0;
+			for (int i = 0; i < 8;)
+				attacks[bq] |= floodFill(pieces[bq], ~(whitePos | blackPos), (dir)i++);
+			break;
 		case wp: break;
-		case wr: break;
+		case wr: 
+			attacks[wr] = 0x0;
+			for (int i = 0; i < 4;)
+				attacks[wr] |= floodFill(pieces[wr], ~(whitePos | blackPos), (dir)i++);
+			break;
 		case wn:
 			mask = pieces[wn];
 			attacks[wn] = 0x0;
 			BITLOOP(pos, mask) attacks[wn] |= KNIGHT_ATTACKS[pos] & ~whitePos;
 			break;
-		case wb: break;
+		case wb: 
+			attacks[wb] = 0x0;
+			for (int i = 4; i < 8;)
+				attacks[wb] |= floodFill(pieces[wb], ~(whitePos | blackPos), (dir)i++);
+			break;
 		case wk: break;
-		case wq: break;
+		case wq: 
+			attacks[wq] = 0x0;
+			for (int i = 0; i < 8;)
+				attacks[wq] |= floodFill(pieces[wq], ~(whitePos | blackPos), (dir)i++);
+			break;
 	}
-	// Compute combined attacks:
-	blackAtt = whiteAtt = 0;
-	for (int i = 0; i < 6; ++i)
-		blackAtt |= attacks[i];
-	for (int i = 6; i < 12; ++i)
-		whiteAtt |= attacks[i];
+}
 
-	// King does not really attack fields, that are under attack
-	// These moves are not considered by the move-generator:
-	//attacks[bk] ^= (attacks[bk] & whiteAtt);
-	//attacks[wk] ^= (attacks[wk] & blackAtt);
+u64 Board::floodFill(u64 propagator, u64 empty, dir direction)
+{
+	// Calculates all attacks including attacked pieces for sliding pieces
+	// (Queen, Rook, bishop)(s)
+	u64 flood = propagator;
+	empty &= noWrap[direction];
+	auto r_shift = shift[direction];
+	flood |= propagator = ROTL64(propagator, r_shift) & empty;
+	flood |= propagator = ROTL64(propagator, r_shift) & empty;
+	flood |= propagator = ROTL64(propagator, r_shift) & empty;
+	flood |= propagator = ROTL64(propagator, r_shift) & empty;
+	flood |= propagator = ROTL64(propagator, r_shift) & empty;
+	flood |= ROTL64(propagator, r_shift) & empty;
+	return ROTL64(flood, r_shift) & noWrap[direction];
 }
 
 void Board::print()

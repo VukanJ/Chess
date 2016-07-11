@@ -204,4 +204,17 @@ static const vector<u64> QUEEN_ATTACKS = {
 	0x7fc0a09088848281
 };
 
+static const vector<u64> noWrap = {
+	0xffffffffffffff00, // down
+	0x7f7f7f7f7f7f7f7f, // left
+	0x00ffffffffffffff, // up
+	0xfefefefefefefefe, // right
+
+	0x7f7f7f7f7f7f7f00, // down left
+	0x007f7f7f7f7f7f7f, // up left
+	0x00fefefefefefefe, // right up
+	0xfefefefefefefe00  // right down
+};
+
+static const int shift[8] = {8, -1, -8, 1, 7, -9, -7, 9};
 #endif

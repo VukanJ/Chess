@@ -8,7 +8,7 @@
 
 using namespace std;
 
-#ifdef __MACHINEX64
+#ifndef __MACHINEX64
 #pragma message ("X64 RECOMMENDED!\n COMPILATION MAY FAIL")
 #endif
 #ifdef _WIN32
@@ -16,7 +16,8 @@ using namespace std;
   typedef unsigned __int16 u16;
   #define POPCOUNT(x) __popcnt64(x)
   #define BITSCANR64(index,mask) _BitScanReverse64(&index,mask)
-
+  #define ROTL64(mask, amount) _rotl64(mask,amount)
+  #define ROTR64(mask, amount) _rotr64(mask,amount)
 #elif __linux__
 typedef unsigned long long u64;
 #endif
@@ -47,7 +48,7 @@ static void printBitboardFigAttack(u64 board, u64 att, char piece)
 		if (++c % 8 == 0) cout << endl;
 	}
 	cout << endl;
-	if (board&att) cout << "Error: Attacking same color!\n"; 
+	if (board&att) cout << "Warning: Attacking same color!\n"; 
 }
 
 enum piece {

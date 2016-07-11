@@ -18,8 +18,13 @@ public:
 	Board(string fen);
 	vector<u64> pieces, attacks;
 	u64 whitePos, blackPos, whiteAtt, blackAtt;
-	void updateAttacks(piece p);
+	void updateAttack(piece p);
+	void updateAllAttacks();
 	void print();
+
+	// Flooding algorithm
+	enum dir { n, e, s, w, ne, se, sw, nw};
+	u64 floodFill(u64 propagator, u64 empty, dir);
 };
 
 #endif 
