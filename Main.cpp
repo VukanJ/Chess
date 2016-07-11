@@ -11,10 +11,8 @@ const unsigned int WIDTH = 800, HEIGHT = 600;
 
 int main()
 {
-	AI computer;
-	unsigned long index = -1;
-	_BitScanReverse64(&index, (u64)1);
-	cout << index << endl;
+	AI computer("88888888");
+	computer.printDebug("N");
 	std::cin.ignore();
 	return 0;
 }

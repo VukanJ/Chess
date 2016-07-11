@@ -1,8 +1,8 @@
 #include "AI.h"
 
-AI::AI()
+AI::AI(string FEN)
 {
-
+	board = Board(FEN);
 }
 
 void AI::move(int from, int to)
@@ -14,4 +14,15 @@ void AI::move(int from, int to)
 		}
 	}
 	board.print();
+}
+
+void AI::printDebug(string showPieces)
+{
+	board.print();
+	for (auto p : showPieces){
+		auto drawPiece = getPieceIndex(p);
+		printBitboard(board.pieces[drawPiece]);
+		printBitboard(board.attacks[drawPiece]);
+		printBitboardFigAttack(board.pieces[drawPiece], board.attacks[drawPiece], p);
+	}
 }
