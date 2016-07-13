@@ -6,6 +6,7 @@
 #include <typeinfo>
 #include <string>
 #include <list>
+#include <chrono>
 
 #include "Data.h"
 #include "ZobristHash.h"
@@ -34,33 +35,54 @@ class Board
 public:
 	Board();
 	Board(string fen);
-	vector<u64> pieces, attacks;
-	u64 whitePos, blackPos, whiteAtt, blackAtt, hashKey;
-	void updateAttack(piece p);
-	void updateAllAttacks();
+	// Init
 	void initHash(); // Used only for Init!, this key is updated for each move
 	
+	// Move making
+	void updateAttack(piece p);
+	void updateAllAttacks();
 	void generateMoveList(list<Move>&, color) const;
 	void makeMove(const Move&);
 	void unMakeMove(const Move&);
-	void print();
 
 	// Flooding algorithm
 	enum dir { n, e, s, w, ne, se, sw, nw};
 	u64 floodFill(u64 propagator, u64 empty, dir);
 	void pawnFill(color side);
 
+	// Misc
+	void print();
+
+	vector<u64> pieces, attacks;
+	enum{
+		Ck = 0x1, CCk = 0x2, CK = 0x4, CCK = 0x8
+	};
+	byte castlingRights;
+	byte b_enpassent, w_enpassent;
+	u64 whitePos, blackPos, whiteAtt, blackAtt, hashKey;
 	Zob_Hash hash;
 	vector<vector<u64>> randomSet;
 };
 
 static string moveString(Move m)
 {
-	string s(1, names[m.p]);
+	// Short algebraic notation (AN)
+	if (m.flags == BCASTLE){
+		return "rochade";
+	}
+	else if (m.flags == BCASTLE_2){
+		return "grand rochade";
+	}
+	string s(1, names[m.p%6+6]);
+	if (m.flags == CAPTURE){
+		if (s[0] == 'P'){
+			s.clear();
+			s += 'h' - (m.to % 8);
+		}
+		s += 'x';
+	}
 	s += 'h'-(m.to % 8);
 	s += '1'+(m.to / 8);
-	if (m.flags == CAPTURE)
-		s += '!';
 	return s;
 }
 #endif 

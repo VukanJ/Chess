@@ -1,7 +1,8 @@
 #include "Board.h"
 
 Board::Board()
-	: whitePos(0), blackPos(0), whiteAtt(0), blackAtt(0), hashKey(0)
+	: whitePos(0x0), blackPos(0x0), whiteAtt(0x0), blackAtt(0x0), hashKey(0x0),
+	castlingRights(0xFF), b_enpassent(0x0), w_enpassent(0x0)
 {
 	pieces = vector<u64>(12, 0x0);
 	attacks = vector<u64>(12, 0x0);
@@ -10,7 +11,7 @@ Board::Board()
 
 Board::Board(string fen) : Board()
 {
-	if (fen == "*"){
+	if (fen == "*"){ // Standard starting position
 		pieces[bp] = (u64)0xFF << 8;
 		pieces[br] = (u64)0x81;
 		pieces[bn] = (u64)0x42;
@@ -26,7 +27,7 @@ Board::Board(string fen) : Board()
 		blackPos = 0xFFFF;
 		whitePos = 0xFFFF00000000;
 	}
-	else {
+	else { // Setup board according to FEN
 		int counter = -1;
 		for (auto& p : fen) {
 			if (isdigit(p)) {
@@ -59,18 +60,26 @@ Board::Board(string fen) : Board()
 	}
 	updateAllAttacks();
 	initHash();
-
+	
 	// debug
+	auto startingHash = hashKey;
 	list<Move> movelist;
+	movelist.clear();
 	generateMoveList(movelist, black);
-	print();
+
+
 	for (auto& m : movelist){
 		makeMove(m);
 		cout << moveString(m) << endl;
 		print();
 		unMakeMove(m);
+		//print();
 	}
+
 	cout << hashKey << endl;
+	if (startingHash != hashKey){
+		cerr << "\t\t\tHASHING ERROR\n" << endl;
+	}
 }
 
 void Board::updateAllAttacks()
@@ -211,10 +220,10 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 	Aggressive and special moves are generated first and preferably stored
 	at the front of the list
 	*/
-	unsigned long pos = -1, m=-1;
+	unsigned long pos = nulSq, m=nulSq;
 	u64 tempMask = 0x0;
-	u64 temp2 = 0x0,attackingPieces;
-	// Generate all capturing moves...
+	u64 temp2 = 0x0,attackingPieces = 0x0;
+	// Generate all capturing and normal moves
 	if (side == black){
 	BLACKLOOP(b){ // Loop through black pieces
 		attackingPieces = pieces[b];
@@ -234,7 +243,7 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						}
 						tempMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8))&attacks[br]; // Non capturing moves
 						BITLOOP(m, tempMask)                                             // Add moves
-							moveList.push_back(Move(pos, m, MOVE, (piece)b, (piece)-1));
+							moveList.push_back(Move(pos, m, MOVE, (piece)b, nulPiece));
 					}
 					break;
 				case bn: //// BLACK KNIGHT
@@ -251,7 +260,7 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						}
 						tempMask ^= KNIGHT_ATTACKS[pos] & attacks[bn]; // Non capturing moves
 						BITLOOP(m, tempMask)                        // Add moves
-							moveList.push_back(Move(pos, m, MOVE, (piece)b, (piece)-1));
+							moveList.push_back(Move(pos, m, MOVE, (piece)b,nulPiece));
 					}
 					break;
 				case bb: // BLACK BISHOP
@@ -266,7 +275,7 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						}
 						tempMask ^= BISHOP_ATTACKS[pos] & attacks[bb]; // Non capturing moves
 						BITLOOP(m, tempMask)                        // Add moves
-							moveList.push_back(Move(pos, m, MOVE, (piece)b, (piece)-1));
+							moveList.push_back(Move(pos, m, MOVE, (piece)b, nulPiece));
 					}
 					break;
 				case bq: // BLACK QUEEN
@@ -281,54 +290,101 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						}
 						tempMask ^= QUEEN_ATTACKS[pos] & attacks[bq]; // Non capturing moves
 						BITLOOP(m, tempMask)                        // Add moves
-							moveList.push_back(Move(pos, m, MOVE, (piece)b, (piece)-1));
+							moveList.push_back(Move(pos, m, MOVE, (piece)b, nulPiece));
 					}
 					break;
 				case bk:
 					break;
 			}
 		}
+		// Generate castling moves
+	if (castlingRights & Ck && !(blackPos & 0x60)) // Black King can castle
+		moveList.push_back(Move(nulSq, nulSq, BCASTLE, nulPiece, nulPiece));
+	if (castlingRights & CCk&& !(blackPos & 14)){ // Black King can castle (big)
+		moveList.push_back(Move(nulSq, nulSq, BCASTLE_2, nulPiece, nulPiece));
+	}
 	}
 }
 
 void Board::makeMove(const Move& move)
 {
-	if (move.flags == MOVE){
-		pieces[move.p] ^= (u64)0x1 << move.from;   // Piece disappears from departure
-		pieces[move.p] |= (u64)0x1 << move.to;     // Piece appears at destination
-		hashKey ^= randomSet[move.p][move.from];   // Update hashKey
-		hashKey ^= randomSet[move.p][move.to];
-	}
-	else if (move.flags == CAPTURE){
-		pieces[move.p] ^= (u64)0x1 << move.from;    // Piece disappears from departure
-		pieces[move.p] |= (u64)0x1 << move.to;      // Piece appears at destination
-		pieces[move.target] ^= (u64)0x1 << move.to; // Captured piece is deleted
-		hashKey ^= randomSet[move.p][move.from];    // Update hashKey
-		hashKey ^= randomSet[move.p][move.to];
-		hashKey ^= randomSet[move.target][move.to];
+	switch (move.flags){
+		case MOVE:
+			pieces[move.p] ^= (u64)0x1 << move.from;   // Piece disappears from departure
+			pieces[move.p] |= (u64)0x1 << move.to;     // Piece appears at destination
+			hashKey ^= randomSet[move.p][move.from];   // Update hashKey...
+			hashKey ^= randomSet[move.p][move.to];
+			break;
+		case CAPTURE:
+			pieces[move.p] ^= (u64)0x1 << move.from;    // Piece disappears from departure
+			pieces[move.p] |= (u64)0x1 << move.to;      // Piece appears at destination
+			pieces[move.target] ^= (u64)0x1 << move.to; // Captured piece is deleted
+			hashKey ^= randomSet[move.p][move.from];    // Update hashKey...
+			hashKey ^= randomSet[move.p][move.to];
+			hashKey ^= randomSet[move.target][move.to];
+			break;
+		case BCASTLE: // Rochade
+			makeMove(Move(d1, b1, MOVE, bk, nulPiece));
+			makeMove(Move(a1, c1, MOVE, br, nulPiece));
+			hashKey ^= randomSet[bk][d1];
+			hashKey ^= randomSet[bk][b1];
+			hashKey ^= randomSet[br][a1];
+			hashKey ^= randomSet[br][c1];
+			castlingRights ^= Ck;
+			break;
+		case BCASTLE_2: // Grand Rochade
+			makeMove(Move(d1, f1, MOVE, bk, nulPiece));
+			makeMove(Move(h1, e1, MOVE, br, nulPiece));
+			hashKey ^= randomSet[bk][d1];
+			hashKey ^= randomSet[bk][f1];
+			hashKey ^= randomSet[br][h1];
+			hashKey ^= randomSet[br][e1];
+			castlingRights ^= CCk;
+			break;
 	}
 }
 
 void Board::unMakeMove(const Move& move)
 {
-	if (move.flags == MOVE){
-		pieces[move.p] ^= (u64)0x1 << move.to;     // Piece disappears from destination
-		pieces[move.p] |= (u64)0x1 << move.from;   // Piece appears at departure
-		hashKey ^= randomSet[move.p][move.from];   // Update hashKey
-		hashKey ^= randomSet[move.p][move.to];
-	}
-	else if (move.flags == CAPTURE){
-		pieces[move.p] ^= (u64)0x1 << move.to;      // Piece disappears from destination
-		pieces[move.p] |= (u64)0x1 << move.from;    // Piece appears at departure
-		pieces[move.target] |= (u64)0x1 << move.to; // Captured piece reappears
-		hashKey ^= randomSet[move.p][move.from];    // Update hashKey
-		hashKey ^= randomSet[move.p][move.to];
-		hashKey ^= randomSet[move.target][move.to];
+	switch (move.flags){
+		case MOVE:
+			pieces[move.p] ^= (u64)0x1 << move.to;     // Piece disappears from destination
+			pieces[move.p] |= (u64)0x1 << move.from;   // Piece appears at departure
+			hashKey ^= randomSet[move.p][move.from];   // Update hashKey...
+			hashKey ^= randomSet[move.p][move.to];
+			break;
+		case CAPTURE:
+			pieces[move.p] ^= (u64)0x1 << move.to;      // Piece disappears from destination
+			pieces[move.p] |= (u64)0x1 << move.from;    // Piece appears at departure
+			pieces[move.target] |= (u64)0x1 << move.to; // Captured piece reappears
+			hashKey ^= randomSet[move.p][move.from];    // Update hashKey...
+			hashKey ^= randomSet[move.p][move.to];
+			hashKey ^= randomSet[move.target][move.to];
+			break;
+		case BCASTLE: // Maybe add additional switch for castling
+			makeMove(Move(b1, d1, MOVE, bk, nulPiece));
+			makeMove(Move(c1, a1, MOVE, br, nulPiece));
+			hashKey ^= randomSet[bk][d1];
+			hashKey ^= randomSet[bk][b1];
+			hashKey ^= randomSet[br][a1];
+			hashKey ^= randomSet[br][c1];
+			castlingRights |= Ck;
+			break;
+		case BCASTLE_2:
+			makeMove(Move(f1, d1, MOVE, bk, nulPiece));
+			makeMove(Move(e1, h1, MOVE, br, nulPiece));
+			hashKey ^= randomSet[bk][d1];
+			hashKey ^= randomSet[bk][f1];
+			hashKey ^= randomSet[br][h1];
+			hashKey ^= randomSet[br][e1];
+			castlingRights |= CCk;
+			break;
 	}
 }
 
 void Board::print()
 {
+	// Print full chessboard with symbols and borders without attacked squares
 	static vector<string> asciiBoard = vector<string>(8, string(8, ' '));
 	for (auto& r : asciiBoard)
 		for (auto& c : r)
