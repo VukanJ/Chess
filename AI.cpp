@@ -3,16 +3,16 @@
 AI::AI(string FEN)
 {
 	board = Board(FEN);
+	debug();
 }
 
-void AI::move(int from, int to)
+void AI::debug()
 {
-	for (auto& p : board.pieces) {
-		if (p & (u64)1 << from && (p & ((u64)1 << to)) == 0) {
-			p ^= (u64)1 << from;
-			p |= (u64)1 << to;
-		}
-	}
+	
+}
+
+void AI::printBoard()
+{
 	board.print();
 }
 

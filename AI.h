@@ -2,6 +2,7 @@
 #define AI_H
 #include <iostream>
 #include <string>
+#include <stack>
 
 #include "Board.h"
 
@@ -12,27 +13,23 @@ using namespace std;
 Computer is always black. 
 */
 
-struct Move
-{
-	/* 
-	 Bit 0-5:   From     (0-63)
-	 Bit 6-11:  To       (0-63)
-	*/
-	u16 move;
-};
 
 class AI
 {
 public:
 	AI(string FEN);
 	void printDebug(string show);
-	class GameTree {
-	public:
-		GameTree();
-		//void search_evaluate(int targetDepth);
+	void printBoard();
+
+	void negaMax_Search();
+	void debug();
+	//void search_evaluate(int targetDepth);
+	struct Node{
+		vector<u32> moves;
+		int movePtr;
+		float alpha, beta;
 	};
 private:
-	void move(int, int);
 	Board board;
 };
 

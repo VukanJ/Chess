@@ -9,11 +9,13 @@
 using namespace std;
 
 #ifndef __MACHINEX64
-#pragma message ("X64 RECOMMENDED!\n COMPILATION MAY FAIL")
+#pragma message ("X64 ARCHITECTURE RECOMMENDED!\n COMPILATION MAY FAIL")
 #endif
 #ifdef _WIN32
   typedef unsigned __int64 u64;
+  typedef unsigned __int32 u32;
   typedef unsigned __int16 u16;
+  typedef unsigned __int8  byte;
   #define POPCOUNT(x) __popcnt64(x)
   #define BITSCANR64(index,mask) _BitScanReverse64(&index,mask)
   #define ROTL64(mask, amount) _rotl64(mask,amount)
@@ -23,12 +25,16 @@ typedef unsigned long long u64;
 #endif
 
 #define BITLOOP(pos,mask) for (unsigned long pos = BITSCANR64(pos, mask); BITSCANR64(pos,mask) ; mask ^= (u64)1 << pos)
+#define BLACKLOOP(x) for (int x = 0; x < 6;  ++x)
+#define WHITELOOP(x) for (int x = 6; x < 12; ++x)
 
 const u64 _start = (u64)1 << 63;
 const u64 _col       = 0x101010101010101;
 const u64 _row       = 0xFF;
 const u64 _noSides   = 0x7E7E7E7E7E7E7E7E;
 const u64 _sidesOnly = 0x8181818181818181;
+
+const string names = "prnbkqPRNBKQ";
 
 static void printBitboard(u64 board)
 {
@@ -60,6 +66,18 @@ enum piece {
 
 enum color { black, white };
 
+enum moveType{ 
+	MOVE, 
+	CAPTURE, 
+	PAWN2, 
+	PROMOTION, 
+	ENPASSENT, 
+	WCASTLE, 
+	WCASTLE_2, 
+	BCASTLE, 
+	BCASTLE_2,
+};
+
 static piece getPieceIndex(char p)
 {
 	piece res;
@@ -85,8 +103,6 @@ enum attacks {
 	att_bp, att_br, att_bn, att_bb, att_bk, att_bq,
 	att_wp, att_wr, att_wn, att_wb, att_wk, att_wq
 };
-
-const string names = "prnbkqPRNBKQ";
 
 enum {
 	h1, g1, f1, e1, d1, c1, b1, a1,
