@@ -25,8 +25,10 @@ typedef unsigned long long u64;
 #define BITLOOP(pos,mask) for (unsigned long pos = BITSCANR64(pos, mask); BITSCANR64(pos,mask) ; mask ^= (u64)1 << pos)
 
 const u64 _start = (u64)1 << 63;
-const u64 _col = 0x101010101010101;
-const u64 _row = 0xFF;
+const u64 _col       = 0x101010101010101;
+const u64 _row       = 0xFF;
+const u64 _noSides   = 0x7E7E7E7E7E7E7E7E;
+const u64 _sidesOnly = 0x8181818181818181;
 
 static void printBitboard(u64 board)
 {
@@ -55,6 +57,8 @@ enum piece {
 	bp, br, bn, bb, bk, bq,
 	wp, wr, wn, wb, wk, wq
 };
+
+enum color { black, white };
 
 static piece getPieceIndex(char p)
 {

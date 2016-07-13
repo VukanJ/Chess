@@ -1,18 +1,16 @@
 #include "Board.h"
 
 Board::Board()
- : whitePos(0), blackPos(0), whiteAtt(0), blackAtt(0)
+	: whitePos(0), blackPos(0), whiteAtt(0), blackAtt(0), hashKey(0)
 {
 	pieces = vector<u64>(12, 0x0);
 	attacks = vector<u64>(12, 0x0);
+	randomSet = hash.getRandomSet();
 }
 
-Board::Board(string fen)
+Board::Board(string fen) : Board()
 {
 	if (fen == "*"){
-		pieces = vector<u64>(12, 0x0);
-		attacks = vector<u64>(12, 0x0);
-		whitePos = blackPos = whiteAtt = blackAtt = 0x0;
 		pieces[bp] = (u64)0xFF << 8;
 		pieces[br] = (u64)0x81;
 		pieces[bn] = (u64)0x42;
@@ -29,9 +27,6 @@ Board::Board(string fen)
 		whitePos = 0xFFFF00000000;
 	}
 	else {
-		pieces = vector<u64>(12, 0x0);
-		attacks = vector<u64>(12, 0x0);
-		whitePos = blackPos = whiteAtt = blackAtt = 0x0;
 		int counter = -1;
 		for (auto& p : fen) {
 			if (isdigit(p)) {
@@ -52,7 +47,7 @@ Board::Board(string fen)
 					case 'B': pieces[wb] |= (u64)1 << (63 - counter); break;
 					case 'K': pieces[wk] |= (u64)1 << (63 - counter); break;
 					case 'Q': pieces[wq] |= (u64)1 << (63 - counter); break;
-					case '/': break;
+					case '/': counter--; break;
 					default: cerr << "Bad FEN! (Board::Board())\n"; exit(1); break;
 				}
 			}
@@ -63,6 +58,7 @@ Board::Board(string fen)
 			whitePos |= pieces[p];
 		updateAllAttacks();
 	}
+	computeHash();
 }
 
 void Board::updateAllAttacks()
@@ -84,7 +80,9 @@ void Board::updateAttack(piece p)
 	unsigned long pos = -1;
 	u64 mask = 0;
 	switch (p){
-		case bp: break;
+		case bp:
+			pawnFill(black);
+			break;
 		case br: 
 			attacks[br] = 0x0;
 			for (int i = 0; i < 4;)
@@ -106,7 +104,9 @@ void Board::updateAttack(piece p)
 			for (int i = 0; i < 8;)
 				attacks[bq] |= floodFill(pieces[bq], ~(whitePos | blackPos), (dir)i++);
 			break;
-		case wp: break;
+		case wp: 
+			pawnFill(white);
+			break;
 		case wr: 
 			attacks[wr] = 0x0;
 			for (int i = 0; i < 4;)
@@ -145,6 +145,51 @@ u64 Board::floodFill(u64 propagator, u64 empty, dir direction)
 	flood |= propagator = ROTL64(propagator, r_shift) & empty;
 	flood |= ROTL64(propagator, r_shift) & empty;
 	return ROTL64(flood, r_shift) & noWrap[direction];
+}
+
+void Board::pawnFill(color side)
+{
+	// Does not compute enPassent
+	// Vielleicht sollte ich diese Funktion löschen, und direkt in die Zuggeneration einfügen
+	// Bei der Zug-Generation werden die Bitboards mit vorgefertigten boards ge-&-ndet.
+	// Vielleicht sollten auch nur die Attacks bleiben (evaluation)
+	if (side == black){
+		attacks[bp] = 0x0;
+		// Normal step
+		attacks[bp] |= (pieces[bp] << 8) & ~(whitePos | blackPos);
+		// Double step
+		attacks[bp] |= ((pieces[bp] & (u64)0xFF00) << 16) & ~(whitePos | blackPos);
+		// Side Attacks
+		attacks[bp] |= ((pieces[bp] & _noSides)                << 9) & whitePos;
+		attacks[bp] |= ((pieces[bp] & _noSides)                << 7) & whitePos;
+		attacks[bp] |= ((pieces[bp] & (u64)0x0101010101010101) << 9) & whitePos;
+		attacks[bp] |= ((pieces[bp] & (u64)0x8080808080808080) << 7) & whitePos;
+	}
+	else{
+		attacks[wp] = 0x0;
+		// Normal step
+		attacks[wp] |= (pieces[wp] >> 8) & ~(whitePos | blackPos);
+		// Double step
+		attacks[wp] |= ((pieces[wp] & (u64)0xFF000000000000) >> 16) & ~(whitePos | blackPos);
+		// Side Attacks
+		attacks[wp] |= ((pieces[wp] & _noSides)                >> 9) & blackPos;
+		attacks[wp] |= ((pieces[wp] & _noSides)                >> 7) & blackPos;
+		attacks[wp] |= ((pieces[wp] & (u64)0x0101010101010101) >> 7) & blackPos;
+		attacks[wp] |= ((pieces[wp] & (u64)0x8080808080808080) >> 9) & blackPos;
+	}
+}
+
+void Board::computeHash()
+{
+	auto pos = 0;
+	for (int i = 0; i < 12; i++){
+		for (auto p : pieces){
+			BITLOOP(pos, p){
+				hashKey ^= randomSet[i][pos];
+			}
+		}
+	}
+	cout << hex << hashKey << endl;
 }
 
 void Board::print()

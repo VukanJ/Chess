@@ -7,6 +7,11 @@
 
 using namespace std;
 
+// Conventions:
+/*
+Computer is always black. 
+*/
+
 struct Move
 {
 	/* 
