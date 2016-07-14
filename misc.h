@@ -73,7 +73,8 @@ enum moveType{
 	MOVE, 
 	CAPTURE, 
 	PAWN2, 
-	PROMOTION, 
+	PROMOTION,
+	C_PROMOTION, // Capture and promotion
 	ENPASSENT, 
 	WCASTLE, 
 	WCASTLE_2, 

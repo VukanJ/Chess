@@ -65,8 +65,8 @@ Board::Board(string fen) : Board()
 	auto startingHash = hashKey;
 	list<Move> movelist;
 	movelist.clear();
+	print();
 	generateMoveList(movelist, black);
-
 
 	for (auto& m : movelist){
 		makeMove(m);
@@ -75,6 +75,10 @@ Board::Board(string fen) : Board()
 		unMakeMove(m);
 		//print();
 	}
+	if (isCheckMate(black))
+		cout << "CHECKMATE FOR BLACK!\n";
+	else if (isCheckMate(white))
+		cout << "CHECKMATE FOR WHITE!\n";
 
 	cout << hashKey << endl;
 	if (startingHash != hashKey){
@@ -84,13 +88,18 @@ Board::Board(string fen) : Board()
 
 void Board::updateAllAttacks()
 {
+	whiteAtt = blackAtt = 0x0;
 	for (int i = 0; i < 12; i++)
 		updateAttack((piece)i);
 	// Exclude pieces that attack pieces of same color
-	for (int i = 0; i < 6; i++)
+	BLACKLOOP(i)
 		attacks[i] = attacks[i] & ~blackPos;
-	for (int i = 6; i < 12; i++)
+	WHITELOOP(i)
 		attacks[i] = attacks[i] & ~whitePos;
+	BLACKLOOP(i)
+		blackAtt |= attacks[i];
+	WHITELOOP(i)
+		whiteAtt |= attacks[i];
 }
 
 void Board::updateAttack(piece p)
@@ -236,57 +245,52 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 	BLACKLOOP(b){ // Loop through black pieces
 		attackingPieces = pieces[b];
 		switch (b){
-			case bp: // Umschreiben! erst züge berechnen, dann gucken wo die attackierten Felder liegen.
-				     // Robin fragen: Was ist mit figur schlagen und Umwandlung ?? (spezielle umwandlung)
+			case bp: 
+				// Find normal captures:
+				// attackingPieces stands for attacked squares in this case
 				BITLOOP(pos, attackingPieces){
-					tempMask = ((noWrap[1] & attackingPieces) << 9) & whitePos;
+					tempMask = (0x5ull << (pos - 1+8)) & whitePos;
 					if (tempMask)                                                // If pieces are targeted
 						WHITELOOP(candidate){                                        // Find targeted piece
 						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-						if (temp2)
-							BITLOOP(m, temp2)                                    // Add moves
-							moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
+						if (temp2){
+							BITLOOP(m, temp2){                                    // Add moves
+								if (m > 55){
+									moveList.push_front(Move(pos, m, C_PROMOTION, (piece)candidate, bq));
+									moveList.push_front(Move(pos, m, C_PROMOTION, (piece)candidate, bn));
+								}
+								else{
+									moveList.push_front(Move(pos, m, CAPTURE, bp, (piece)candidate));
+								}
+							}
+						}
 					}
 				}
-				attackingPieces = pieces[b];
+				// Find normal upwards moves:
+				attackingPieces = (pieces[bp] << 8) & ~(blackPos | whitePos);
 				BITLOOP(pos, attackingPieces){
-					tempMask = ((noWrap[3] & attackingPieces) << 7) & whitePos;
-					if (tempMask)                                                // If pieces are targeted
-						WHITELOOP(candidate){                                        // Find targeted piece
-						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-						if (temp2)
-							BITLOOP(m, temp2)                                    // Add moves
-							moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
+					if (pos < 56){
+						moveList.push_back(Move(pos - 8, pos, MOVE, bp, nulPiece));
+					} else{
+						moveList.push_front(Move(pos - 8, pos, PROMOTION, bp, bq));
+						moveList.push_front(Move(pos - 8, pos, PROMOTION, bp, bn));
 					}
 				}
-				attackingPieces = (pieces[b] & (noWrap[2]>>8))<<8 & ~(whitePos|blackPos); // Attacked squares
-				BITLOOP(pos, attackingPieces){
-					moveList.push_back(Move(pos-8, pos, MOVE, (piece)b, nulPiece));
-				}
-				// Add promotion moves
-				attackingPieces = pieces[b]&0xFF000000000000ull; // Pawn on 7th rank?
-				if (attackingPieces){
-					BITLOOP(pos, attackingPieces){
-						moveList.push_front(Move(pos, pos + 8, PROMOTION, (piece)b, bq)); // Only promote knight and queen, since everything else is redundant
-						moveList.push_front(Move(pos, pos + 8, PROMOTION, (piece)b, bn));
-					}
-				}
-				
 				break;
 			case br: // BLACK ROOK
 				// Calculate attacked pieces
 				BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind br
-					tempMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8))&attacks[br] & whitePos; // Intersections with opponent pieces
+					tempMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[br] & whitePos; // Intersections with opponent pieces
 					if (tempMask)                                                // If pieces are targeted
 						WHITELOOP(candidate){                                        // Find targeted piece
 						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
 						if (temp2)
 							BITLOOP(m, temp2)                                    // Add moves
-							moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
+							moveList.push_front(Move(pos, m, CAPTURE, br, (piece)candidate));
 					}
 					tempMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8))&attacks[br]; // Non capturing moves
 					BITLOOP(m, tempMask)                                             // Add moves
-						moveList.push_back(Move(pos, m, MOVE, (piece)b, nulPiece));
+						moveList.push_back(Move(pos, m, MOVE, br, nulPiece));
 				}
 				break;
 			case bn: //// BLACK KNIGHT
@@ -299,11 +303,11 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
 						if (temp2)
 							BITLOOP(m, temp2)                                    // Add moves
-							moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
+							moveList.push_front(Move(pos, m, CAPTURE, bn, (piece)candidate));
 					}
 					tempMask ^= KNIGHT_ATTACKS[pos] & attacks[bn]; // Non capturing moves
 					BITLOOP(m, tempMask)                        // Add moves
-						moveList.push_back(Move(pos, m, MOVE, (piece)b,nulPiece));
+						moveList.push_back(Move(pos, m, MOVE, bn, nulPiece));
 				}
 				break;
 			case bb: // BLACK BISHOP
@@ -314,11 +318,11 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
 						if (temp2)
 							BITLOOP(m, temp2)                                    // Add moves
-							moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
+							moveList.push_front(Move(pos, m, CAPTURE, bb, (piece)candidate));
 					}
 					tempMask ^= BISHOP_ATTACKS[pos] & attacks[bb]; // Non capturing moves
 					BITLOOP(m, tempMask)                        // Add moves
-						moveList.push_back(Move(pos, m, MOVE, (piece)b, nulPiece));
+						moveList.push_back(Move(pos, m, MOVE, bb, nulPiece));
 				}
 				break;
 			case bq: // BLACK QUEEN
@@ -329,11 +333,11 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
 						if (temp2)
 							BITLOOP(m, temp2)                                    // Add moves
-							moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
+							moveList.push_front(Move(pos, m, CAPTURE, bq, (piece)candidate));
 					}
 					tempMask ^= QUEEN_ATTACKS[pos] & attacks[bq]; // Non capturing moves
 					BITLOOP(m, tempMask)                        // Add moves
-						moveList.push_back(Move(pos, m, MOVE, (piece)b, nulPiece));
+						moveList.push_back(Move(pos, m, MOVE, bq, nulPiece));
 				}
 				break;
 			case bk: // BLACK KING
@@ -346,16 +350,16 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
 						if (temp2)
 							BITLOOP(m, temp2)                                    // Add moves
-							moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
+							moveList.push_front(Move(pos, m, CAPTURE, bk, (piece)candidate));
 					}
 					tempMask ^= KING_ATTACKS[pos] & attacks[bk]; // Non capturing moves
 					BITLOOP(m, tempMask)                        // Add moves
-						moveList.push_back(Move(pos, m, MOVE, (piece)b, nulPiece));
+						moveList.push_back(Move(pos, m, MOVE, bk, nulPiece));
 				}
 				break;
 			}
 		}
-		// Generate castling moves
+		// Generate castling moves (temporarily deactivated)
 	//if (castlingRights & Ck && !(blackPos & 0x60)) // Black King can castle
 	//	moveList.push_back(Move(nulSq, nulSq, BCASTLE, nulPiece, nulPiece));
 	//if (castlingRights & CCk&& !(blackPos & 14)){ // Black King can castle (big)
@@ -370,39 +374,40 @@ void Board::makeMove(const Move& move)
 		case MOVE:
 			pieces[move.p] ^= 0x1ull << move.from;   // Piece disappears from departure
 			pieces[move.p] |= 0x1ull << move.to;     // Piece appears at destination
-			hashKey ^= randomSet[move.p][move.from];   // Update hashKey...
+			hashKey ^= randomSet[move.p][move.from]; // Update hashKey...
 			hashKey ^= randomSet[move.p][move.to];
 			break;
 		case CAPTURE:
 			pieces[move.p] ^= 0x1ull << move.from;    // Piece disappears from departure
 			pieces[move.p] |= 0x1ull << move.to;      // Piece appears at destination
 			pieces[move.target] ^= 0x1ull << move.to; // Captured piece is deleted
-			hashKey ^= randomSet[move.p][move.from];    // Update hashKey...
+			hashKey ^= randomSet[move.p][move.from];  // Update hashKey...
 			hashKey ^= randomSet[move.p][move.to];
 			hashKey ^= randomSet[move.target][move.to];
 			break;
 		case PROMOTION:
-			pieces[move.p] ^= 0x1ull << move.from;
-			pieces[move.target] |= 0x1ull << move.to;
+			pieces[move.p] ^= 0x1ull << move.from;      // removes pawn
+			pieces[move.target] |= 0x1ull << move.to;   // New piece appears 
 			hashKey ^= randomSet[move.p][move.from];    // Update hashKey...
+			hashKey ^= randomSet[move.target][move.to];
+			break;
+		case C_PROMOTION:
+			//Needs better solution
+			pieces[(move.to>55?bp:wp)] ^= 0x1ull << move.from;     // removes pawn
+			pieces[move.p]      ^= 0x1ull << move.to;              // Captured piece disappears
+			pieces[move.target] |= 0x1ull << move.to;              // New piece appears 
+			hashKey ^= randomSet[move.to>55 ? bp : wp][move.from]; // Update hashKey...
+			hashKey ^= randomSet[move.p][move.to];
 			hashKey ^= randomSet[move.target][move.to];
 			break;
 		case BCASTLE: // Castling short
 			makeMove(Move(d1, b1, MOVE, bk, nulPiece));
 			makeMove(Move(a1, c1, MOVE, br, nulPiece));
-			hashKey ^= randomSet[bk][d1];
-			hashKey ^= randomSet[bk][b1];
-			hashKey ^= randomSet[br][a1];
-			hashKey ^= randomSet[br][c1];
 			castlingRights ^= Ck;
 			break;
 		case BCASTLE_2: // Castling long
 			makeMove(Move(d1, f1, MOVE, bk, nulPiece));
 			makeMove(Move(h1, e1, MOVE, br, nulPiece));
-			hashKey ^= randomSet[bk][d1];
-			hashKey ^= randomSet[bk][f1];
-			hashKey ^= randomSet[br][h1];
-			hashKey ^= randomSet[br][e1];
 			castlingRights ^= CCk;
 			break;
 	}
@@ -431,6 +436,15 @@ void Board::unMakeMove(const Move& move)
 			hashKey ^= randomSet[move.p][move.from];    // Update hashKey...
 			hashKey ^= randomSet[move.target][move.to];
 			break;
+		case C_PROMOTION:
+			//Needs better solution
+			pieces[move.to>55 ? bp : wp] |= 0x1ull << move.from;   // pawn reappears
+			pieces[move.p]               |= 0x1ull << move.to;     // Captured piece reappears
+			pieces[move.target] ^= 0x1ull << move.to;              // promoted piece disappears
+			hashKey ^= randomSet[move.to>55 ? bp : wp][move.from]; // Update hashKey...
+			hashKey ^= randomSet[move.p][move.to];
+			hashKey ^= randomSet[move.target][move.to];
+			break;
 		case BCASTLE: // Maybe add additional switch for castling
 			makeMove(Move(b1, d1, MOVE, bk, nulPiece));
 			makeMove(Move(c1, a1, MOVE, br, nulPiece));
@@ -450,6 +464,28 @@ void Board::unMakeMove(const Move& move)
 			castlingRights |= CCk;
 			break;
 	}
+}
+
+bool Board::isCheckMate(color side) const
+{
+	// Not yet tested
+	unsigned long pos;
+	u64 mask;
+	if (!pieces[bk] || !pieces[wk]){
+		cerr << "Missing Kings!!\n";
+		return false;
+	}
+	if (side == black){
+		mask = pieces[bk];
+		BITSCANR64(pos, mask);
+		return (KING_ATTACKS[pos] & whiteAtt == KING_ATTACKS[pos]) && (pieces[bk] & whiteAtt);
+	}
+	else{
+		mask = pieces[wk];
+		BITSCANR64(pos, mask);
+		return (KING_ATTACKS[pos] & blackAtt == KING_ATTACKS[pos]) && (pieces[wk] & blackAtt);
+	}
+	return true;
 }
 
 void Board::print()

@@ -44,6 +44,7 @@ public:
 	void generateMoveList(list<Move>&, color) const;
 	void makeMove(const Move&);
 	void unMakeMove(const Move&);
+	bool isCheckMate(color) const;
 
 	// Flooding algorithm
 	enum dir { n, e, s, w, ne, se, sw, nw};
@@ -70,6 +71,12 @@ static string moveString(Move m)
 	if (m.flags == BCASTLE){
 		return "rochade";
 	}
+	else if (m.flags == PROMOTION){
+		return m.target == bq ? "Queen prom" : "Knight prom";
+	}
+	else if (m.flags == C_PROMOTION){
+		return m.target == bq ? "Queen c_prom" : "Knight c_prom";
+	}
 	else if (m.flags == BCASTLE_2){
 		return "grand rochade";
 	}
@@ -81,6 +88,7 @@ static string moveString(Move m)
 		}
 		s += 'x';
 	}
+	if (s[0] == 'P')s.clear();
 	s += 'h'-(m.to % 8);
 	s += '1'+(m.to / 8);
 	return s;
