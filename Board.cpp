@@ -12,20 +12,20 @@ Board::Board()
 Board::Board(string fen) : Board()
 {
 	if (fen == "*"){ // Standard starting position
-		pieces[bp] = (u64)0xFF << 8;
-		pieces[br] = (u64)0x81;
-		pieces[bn] = (u64)0x42;
-		pieces[bb] = (u64)0x24;
-		pieces[bk] = (u64)0x10;
-		pieces[bq] = (u64)0x8;
-		pieces[wp] = (u64)0xFF << 48;
-		pieces[wr] = (u64)0x81 << 56;
-		pieces[wn] = (u64)0x42 << 56;
-		pieces[wb] = (u64)0x24 << 56;
-		pieces[wk] = (u64)0x10 << 56;
-		pieces[wq] = (u64)0x8 << 56;
-		blackPos = 0xFFFF;
-		whitePos = 0xFFFF00000000;
+		pieces[bp] = 0xFFull << 8;
+		pieces[br] = 0x81ull;
+		pieces[bn] = 0x42ull;
+		pieces[bb] = 0x24ull;
+		pieces[bk] = 0x10ull;
+		pieces[bq] = 0x8ull;
+		pieces[wp] = 0xFFull << 48;
+		pieces[wr] = 0x81ull << 56;
+		pieces[wn] = 0x42ull << 56;
+		pieces[wb] = 0x24ull << 56;
+		pieces[wk] = 0x10ull << 56;
+		pieces[wq] = 0x8ull << 56;
+		blackPos = 0xFFFFull;
+		whitePos = 0xFFFF00000000ull;
 	}
 	else { // Setup board according to FEN
 		int counter = -1;
@@ -36,18 +36,18 @@ Board::Board(string fen) : Board()
 			else {
 				counter++;
 				switch (p) {
-					case 'p': pieces[bp] |= (u64)1 << (63 - counter); break;
-					case 'r': pieces[br] |= (u64)1 << (63 - counter); break;
-					case 'n': pieces[bn] |= (u64)1 << (63 - counter); break;
-					case 'b': pieces[bb] |= (u64)1 << (63 - counter); break;
-					case 'k': pieces[bk] |= (u64)1 << (63 - counter); break;
-					case 'q': pieces[bq] |= (u64)1 << (63 - counter); break;
-					case 'P': pieces[wp] |= (u64)1 << (63 - counter); break;
-					case 'R': pieces[wr] |= (u64)1 << (63 - counter); break;
-					case 'N': pieces[wn] |= (u64)1 << (63 - counter); break;
-					case 'B': pieces[wb] |= (u64)1 << (63 - counter); break;
-					case 'K': pieces[wk] |= (u64)1 << (63 - counter); break;
-					case 'Q': pieces[wq] |= (u64)1 << (63 - counter); break;
+					case 'p': pieces[bp] |= 0x1ull << (63 - counter); break;
+					case 'r': pieces[br] |= 0x1ull << (63 - counter); break;
+					case 'n': pieces[bn] |= 0x1ull << (63 - counter); break;
+					case 'b': pieces[bb] |= 0x1ull << (63 - counter); break;
+					case 'k': pieces[bk] |= 0x1ull << (63 - counter); break;
+					case 'q': pieces[bq] |= 0x1ull << (63 - counter); break;
+					case 'P': pieces[wp] |= 0x1ull << (63 - counter); break;
+					case 'R': pieces[wr] |= 0x1ull << (63 - counter); break;
+					case 'N': pieces[wn] |= 0x1ull << (63 - counter); break;
+					case 'B': pieces[wb] |= 0x1ull << (63 - counter); break;
+					case 'K': pieces[wk] |= 0x1ull << (63 - counter); break;
+					case 'Q': pieces[wq] |= 0x1ull << (63 - counter); break;
 					case '/': counter--; break;
 					default: cerr << "Bad FEN! (Board::Board())\n"; exit(1); break;
 				}
@@ -71,7 +71,7 @@ Board::Board(string fen) : Board()
 	for (auto& m : movelist){
 		makeMove(m);
 		cout << moveString(m) << endl;
-		print();
+		//print();
 		unMakeMove(m);
 		//print();
 	}
@@ -119,7 +119,11 @@ void Board::updateAttack(piece p)
 			for (int i = 4; i < 8;)
 				attacks[bb] |= floodFill(pieces[bb], ~(whitePos | blackPos), (dir)i++);
 			break;
-		case bk: break;
+		case bk: 
+			mask = pieces[bk];
+			attacks[bk] = 0x0;
+			BITLOOP(pos, mask) attacks[bk] |= KING_ATTACKS[pos] & ~blackPos;
+			break;
 		case bq:
 			attacks[bq] = 0x0;
 			for (int i = 0; i < 8;)
@@ -143,7 +147,11 @@ void Board::updateAttack(piece p)
 			for (int i = 4; i < 8;)
 				attacks[wb] |= floodFill(pieces[wb], ~(whitePos | blackPos), (dir)i++);
 			break;
-		case wk: break;
+		case wk: 
+			mask = pieces[wk];
+			attacks[wk] = 0x0;
+			BITLOOP(pos, mask) attacks[wk] |= KING_ATTACKS[pos] & ~whitePos;
+			break;
 		case wq: 
 			attacks[wq] = 0x0;
 			for (int i = 0; i < 8;)
@@ -179,24 +187,24 @@ void Board::pawnFill(color side)
 		// Normal step
 		attacks[bp] |= (pieces[bp] << 8) & ~(whitePos | blackPos);
 		// Double step
-		attacks[bp] |= ((((pieces[bp] & (u64)0xFF00) << 8) & ~(whitePos | blackPos)) << 8) & ~(whitePos | blackPos);
+		attacks[bp] |= ((((pieces[bp] & 0xFF00ull) << 8) & ~(whitePos | blackPos)) << 8) & ~(whitePos | blackPos);
 		// Side Attacks
-		attacks[bp] |= ((pieces[bp] & _noSides)                << 9) & whitePos;
-		attacks[bp] |= ((pieces[bp] & _noSides)                << 7) & whitePos;
-		attacks[bp] |= ((pieces[bp] & (u64)0x0101010101010101) << 9) & whitePos;
-		attacks[bp] |= ((pieces[bp] & (u64)0x8080808080808080) << 7) & whitePos;
+		attacks[bp] |= ((pieces[bp] & _noSides)              << 9) & whitePos;
+		attacks[bp] |= ((pieces[bp] & _noSides)              << 7) & whitePos;
+		attacks[bp] |= ((pieces[bp] & 0x0101010101010101ull) << 9) & whitePos;
+		attacks[bp] |= ((pieces[bp] & 0x8080808080808080ull) << 7) & whitePos;
 	}
 	else{
 		attacks[wp] = 0x0;
 		// Normal step
 		attacks[wp] |= (pieces[wp] >> 8) & ~(whitePos | blackPos);
 		// Double step
-		attacks[wp] |= ((((pieces[wp] & (u64)0xFF000000000000) >> 8) & ~(whitePos | blackPos)) >> 8) & ~(whitePos | blackPos);
+		attacks[wp] |= ((((pieces[wp] & 0xFF000000000000ull) >> 8) & ~(whitePos | blackPos)) >> 8) & ~(whitePos | blackPos);
 		// Side Attacks
-		attacks[wp] |= ((pieces[wp] & _noSides)                >> 9) & blackPos;
-		attacks[wp] |= ((pieces[wp] & _noSides)                >> 7) & blackPos;
-		attacks[wp] |= ((pieces[wp] & (u64)0x0101010101010101) >> 7) & blackPos;
-		attacks[wp] |= ((pieces[wp] & (u64)0x8080808080808080) >> 9) & blackPos;
+		attacks[wp] |= ((pieces[wp] & _noSides)              >> 9) & blackPos;
+		attacks[wp] |= ((pieces[wp] & _noSides)              >> 7) & blackPos;
+		attacks[wp] |= ((pieces[wp] & 0x0101010101010101ull) >> 7) & blackPos;
+		attacks[wp] |= ((pieces[wp] & 0x8080808080808080ull) >> 9) & blackPos;
 	}
 }
 
@@ -227,82 +235,132 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 	if (side == black){
 	BLACKLOOP(b){ // Loop through black pieces
 		attackingPieces = pieces[b];
-			switch (b){
-				case bp:
-					break;
-				case br: // BLACK ROOK
-					// Calculate attacked pieces
-					BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind br
-						tempMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8))&attacks[br] & whitePos; // Intersections with opponent pieces
-						if (tempMask)                                                // If pieces are targeted
-							WHITELOOP(candidate){                                        // Find targeted piece
-							temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-							if (temp2)
-								BITLOOP(m, temp2)                                    // Add moves
-								moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
-						}
-						tempMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8))&attacks[br]; // Non capturing moves
-						BITLOOP(m, tempMask)                                             // Add moves
-							moveList.push_back(Move(pos, m, MOVE, (piece)b, nulPiece));
+		switch (b){
+			case bp: // Umschreiben! erst züge berechnen, dann gucken wo die attackierten Felder liegen.
+				     // Robin fragen: Was ist mit figur schlagen und Umwandlung ?? (spezielle umwandlung)
+				BITLOOP(pos, attackingPieces){
+					tempMask = ((noWrap[1] & attackingPieces) << 9) & whitePos;
+					if (tempMask)                                                // If pieces are targeted
+						WHITELOOP(candidate){                                        // Find targeted piece
+						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
+						if (temp2)
+							BITLOOP(m, temp2)                                    // Add moves
+							moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
 					}
-					break;
-				case bn: //// BLACK KNIGHT
+				}
+				attackingPieces = pieces[b];
+				BITLOOP(pos, attackingPieces){
+					tempMask = ((noWrap[3] & attackingPieces) << 7) & whitePos;
+					if (tempMask)                                                // If pieces are targeted
+						WHITELOOP(candidate){                                        // Find targeted piece
+						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
+						if (temp2)
+							BITLOOP(m, temp2)                                    // Add moves
+							moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
+					}
+				}
+				attackingPieces = (pieces[b] & (noWrap[2]>>8))<<8 & ~(whitePos|blackPos); // Attacked squares
+				BITLOOP(pos, attackingPieces){
+					moveList.push_back(Move(pos-8, pos, MOVE, (piece)b, nulPiece));
+				}
+				// Add promotion moves
+				attackingPieces = pieces[b]&0xFF000000000000ull; // Pawn on 7th rank?
+				if (attackingPieces){
+					BITLOOP(pos, attackingPieces){
+						moveList.push_front(Move(pos, pos + 8, PROMOTION, (piece)b, bq)); // Only promote knight and queen, since everything else is redundant
+						moveList.push_front(Move(pos, pos + 8, PROMOTION, (piece)b, bn));
+					}
+				}
+				
+				break;
+			case br: // BLACK ROOK
+				// Calculate attacked pieces
+				BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind br
+					tempMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8))&attacks[br] & whitePos; // Intersections with opponent pieces
+					if (tempMask)                                                // If pieces are targeted
+						WHITELOOP(candidate){                                        // Find targeted piece
+						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
+						if (temp2)
+							BITLOOP(m, temp2)                                    // Add moves
+							moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
+					}
+					tempMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8))&attacks[br]; // Non capturing moves
+					BITLOOP(m, tempMask)                                             // Add moves
+						moveList.push_back(Move(pos, m, MOVE, (piece)b, nulPiece));
+				}
+				break;
+			case bn: //// BLACK KNIGHT
 
-					// Calculate attacked pieces
-					BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind bn
-						tempMask = KNIGHT_ATTACKS[pos] & attacks[bn] & whitePos; // Intersections with opponent pieces
-						if (tempMask)                                                // If pieces are targeted
-							WHITELOOP(candidate){                                    // Find targeted piece
-							temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-							if (temp2)
-								BITLOOP(m, temp2)                                    // Add moves
-								moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
-						}
-						tempMask ^= KNIGHT_ATTACKS[pos] & attacks[bn]; // Non capturing moves
-						BITLOOP(m, tempMask)                        // Add moves
-							moveList.push_back(Move(pos, m, MOVE, (piece)b,nulPiece));
+				// Calculate attacked pieces
+				BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind bn
+					tempMask = KNIGHT_ATTACKS[pos] & attacks[bn] & whitePos; // Intersections with opponent pieces
+					if (tempMask)                                                // If pieces are targeted
+						WHITELOOP(candidate){                                    // Find targeted piece
+						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
+						if (temp2)
+							BITLOOP(m, temp2)                                    // Add moves
+							moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
 					}
-					break;
-				case bb: // BLACK BISHOP
-					BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind bb
-						tempMask = BISHOP_ATTACKS[pos] & attacks[bb] & whitePos; // Intersections with opponent pieces
-						if (tempMask)                                                // If pieces are targeted
-							WHITELOOP(candidate){                                    // Find targeted piece
-							temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-							if (temp2)
-								BITLOOP(m, temp2)                                    // Add moves
-								moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
-						}
-						tempMask ^= BISHOP_ATTACKS[pos] & attacks[bb]; // Non capturing moves
-						BITLOOP(m, tempMask)                        // Add moves
-							moveList.push_back(Move(pos, m, MOVE, (piece)b, nulPiece));
+					tempMask ^= KNIGHT_ATTACKS[pos] & attacks[bn]; // Non capturing moves
+					BITLOOP(m, tempMask)                        // Add moves
+						moveList.push_back(Move(pos, m, MOVE, (piece)b,nulPiece));
+				}
+				break;
+			case bb: // BLACK BISHOP
+				BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind bb
+					tempMask = BISHOP_ATTACKS[pos] & attacks[bb] & whitePos; // Intersections with opponent pieces
+					if (tempMask)                                                // If pieces are targeted
+						WHITELOOP(candidate){                                    // Find targeted piece
+						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
+						if (temp2)
+							BITLOOP(m, temp2)                                    // Add moves
+							moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
 					}
-					break;
-				case bq: // BLACK QUEEN
-					BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind bq
-						tempMask = QUEEN_ATTACKS[pos] & attacks[bq] & whitePos; // Intersections with opponent pieces
-						if (tempMask)                                                // If pieces are targeted
-							WHITELOOP(candidate){                                    // Find targeted piece
-							temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-							if (temp2)
-								BITLOOP(m, temp2)                                    // Add moves
-								moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
-						}
-						tempMask ^= QUEEN_ATTACKS[pos] & attacks[bq]; // Non capturing moves
-						BITLOOP(m, tempMask)                        // Add moves
-							moveList.push_back(Move(pos, m, MOVE, (piece)b, nulPiece));
+					tempMask ^= BISHOP_ATTACKS[pos] & attacks[bb]; // Non capturing moves
+					BITLOOP(m, tempMask)                        // Add moves
+						moveList.push_back(Move(pos, m, MOVE, (piece)b, nulPiece));
+				}
+				break;
+			case bq: // BLACK QUEEN
+				BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind bq
+					tempMask = QUEEN_ATTACKS[pos] & attacks[bq] & whitePos; // Intersections with opponent pieces
+					if (tempMask)                                                // If pieces are targeted
+						WHITELOOP(candidate){                                    // Find targeted piece
+						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
+						if (temp2)
+							BITLOOP(m, temp2)                                    // Add moves
+							moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
 					}
-					break;
-				case bk:
-					break;
+					tempMask ^= QUEEN_ATTACKS[pos] & attacks[bq]; // Non capturing moves
+					BITLOOP(m, tempMask)                        // Add moves
+						moveList.push_back(Move(pos, m, MOVE, (piece)b, nulPiece));
+				}
+				break;
+			case bk: // BLACK KING
+
+				// Calculate attacked pieces
+				BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind bn
+					tempMask = KING_ATTACKS[pos] & attacks[bk] & whitePos; // Intersections with opponent pieces
+					if (tempMask)                                                // If pieces are targeted
+						WHITELOOP(candidate){                                    // Find targeted piece
+						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
+						if (temp2)
+							BITLOOP(m, temp2)                                    // Add moves
+							moveList.push_front(Move(pos, m, CAPTURE, (piece)b, (piece)candidate));
+					}
+					tempMask ^= KING_ATTACKS[pos] & attacks[bk]; // Non capturing moves
+					BITLOOP(m, tempMask)                        // Add moves
+						moveList.push_back(Move(pos, m, MOVE, (piece)b, nulPiece));
+				}
+				break;
 			}
 		}
 		// Generate castling moves
-	if (castlingRights & Ck && !(blackPos & 0x60)) // Black King can castle
-		moveList.push_back(Move(nulSq, nulSq, BCASTLE, nulPiece, nulPiece));
-	if (castlingRights & CCk&& !(blackPos & 14)){ // Black King can castle (big)
-		moveList.push_back(Move(nulSq, nulSq, BCASTLE_2, nulPiece, nulPiece));
-	}
+	//if (castlingRights & Ck && !(blackPos & 0x60)) // Black King can castle
+	//	moveList.push_back(Move(nulSq, nulSq, BCASTLE, nulPiece, nulPiece));
+	//if (castlingRights & CCk&& !(blackPos & 14)){ // Black King can castle (big)
+	//	moveList.push_back(Move(nulSq, nulSq, BCASTLE_2, nulPiece, nulPiece));
+	//}
 	}
 }
 
@@ -310,20 +368,26 @@ void Board::makeMove(const Move& move)
 {
 	switch (move.flags){
 		case MOVE:
-			pieces[move.p] ^= (u64)0x1 << move.from;   // Piece disappears from departure
-			pieces[move.p] |= (u64)0x1 << move.to;     // Piece appears at destination
+			pieces[move.p] ^= 0x1ull << move.from;   // Piece disappears from departure
+			pieces[move.p] |= 0x1ull << move.to;     // Piece appears at destination
 			hashKey ^= randomSet[move.p][move.from];   // Update hashKey...
 			hashKey ^= randomSet[move.p][move.to];
 			break;
 		case CAPTURE:
-			pieces[move.p] ^= (u64)0x1 << move.from;    // Piece disappears from departure
-			pieces[move.p] |= (u64)0x1 << move.to;      // Piece appears at destination
-			pieces[move.target] ^= (u64)0x1 << move.to; // Captured piece is deleted
+			pieces[move.p] ^= 0x1ull << move.from;    // Piece disappears from departure
+			pieces[move.p] |= 0x1ull << move.to;      // Piece appears at destination
+			pieces[move.target] ^= 0x1ull << move.to; // Captured piece is deleted
 			hashKey ^= randomSet[move.p][move.from];    // Update hashKey...
 			hashKey ^= randomSet[move.p][move.to];
 			hashKey ^= randomSet[move.target][move.to];
 			break;
-		case BCASTLE: // Rochade
+		case PROMOTION:
+			pieces[move.p] ^= 0x1ull << move.from;
+			pieces[move.target] |= 0x1ull << move.to;
+			hashKey ^= randomSet[move.p][move.from];    // Update hashKey...
+			hashKey ^= randomSet[move.target][move.to];
+			break;
+		case BCASTLE: // Castling short
 			makeMove(Move(d1, b1, MOVE, bk, nulPiece));
 			makeMove(Move(a1, c1, MOVE, br, nulPiece));
 			hashKey ^= randomSet[bk][d1];
@@ -332,7 +396,7 @@ void Board::makeMove(const Move& move)
 			hashKey ^= randomSet[br][c1];
 			castlingRights ^= Ck;
 			break;
-		case BCASTLE_2: // Grand Rochade
+		case BCASTLE_2: // Castling long
 			makeMove(Move(d1, f1, MOVE, bk, nulPiece));
 			makeMove(Move(h1, e1, MOVE, br, nulPiece));
 			hashKey ^= randomSet[bk][d1];
@@ -348,17 +412,23 @@ void Board::unMakeMove(const Move& move)
 {
 	switch (move.flags){
 		case MOVE:
-			pieces[move.p] ^= (u64)0x1 << move.to;     // Piece disappears from destination
-			pieces[move.p] |= (u64)0x1 << move.from;   // Piece appears at departure
+			pieces[move.p] ^= 0x1ull << move.to;     // Piece disappears from destination
+			pieces[move.p] |= 0x1ull << move.from;   // Piece appears at departure
 			hashKey ^= randomSet[move.p][move.from];   // Update hashKey...
 			hashKey ^= randomSet[move.p][move.to];
 			break;
 		case CAPTURE:
-			pieces[move.p] ^= (u64)0x1 << move.to;      // Piece disappears from destination
-			pieces[move.p] |= (u64)0x1 << move.from;    // Piece appears at departure
-			pieces[move.target] |= (u64)0x1 << move.to; // Captured piece reappears
+			pieces[move.p] ^= 0x1ull << move.to;      // Piece disappears from destination
+			pieces[move.p] |= 0x1ull << move.from;    // Piece appears at departure
+			pieces[move.target] |= 0x1ull << move.to; // Captured piece reappears
 			hashKey ^= randomSet[move.p][move.from];    // Update hashKey...
 			hashKey ^= randomSet[move.p][move.to];
+			hashKey ^= randomSet[move.target][move.to];
+			break;
+		case PROMOTION:
+			pieces[move.p] |= 0x1ull << move.from;
+			pieces[move.target] ^= 0x1ull << move.to;
+			hashKey ^= randomSet[move.p][move.from];    // Update hashKey...
 			hashKey ^= randomSet[move.target][move.to];
 			break;
 		case BCASTLE: // Maybe add additional switch for castling

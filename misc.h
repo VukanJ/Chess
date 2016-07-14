@@ -28,7 +28,7 @@ typedef unsigned long long u64;
 #define BLACKLOOP(x) for (int x = 0; x < 6;  ++x)
 #define WHITELOOP(x) for (int x = 6; x < 12; ++x)
 
-const u64 _start = (u64)1 << 63;
+const u64 _start = 0x11ULL << 63;
 const u64 _col       = 0x101010101010101;
 const u64 _row       = 0xFF;
 const u64 _noSides   = 0x7E7E7E7E7E7E7E7E;

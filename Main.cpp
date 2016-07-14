@@ -10,9 +10,10 @@ const unsigned int WIDTH = 800, HEIGHT = 600;
 int main()
 {
 	//AI computer("K1PP4/P3PPBP/qPP3PN/8/5b2/pp2pQpp/k1p2pn1/2r2r2");
-	AI computer("888888p6pr2k3r");
+	//AI computer("82p588pp2p1pp84p38");
+	AI computer("k6k88k6K4k388K6K");
 	//AI computer("*");
-	computer.printDebug("rk");
+	computer.printDebug("kK");
 	
 	std::cin.ignore();
 	return 0;
