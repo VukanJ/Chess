@@ -29,10 +29,10 @@ typedef unsigned long long u64;
 #define WHITELOOP(x) for (int x = 6; x < 12; ++x)
 
 const u64 _start = 0x11ULL << 63;
-const u64 _col       = 0x101010101010101;
-const u64 _row       = 0xFF;
-const u64 _noSides   = 0x7E7E7E7E7E7E7E7E;
-const u64 _sidesOnly = 0x8181818181818181;
+const u64 _col       = 0x101010101010101ull;
+const u64 _row       = 0xFFull;
+const u64 _noSides   = 0x7E7E7E7E7E7E7E7Eull;
+const u64 _sidesOnly = 0x8181818181818181ull;
 
 const string names = "prnbkqPRNBKQ";
 

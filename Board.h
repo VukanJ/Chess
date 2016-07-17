@@ -56,7 +56,7 @@ public:
 	};
 	byte castlingRights;
 	byte b_enpassent, w_enpassent;
-	u64 whitePos, blackPos, whiteAtt, blackAtt, hashKey;
+	u64 whitePos, blackPos, whiteAtt, blackAtt,hashKey;
 	Zob_Hash hash;
 	vector<vector<u64>> randomSet;
 	stack<byte> moveHistory; // stores additional information about castling, enpassent
