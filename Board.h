@@ -5,6 +5,7 @@
 #include <vector>
 #include <typeinfo>
 #include <string>
+#include <stack>
 #include <list>
 #include <chrono>
 
@@ -14,12 +15,6 @@
 
 using namespace std;
 
-const u32 fromBits = (u32)0x3F;     
-const u32 toBits   = (u32)0xFC0;    
-const u32 pType    = (u32)0xF000;   
-const u32 mType    = (u32)0xF0000;
-const u32 cPiece   = (u32)0xF00000; 
-
 struct Move
 {
 	Move() : from(0), to(0), flags(0), p((piece)-1), target((piece)-1){}
@@ -27,6 +22,7 @@ struct Move
 		: from(_from), to(_to), flags(_flags), p(_p), target(_target){}
 	
 	byte from, to, flags;
+	// Flagbits: 1-4: castlingRuleReset?[k,K,w,W]; 5-8: Movetype
 	piece p, target;
 };
 
@@ -63,22 +59,29 @@ public:
 	u64 whitePos, blackPos, whiteAtt, blackAtt, hashKey;
 	Zob_Hash hash;
 	vector<vector<u64>> randomSet;
+	stack<byte> moveHistory; // stores additional information about castling, enpassent
 };
 
 static string moveString(Move m)
 {
 	// Short algebraic notation (AN)
 	if (m.flags == BCASTLE){
-		return "rochade";
+		return "b rochade";
+	}
+	else if (m.flags == WCASTLE){
+		return "w rochade";
 	}
 	else if (m.flags == PROMOTION){
-		return m.target == bq ? "Queen prom" : "Knight prom";
+		return m.target == bq || m.target == wq ? "Queen prom" : "Knight prom";
 	}
 	else if (m.flags == C_PROMOTION){
-		return m.target == bq ? "Queen c_prom" : "Knight c_prom";
+		return m.target == bq || m.target == wq ? "Queen c_prom" : "Knight c_prom";
 	}
 	else if (m.flags == BCASTLE_2){
-		return "grand rochade";
+		return "b grand rochade";
+	}
+	else if (m.flags == WCASTLE_2){
+		return "w grand rochade";
 	}
 	string s(1, names[m.p%6+6]);
 	if (m.flags == CAPTURE){

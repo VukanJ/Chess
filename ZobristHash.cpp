@@ -30,7 +30,7 @@ vector<vector<u64>> Zob_Hash::getRandomSet()
 	random_device r_device;
 	mt19937_64 generator(r_device());
 	uniform_int_distribution<u64> distr;
-	vector<vector<u64>> randSet = vector<vector<u64>>(13,vector<u64>(64,0));
+	vector<vector<u64>> randSet = vector<vector<u64>>(14,vector<u64>(64,0));
 	for (auto& r1 : randSet)
 		for (auto& r2: r1)
 			r2 = distr(generator);

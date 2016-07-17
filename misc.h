@@ -36,6 +36,14 @@ const u64 _sidesOnly = 0x8181818181818181;
 
 const string names = "prnbkqPRNBKQ";
 
+static void printBits(byte num)
+{
+	int c = 0;
+	for (byte p = 0x1 << 7; p; p >>= 1)
+		cout << (p & num ? '1' : '0');
+	cout << endl;
+}
+
 static void printBitboard(u64 board)
 {
 	// Prints Bitboard and occupied pieces
@@ -107,6 +115,8 @@ enum attacks {
 	att_bp, att_br, att_bn, att_bb, att_bk, att_bq,
 	att_wp, att_wr, att_wn, att_wb, att_wk, att_wq
 };
+
+enum hashPosition{CASTLE_HASH=12,ENPASSENT_HASH=13};
 
 enum {
 	h1, g1, f1, e1, d1, c1, b1, a1,
