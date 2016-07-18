@@ -18,12 +18,15 @@ using namespace std;
 struct Move
 {
 	Move() : from(0), to(0), flags(0), p((piece)-1), target((piece)-1){}
+	Move(byte OldCastlingRights, byte _flags)
+		: from(OldCastlingRights), to(nulSq), flags(_flags), p(nulPiece), target(nulPiece){}
+	Move(byte _from, byte _to, byte _flags, piece _p)
+		: from(_from), to(_to), flags(_flags), p(_p), target(nulPiece){}
 	Move(byte _from, byte _to, byte _flags, piece _p, piece _target)
 		: from(_from), to(_to), flags(_flags), p(_p), target(_target){}
-	
-	byte from, to, flags;
+	byte from, to, flags, p, target;
+	byte k : 3,l:4;
 	// Flagbits: 1-4: castlingRuleReset?[k,K,w,W]; 5-8: Movetype
-	piece p, target;
 };
 
 class Board
@@ -41,7 +44,7 @@ public:
 	void makeMove(const Move&);
 	void unMakeMove(const Move&);
 	bool isCheckMate(color) const;
-
+	
 	// Flooding algorithm
 	enum dir { n, e, s, w, ne, se, sw, nw};
 	u64 floodFill(u64 propagator, u64 empty, dir);
@@ -59,7 +62,6 @@ public:
 	u64 whitePos, blackPos, whiteAtt, blackAtt,hashKey;
 	Zob_Hash hash;
 	vector<vector<u64>> randomSet;
-	stack<byte> moveHistory; // stores additional information about castling, enpassent
 };
 
 static string moveString(Move m)
