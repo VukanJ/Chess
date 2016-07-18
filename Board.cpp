@@ -230,11 +230,12 @@ void Board::pawnFill(color side)
 
 void Board::initHash()
 {
-	auto pos = 0,i=0;
+	auto pos = 0, i = 0;
 	for (auto p : pieces){
 		BITLOOP(pos, p){
-			hashKey ^= randomSet[i++][pos];
+			hashKey ^= randomSet[i][pos];
 		}
+		i++;
 	}
 	hashKey ^= randomSet[CASTLE_HASH][castlingRights];
 	cout << "Initial hash --> " << hex << hashKey << endl;
@@ -251,8 +252,7 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 	u64 tempMask = 0x0;
 	u64 temp2 = 0x0,attackingPieces = 0x0;
 	// Generate all capturing and normal moves
-	if (side == black){
-		////////////////////////////////////////////////BLACK MOVE GENERATION///////////////////////////////////////////////////
+	if (side == black){////////////////////////////////////////////////BLACK MOVE GENERATION///////////////////////////////////////////////////
 	BLACKLOOP(b){ // Loop through black pieces
 		attackingPieces = pieces[b];
 		switch (b){
@@ -267,11 +267,11 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						if (temp2){
 							BITLOOP(m, temp2){                                   // Add moves
 								if (m > 55){
-									moveList.push_front(Move(pos, m, C_PROMOTION, (piece)candidate, bq));
-									moveList.push_front(Move(pos, m, C_PROMOTION, (piece)candidate, bn));
+									moveList.push_front(Move(pos, m, C_PROMOTION, PIECE_PAIR(candidate, bq)));
+									moveList.push_front(Move(pos, m, C_PROMOTION, PIECE_PAIR(candidate, bn)));
 								}
 								else{
-									moveList.push_front(Move(pos, m, CAPTURE, bp, (piece)candidate));
+									moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(bp, candidate)));
 								}
 							}
 						}
@@ -281,15 +281,15 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 				attackingPieces = (pieces[bp] << 8) & ~(blackPos | whitePos);
 				BITLOOP(pos, attackingPieces){
 					if (pos < 56){
-						moveList.push_back(Move(pos - 8, pos, MOVE, bp, nulPiece));
+						moveList.push_back(Move(pos - 8, pos, MOVE, bp));
 					} else{
-						moveList.push_front(Move(pos - 8, pos, PROMOTION, bp, bq));
-						moveList.push_front(Move(pos - 8, pos, PROMOTION, bp, bn));
+						moveList.push_front(Move(pos - 8, pos, PROMOTION, PIECE_PAIR(bp, bq)));
+						moveList.push_front(Move(pos - 8, pos, PROMOTION, PIECE_PAIR(bp, bn)));
 					}
 				}
 				attackingPieces = (pieces[bp] << 16)&attacks[bp];
 				BITLOOP(pos, attackingPieces)
-					moveList.push_back(Move(pos - 16, pos, MOVE, bp, nulPiece));
+					moveList.push_back(Move(pos - 16, pos, MOVE, bp));
 				break;
 			case br: // BLACK ROOK
 				// Calculate attacked pieces
@@ -300,11 +300,11 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
 						if (temp2)
 							BITLOOP(m, temp2)                                    // Add moves
-							moveList.push_front(Move(pos, m, CAPTURE | ((pos == 0 ? Ck : CCk) << 4), br, (piece)candidate));
+							moveList.push_front(Move(pos, m, CAPTURE | ((pos == 0 ? Ck : CCk) << 4), PIECE_PAIR(br, candidate)));
 					}
 					tempMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8))&attacks[br]; // Non capturing moves
 					BITLOOP(m, tempMask)                                             // Add moves
-						moveList.push_back(Move(pos, m, MOVE | ((pos == 0 ? Ck : CCk) << 4), br, nulPiece));
+						moveList.push_back(Move(pos, m, MOVE | ((pos == 0 ? Ck : CCk) << 4), br));
 				}
 				break;
 			case bn: //// BLACK KNIGHT
@@ -317,11 +317,11 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
 						if (temp2)
 							BITLOOP(m, temp2)                                    // Add moves
-							moveList.push_front(Move(pos, m, CAPTURE, bn, (piece)candidate));
+							moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(bn,candidate)));
 					}
 					tempMask ^= KNIGHT_ATTACKS[pos] & attacks[bn]; // Non capturing moves
 					BITLOOP(m, tempMask)                        // Add moves
-						moveList.push_back(Move(pos, m, MOVE, bn, nulPiece));
+						moveList.push_back(Move(pos, m, MOVE, bn));
 				}
 				break;
 			case bb: // BLACK BISHOP
@@ -332,11 +332,11 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
 						if (temp2)
 							BITLOOP(m, temp2)                                    // Add moves
-							moveList.push_front(Move(pos, m, CAPTURE, bb, (piece)candidate));
+							moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(bb,candidate)));
 					}
 					tempMask ^= BISHOP_ATTACKS[pos] & attacks[bb]; // Non capturing moves
 					BITLOOP(m, tempMask)                        // Add moves
-						moveList.push_back(Move(pos, m, MOVE, bb, nulPiece));
+						moveList.push_back(Move(pos, m, MOVE, bb));
 				}
 				break;
 			case bq: // BLACK QUEEN
@@ -347,11 +347,11 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
 						if (temp2)
 							BITLOOP(m, temp2)                                    // Add moves
-							moveList.push_front(Move(pos, m, CAPTURE, bq, (piece)candidate));
+							moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(bq,candidate)));
 					}
 					tempMask ^= QUEEN_ATTACKS[pos] & attacks[bq]; // Non capturing moves
 					BITLOOP(m, tempMask)                        // Add moves
-						moveList.push_back(Move(pos, m, MOVE, bq, nulPiece));
+						moveList.push_back(Move(pos, m, MOVE, bq));
 				}
 				break;
 			case bk: // BLACK KING
@@ -364,11 +364,11 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
 						if (temp2)
 							BITLOOP(m, temp2)                                    // Add moves
-							moveList.push_front(Move(pos, m, CAPTURE | ((Ck | CCk) << 4), bk, (piece)candidate));
+							moveList.push_front(Move(pos, m, CAPTURE | ((Ck | CCk) << 4), PIECE_PAIR(bk, candidate)));
 					}
 					tempMask ^= KING_ATTACKS[pos] & attacks[bk]; // Non capturing moves
 					BITLOOP(m, tempMask)                        // Add moves
-						moveList.push_back(Move(pos, m, MOVE | ((Ck | CCk) << 4), bk, nulPiece));
+						moveList.push_back(Move(pos, m, MOVE | ((Ck | CCk) << 4), bk));
 				}
 				break;
 			}
@@ -397,11 +397,11 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						 if (temp2){
 							 BITLOOP(m, temp2){                                   // Add moves
 								 if (m < 8){
-									 moveList.push_front(Move(pos, m, C_PROMOTION, (piece)candidate, wq));
-									 moveList.push_front(Move(pos, m, C_PROMOTION, (piece)candidate, wn));
+									 moveList.push_front(Move(pos, m, C_PROMOTION, PIECE_PAIR(candidate, wq)));
+									 moveList.push_front(Move(pos, m, C_PROMOTION, PIECE_PAIR(candidate, wn)));
 								 }
 								 else{
-									 moveList.push_front(Move(pos, m, CAPTURE, wp, (piece)candidate));
+									 moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(wp,candidate)));
 								 }
 							 }
 						 }
@@ -411,16 +411,16 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 				 attackingPieces = (pieces[wp] >> 8) & ~(blackPos | whitePos);
 				 BITLOOP(pos, attackingPieces){
 					 if (pos > 7){
-						 moveList.push_back(Move(pos + 8, pos, MOVE, wp, nulPiece));
+						 moveList.push_back(Move(pos + 8, pos, MOVE, wp));
 					 }
 					 else{
-						 moveList.push_front(Move(pos + 8, pos, PROMOTION, wp, wq));
-						 moveList.push_front(Move(pos + 8, pos, PROMOTION, wp, wn));
+						 moveList.push_front(Move(pos + 8, pos, PROMOTION, PIECE_PAIR(wp, wq)));
+						 moveList.push_front(Move(pos + 8, pos, PROMOTION, PIECE_PAIR(wp, wn)));
 					 }
 				 }
 				 attackingPieces = (pieces[wp] >> 16)&attacks[wp];
 				 BITLOOP(pos, attackingPieces)
-						 moveList.push_back(Move(pos + 16, pos, MOVE, wp, nulPiece));
+						 moveList.push_back(Move(pos + 16, pos, MOVE, wp));
 				 break;
 			 case wr: // WHITE ROOK
 				 // Calculate attacked pieces
@@ -431,11 +431,11 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						 temp2 = pieces[candidate] & tempMask;                        // Set specific attacks
 						 if (temp2)
 							 BITLOOP(m, temp2)                                        // Add moves
-							 moveList.push_front(Move(pos, m, CAPTURE | ((pos == 56 ? CK : CCK) << 4), wr, (piece)candidate));
+							 moveList.push_front(Move(pos, m, CAPTURE | ((pos == 56 ? CK : CCK) << 4), PIECE_PAIR(wr, candidate)));
 					 }
 					 tempMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8))&attacks[wr]; // Non capturing moves
 					 BITLOOP(m, tempMask)                                             // Add moves
-						 moveList.push_back(Move(pos, m, MOVE | ((pos == 56 ? CK : CCK) << 4), wr, nulPiece));
+						 moveList.push_back(Move(pos, m, MOVE | ((pos == 56 ? CK : CCK) << 4), wr));
 				 }
 				 break;
 			 case wn: //// WHITE KNIGHT
@@ -448,11 +448,11 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						 temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
 						 if (temp2)
 							 BITLOOP(m, temp2)                                    // Add moves
-							 moveList.push_front(Move(pos, m, CAPTURE, wn, (piece)candidate));
+							 moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(wn, candidate)));
 					 }
 					 tempMask ^= KNIGHT_ATTACKS[pos] & attacks[wn]; // Non capturing moves
 					 BITLOOP(m, tempMask)                        // Add moves
-						 moveList.push_back(Move(pos, m, MOVE, wn, nulPiece));
+						 moveList.push_back(Move(pos, m, MOVE, wn));
 				 }
 				 break;
 			 case wb: // WHITE BISHOP
@@ -463,11 +463,11 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						 temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
 						 if (temp2)
 							 BITLOOP(m, temp2)                                    // Add moves
-							 moveList.push_front(Move(pos, m, CAPTURE, wb, (piece)candidate));
+							 moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(wb, candidate)));
 					 }
 					 tempMask ^= BISHOP_ATTACKS[pos] & attacks[wb]; // Non capturing moves
 					 BITLOOP(m, tempMask)                        // Add moves
-						 moveList.push_back(Move(pos, m, MOVE, wb, nulPiece));
+						 moveList.push_back(Move(pos, m, MOVE, wb));
 				 }
 				 break;
 			 case wq: // WHITE QUEEN
@@ -478,11 +478,11 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						 temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
 						 if (temp2)
 							 BITLOOP(m, temp2)                                    // Add moves
-							 moveList.push_front(Move(pos, m, CAPTURE, wq, (piece)candidate));
+							 moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(wq, candidate)));
 					 }
 					 tempMask ^= QUEEN_ATTACKS[pos] & attacks[wq]; // Non capturing moves
 					 BITLOOP(m, tempMask)                        // Add moves
-						 moveList.push_back(Move(pos, m, MOVE, wq, nulPiece));
+						 moveList.push_back(Move(pos, m, MOVE, wq));
 				 }
 				 break;
 			 case wk: // WHITE KING
@@ -495,11 +495,11 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						 temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
 						 if (temp2)
 							 BITLOOP(m, temp2)                                    // Add moves
-							 moveList.push_front(Move(pos, m, CAPTURE | ((CK | CCK) << 4), wk, (piece)candidate));
+							 moveList.push_front(Move(pos, m, CAPTURE | ((CK | CCK) << 4), PIECE_PAIR(wk, candidate)));
 					 }
 					 tempMask ^= KING_ATTACKS[pos] & attacks[wk]; // Non capturing moves
 					 BITLOOP(m, tempMask)                         // Add moves
-						 moveList.push_back(Move(pos, m, MOVE|((CK | CCK) << 4), wk, nulPiece));
+						 moveList.push_back(Move(pos, m, MOVE|((CK | CCK) << 4), wk));
 				 }
 				 break;
 		 }
@@ -516,56 +516,56 @@ void Board::makeMove(const Move& move)
 {
 	switch (move.flags & 0xFull){
 		case MOVE:
-			pieces[move.p] ^= 0x1ull << move.from;   // Piece disappears from departure
-			pieces[move.p] |= 0x1ull << move.to;     // Piece appears at destination
-			hashKey ^= randomSet[move.p][move.from]; // Update hashKey...
-			hashKey ^= randomSet[move.p][move.to];
+			pieces[MOV_PIECE(move.Pieces)] ^= 0x1ull << move.from;   // Piece disappears from departure
+			pieces[MOV_PIECE(move.Pieces)] |= 0x1ull << move.to;     // Piece appears at destination
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from]; // Update hashKey...
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
 			break;
 		case CAPTURE:
-			pieces[move.p] ^= 0x1ull << move.from;    // Piece disappears from departure
-			pieces[move.p] |= 0x1ull << move.to;      // Piece appears at destination
-			pieces[move.target] ^= 0x1ull << move.to; // Captured piece is deleted
-			hashKey ^= randomSet[move.p][move.from];  // Update hashKey...
-			hashKey ^= randomSet[move.p][move.to];
-			hashKey ^= randomSet[move.target][move.to];
+			pieces[MOV_PIECE(move.Pieces)] ^= 0x1ull << move.from;    // Piece disappears from departure
+			pieces[MOV_PIECE(move.Pieces)] |= 0x1ull << move.to;      // Piece appears at destination
+			pieces[TARGET_PIECE(move.Pieces)] ^= 0x1ull << move.to; // Captured piece is deleted
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from];  // Update hashKey...
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
+			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
 			break;
 		case PROMOTION:
-			pieces[move.p] ^= 0x1ull << move.from;      // removes pawn
-			pieces[move.target] |= 0x1ull << move.to;   // New piece appears 
-			hashKey ^= randomSet[move.p][move.from];    // Update hashKey...
-			hashKey ^= randomSet[move.target][move.to];
+			pieces[MOV_PIECE(move.Pieces)] ^= 0x1ull << move.from;      // removes pawn
+			pieces[TARGET_PIECE(move.Pieces)] |= 0x1ull << move.to;   // New piece appears 
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from];    // Update hashKey...
+			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
 			break;
 		case C_PROMOTION:
 			//Needs better solution --> siehe Aufgabenliste
 			pieces[(move.to>55?bp:wp)] ^= 0x1ull << move.from;     // removes pawn
-			pieces[move.p]      ^= 0x1ull << move.to;              // Captured piece disappears
-			pieces[move.target] |= 0x1ull << move.to;              // New piece appears 
+			pieces[MOV_PIECE(move.Pieces)] ^= 0x1ull << move.to;              // Captured piece disappears
+			pieces[TARGET_PIECE(move.Pieces)] |= 0x1ull << move.to;              // New piece appears 
 			hashKey ^= randomSet[move.to>55 ? bp : wp][move.from]; // Update hashKey...
-			hashKey ^= randomSet[move.p][move.to];
-			hashKey ^= randomSet[move.target][move.to];
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
+			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
 			break;
 		case BCASTLE: // Castling short
 			castlingRights &= ~(Ck|CCk);                           // No casling rights after castling
-			makeMove(Move(d1, b1, MOVE, bk, nulPiece));            // perform moves...
-			makeMove(Move(a1, c1, MOVE, br, nulPiece));		       
+			makeMove(Move(d1, b1, MOVE, bk));                      // perform moves...
+			makeMove(Move(a1, c1, MOVE, br));		       
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];     // update hashKey with new castling rights
 			break;
 		case WCASTLE: // Castling short
 			castlingRights &= ~(CK | CCK);
-			makeMove(Move(d8, b8, MOVE, wk, nulPiece));
-			makeMove(Move(a8, c8, MOVE, wr, nulPiece));
+			makeMove(Move(d8, b8, MOVE, wk));
+			makeMove(Move(a8, c8, MOVE, wr));
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
 			break;
 		case BCASTLE_2: // Castling long
 			castlingRights &= ~(Ck | CCk);
-			makeMove(Move(d1, f1, MOVE, bk, nulPiece));
-			makeMove(Move(h1, e1, MOVE, br, nulPiece));
+			makeMove(Move(d1, f1, MOVE, bk));
+			makeMove(Move(h1, e1, MOVE, br));
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
 			break;
 		case WCASTLE_2: // Castling long
 			castlingRights &= ~(CK | CCK);
-			makeMove(Move(d8, f8, MOVE, wk, nulPiece));
-			makeMove(Move(h8, e8, MOVE, wr, nulPiece));
+			makeMove(Move(d8, f8, MOVE, wk));
+			makeMove(Move(h8, e8, MOVE, wr));
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
 			break;
 	}
@@ -583,56 +583,56 @@ void Board::unMakeMove(const Move& move)
 {
 	switch (move.flags & 0xFull){
 		case MOVE:
-			pieces[move.p] ^= 0x1ull << move.to;     // Piece disappears from destination
-			pieces[move.p] |= 0x1ull << move.from;   // Piece appears at departure
-			hashKey ^= randomSet[move.p][move.from];   // Update hashKey...
-			hashKey ^= randomSet[move.p][move.to];
+			pieces[MOV_PIECE(move.Pieces)] ^= 0x1ull << move.to;     // Piece disappears from destination
+			pieces[MOV_PIECE(move.Pieces)] |= 0x1ull << move.from;   // Piece appears at departure
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from];   // Update hashKey...
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
 			break;
 		case CAPTURE:
-			pieces[move.p] ^= 0x1ull << move.to;      // Piece disappears from destination
-			pieces[move.p] |= 0x1ull << move.from;    // Piece appears at departure
-			pieces[move.target] |= 0x1ull << move.to; // Captured piece reappears
-			hashKey ^= randomSet[move.p][move.from];    // Update hashKey...
-			hashKey ^= randomSet[move.p][move.to];
-			hashKey ^= randomSet[move.target][move.to];
+			pieces[MOV_PIECE(move.Pieces)] ^= 0x1ull << move.to;      // Piece disappears from destination
+			pieces[MOV_PIECE(move.Pieces)] |= 0x1ull << move.from;    // Piece appears at departure
+			pieces[TARGET_PIECE(move.Pieces)] |= 0x1ull << move.to; // Captured piece reappears
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from];    // Update hashKey...
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
+			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
 			break;
 		case PROMOTION:
-			pieces[move.p] |= 0x1ull << move.from;
-			pieces[move.target] ^= 0x1ull << move.to;
-			hashKey ^= randomSet[move.p][move.from];    // Update hashKey...
-			hashKey ^= randomSet[move.target][move.to];
+			pieces[MOV_PIECE(move.Pieces)]    |= 0x1ull << move.from;
+			pieces[TARGET_PIECE(move.Pieces)] ^= 0x1ull << move.to;
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from];    // Update hashKey...
+			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
 			break;
 		case C_PROMOTION:
 			//Needs better solution --> siehe Aufgabenliste
-			pieces[move.to>55 ? bp : wp] |= 0x1ull << move.from;   // pawn reappears
-			pieces[move.p]               |= 0x1ull << move.to;     // Captured piece reappears
-			pieces[move.target] ^= 0x1ull << move.to;              // promoted piece disappears
+			pieces[move.to>55 ? bp : wp]      |= 0x1ull << move.from;   // pawn reappears
+			pieces[MOV_PIECE(move.Pieces)]    |= 0x1ull << move.to;     // Captured piece reappears
+			pieces[TARGET_PIECE(move.Pieces)] ^= 0x1ull << move.to;              // promoted piece disappears
 			hashKey ^= randomSet[move.to>55 ? bp : wp][move.from]; // Update hashKey...
-			hashKey ^= randomSet[move.p][move.to];
-			hashKey ^= randomSet[move.target][move.to];
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
+			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
 			break;
 		case BCASTLE: // Maybe add additional switch for castling
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights]; // Reapply new castling rights to hash (inverse operation)
-			makeMove(Move(b1, d1, MOVE, bk, nulPiece)); 
-			makeMove(Move(c1, a1, MOVE, br, nulPiece));
+			makeMove(Move(b1, d1, MOVE, bk)); 
+			makeMove(Move(c1, a1, MOVE, br));
 			castlingRights = move.from;                        // Restory old rights 
 			break;
 		case WCASTLE: // Castling short
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			makeMove(Move(b8, d8, MOVE, wk, nulPiece));
-			makeMove(Move(c8, a8, MOVE, wr, nulPiece));
+			makeMove(Move(b8, d8, MOVE, wk));
+			makeMove(Move(c8, a8, MOVE, wr));
 			castlingRights = move.from;
 			break;
 		case BCASTLE_2:
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			makeMove(Move(f1, d1, MOVE, bk, nulPiece));
-			makeMove(Move(e1, h1, MOVE, br, nulPiece));
+			makeMove(Move(f1, d1, MOVE, bk));
+			makeMove(Move(e1, h1, MOVE, br));
 			castlingRights = move.from;
 			break;
 		case WCASTLE_2: // Castling long
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			makeMove(Move(f8, d8, MOVE, wk, nulPiece));
-			makeMove(Move(e8, h8, MOVE, wr, nulPiece));
+			makeMove(Move(f8, d8, MOVE, wk));
+			makeMove(Move(e8, h8, MOVE, wr));
 			castlingRights = move.from;
 			break;
 	}

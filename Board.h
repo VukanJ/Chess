@@ -17,15 +17,12 @@ using namespace std;
 
 struct Move
 {
-	Move() : from(0), to(0), flags(0), p((piece)-1), target((piece)-1){}
+	Move() : from(0), to(0), flags(0),Pieces(nulPiece){}
 	Move(byte OldCastlingRights, byte _flags)
-		: from(OldCastlingRights), to(nulSq), flags(_flags), p(nulPiece), target(nulPiece){}
-	Move(byte _from, byte _to, byte _flags, piece _p)
-		: from(_from), to(_to), flags(_flags), p(_p), target(nulPiece){}
-	Move(byte _from, byte _to, byte _flags, piece _p, piece _target)
-		: from(_from), to(_to), flags(_flags), p(_p), target(_target){}
-	byte from, to, flags, p, target;
-	byte k : 3,l:4;
+		: from(OldCastlingRights), to(nulSq), flags(_flags), Pieces(nulPiece){}
+	Move(byte _from, byte _to, byte _flags, byte _pieces)
+		: from(_from), to(_to), flags(_flags), Pieces(_pieces){}
+	byte from, to, flags, Pieces;
 	// Flagbits: 1-4: castlingRuleReset?[k,K,w,W]; 5-8: Movetype
 };
 
@@ -74,10 +71,10 @@ static string moveString(Move m)
 		return "w rochade";
 	}
 	else if (m.flags == PROMOTION){
-		return m.target == bq || m.target == wq ? "Queen prom" : "Knight prom";
+		return TARGET_PIECE(m.Pieces) == bq || TARGET_PIECE(m.Pieces) == wq ? "Queen prom" : "Knight prom";
 	}
 	else if (m.flags == C_PROMOTION){
-		return m.target == bq || m.target == wq ? "Queen c_prom" : "Knight c_prom";
+		return TARGET_PIECE(m.Pieces) == bq || TARGET_PIECE(m.Pieces) == wq ? "Queen c_prom" : "Knight c_prom";
 	}
 	else if (m.flags == BCASTLE_2){
 		return "b grand rochade";
@@ -85,7 +82,7 @@ static string moveString(Move m)
 	else if (m.flags == WCASTLE_2){
 		return "w grand rochade";
 	}
-	string s(1, names[m.p%6+6]);
+	string s(1, names[MOV_PIECE(m.Pieces) % 6 + 6]);
 	if (m.flags == CAPTURE){
 		if (s[0] == 'P'){
 			s.clear();

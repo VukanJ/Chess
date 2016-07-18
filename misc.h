@@ -20,6 +20,9 @@ using namespace std;
   #define BITSCANR64(index,mask) _BitScanReverse64(&index,mask)
   #define ROTL64(mask, amount) _rotl64(mask,amount)
   #define ROTR64(mask, amount) _rotr64(mask,amount)
+  #define MOV_PIECE(DATA) DATA & 0xF
+  #define TARGET_PIECE(DATA) (DATA & 0xF0) >> 4
+  #define PIECE_PAIR(X,Y) (X | (Y << 4))
 #elif __linux__
 typedef unsigned long long u64;
 #endif
