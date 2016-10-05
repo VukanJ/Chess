@@ -37,18 +37,18 @@ Board::Board(string fen) : Board()
 			else {
 				counter++;
 				switch (p) {
-					case 'p': pieces[bp] |= 0x1ull << (63 - counter); break;
-					case 'r': pieces[br] |= 0x1ull << (63 - counter); break;
-					case 'n': pieces[bn] |= 0x1ull << (63 - counter); break;
-					case 'b': pieces[bb] |= 0x1ull << (63 - counter); break;
-					case 'k': pieces[bk] |= 0x1ull << (63 - counter); break;
-					case 'q': pieces[bq] |= 0x1ull << (63 - counter); break;
-					case 'P': pieces[wp] |= 0x1ull << (63 - counter); break;
-					case 'R': pieces[wr] |= 0x1ull << (63 - counter); break;
-					case 'N': pieces[wn] |= 0x1ull << (63 - counter); break;
-					case 'B': pieces[wb] |= 0x1ull << (63 - counter); break;
-					case 'K': pieces[wk] |= 0x1ull << (63 - counter); break;
-					case 'Q': pieces[wq] |= 0x1ull << (63 - counter); break;
+					case 'p': pieces[bp] |= BIT_AT_R(counter); break;
+					case 'r': pieces[br] |= BIT_AT_R(counter); break;
+					case 'n': pieces[bn] |= BIT_AT_R(counter); break;
+					case 'b': pieces[bb] |= BIT_AT_R(counter); break;
+					case 'k': pieces[bk] |= BIT_AT_R(counter); break;
+					case 'q': pieces[bq] |= BIT_AT_R(counter); break;
+					case 'P': pieces[wp] |= BIT_AT_R(counter); break;
+					case 'R': pieces[wr] |= BIT_AT_R(counter); break;
+					case 'N': pieces[wn] |= BIT_AT_R(counter); break;
+					case 'B': pieces[wb] |= BIT_AT_R(counter); break;
+					case 'K': pieces[wk] |= BIT_AT_R(counter); break;
+					case 'Q': pieces[wq] |= BIT_AT_R(counter); break;
 					case '/': counter--; break;
 					default: cerr << "Bad FEN! (Board::Board())\n"; exit(1); break;
 				}
@@ -287,7 +287,7 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						moveList.push_front(Move(pos - 8, pos, PROMOTION, PIECE_PAIR(bp, bn)));
 					}
 				}
-				attackingPieces = (pieces[bp] << 16)&attacks[bp];
+				attackingPieces = (pieces[bp] << 16) & attacks[bp];
 				BITLOOP(pos, attackingPieces)
 					moveList.push_back(Move(pos - 16, pos, MOVE, bp));
 				break;
@@ -397,8 +397,8 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						 if (temp2){
 							 BITLOOP(m, temp2){                                   // Add moves
 								 if (m < 8){
-									 moveList.push_front(Move(pos, m, C_PROMOTION, PIECE_PAIR(candidate, wq)));
-									 moveList.push_front(Move(pos, m, C_PROMOTION, PIECE_PAIR(candidate, wn)));
+									 moveList.push_front(Move(pos, m, C_PROMOTION, PIECE_PAIR(candidate, wq)|(0x1<<8)));
+									 moveList.push_front(Move(pos, m, C_PROMOTION, PIECE_PAIR(candidate, wn)|(0x1<<8)));
 								 }
 								 else{
 									 moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(wp,candidate)));
@@ -516,31 +516,30 @@ void Board::makeMove(const Move& move)
 {
 	switch (move.flags & 0xFull){
 		case MOVE:
-			pieces[MOV_PIECE(move.Pieces)] ^= 0x1ull << move.from;   // Piece disappears from departure
-			pieces[MOV_PIECE(move.Pieces)] |= 0x1ull << move.to;     // Piece appears at destination
+			pieces[MOV_PIECE(move.Pieces)] ^= BIT_AT(move.from);   // Piece disappears from departure
+			pieces[MOV_PIECE(move.Pieces)] |= BIT_AT(move.to);     // Piece appears at destination
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from]; // Update hashKey...
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
 			break;
 		case CAPTURE:
-			pieces[MOV_PIECE(move.Pieces)] ^= 0x1ull << move.from;    // Piece disappears from departure
-			pieces[MOV_PIECE(move.Pieces)] |= 0x1ull << move.to;      // Piece appears at destination
-			pieces[TARGET_PIECE(move.Pieces)] ^= 0x1ull << move.to; // Captured piece is deleted
+			pieces[MOV_PIECE(move.Pieces)] ^= BIT_AT(move.from);    // Piece disappears from departure
+			pieces[MOV_PIECE(move.Pieces)] |= BIT_AT(move.to);      // Piece appears at destination
+			pieces[TARGET_PIECE(move.Pieces)] ^= BIT_AT(move.to); // Captured piece is deleted
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from];  // Update hashKey...
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
 			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
 			break;
 		case PROMOTION:
-			pieces[MOV_PIECE(move.Pieces)] ^= 0x1ull << move.from;      // removes pawn
-			pieces[TARGET_PIECE(move.Pieces)] |= 0x1ull << move.to;   // New piece appears 
+			pieces[MOV_PIECE(move.Pieces)] ^= BIT_AT(move.from);      // removes pawn
+			pieces[TARGET_PIECE(move.Pieces)] |= BIT_AT(move.to);   // New piece appears 
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from];    // Update hashKey...
 			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
 			break;
 		case C_PROMOTION:
-			//Needs better solution --> siehe Aufgabenliste
-			pieces[(move.to>55?bp:wp)] ^= 0x1ull << move.from;     // removes pawn
-			pieces[MOV_PIECE(move.Pieces)] ^= 0x1ull << move.to;              // Captured piece disappears
-			pieces[TARGET_PIECE(move.Pieces)] |= 0x1ull << move.to;              // New piece appears 
-			hashKey ^= randomSet[move.to>55 ? bp : wp][move.from]; // Update hashKey...
+			pieces[((move.Pieces&(0x3 << 8)) >> 8) * 6] ^= BIT_AT(move.from);     // removes pawn
+			pieces[MOV_PIECE(move.Pieces)] ^= BIT_AT(move.to);              // Captured piece disappears
+			pieces[TARGET_PIECE(move.Pieces)] |= BIT_AT(move.to);              // New piece appears 
+			hashKey ^= randomSet[((move.Pieces&(0x3 << 8)) >> 8) * 6][move.from]; // Update hashKey...
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
 			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
 			break;
@@ -583,31 +582,30 @@ void Board::unMakeMove(const Move& move)
 {
 	switch (move.flags & 0xFull){
 		case MOVE:
-			pieces[MOV_PIECE(move.Pieces)] ^= 0x1ull << move.to;     // Piece disappears from destination
-			pieces[MOV_PIECE(move.Pieces)] |= 0x1ull << move.from;   // Piece appears at departure
-			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from];   // Update hashKey...
+			pieces[MOV_PIECE(move.Pieces)] ^= BIT_AT(move.to);      // Piece disappears from destination
+			pieces[MOV_PIECE(move.Pieces)] |= BIT_AT(move.from);    // Piece appears at departure
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from];  // Update hashKey...
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
 			break;
 		case CAPTURE:
-			pieces[MOV_PIECE(move.Pieces)] ^= 0x1ull << move.to;      // Piece disappears from destination
-			pieces[MOV_PIECE(move.Pieces)] |= 0x1ull << move.from;    // Piece appears at departure
-			pieces[TARGET_PIECE(move.Pieces)] |= 0x1ull << move.to; // Captured piece reappears
-			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from];    // Update hashKey...
+			pieces[MOV_PIECE(move.Pieces)]    ^= BIT_AT(move.to);      // Piece disappears from destination
+			pieces[MOV_PIECE(move.Pieces)]    |= BIT_AT(move.from);    // Piece appears at departure
+			pieces[TARGET_PIECE(move.Pieces)] |= BIT_AT(move.to);   // Captured piece reappears
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from];  // Update hashKey...
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
 			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
 			break;
 		case PROMOTION:
-			pieces[MOV_PIECE(move.Pieces)]    |= 0x1ull << move.from;
-			pieces[TARGET_PIECE(move.Pieces)] ^= 0x1ull << move.to;
+			pieces[MOV_PIECE(move.Pieces)]    |= BIT_AT(move.from);
+			pieces[TARGET_PIECE(move.Pieces)] ^= BIT_AT(move.to);
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from];    // Update hashKey...
 			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
 			break;
 		case C_PROMOTION:
-			//Needs better solution --> siehe Aufgabenliste
-			pieces[move.to>55 ? bp : wp]      |= 0x1ull << move.from;   // pawn reappears
-			pieces[MOV_PIECE(move.Pieces)]    |= 0x1ull << move.to;     // Captured piece reappears
-			pieces[TARGET_PIECE(move.Pieces)] ^= 0x1ull << move.to;              // promoted piece disappears
-			hashKey ^= randomSet[move.to>55 ? bp : wp][move.from]; // Update hashKey...
+			pieces[((move.Pieces&(0x3 << 8)) >> 8) * 6] |= BIT_AT(move.from);   // Pawn reappears
+			pieces[MOV_PIECE(move.Pieces)]    |= BIT_AT(move.to);     // Captured piece reappears
+			pieces[TARGET_PIECE(move.Pieces)] ^= BIT_AT(move.to);     // Promoted piece disappears
+			hashKey ^= randomSet[((move.Pieces&(0x3 << 8)) >> 8) * 6][move.from];      // Update hashKey...
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
 			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
 			break;
@@ -670,7 +668,7 @@ void Board::print()
 	for (int p = 0; p < 12; p++) {
 		auto temp = pieces[p];
 		auto count = -1;
-		for (u64 b = _start; b != 0; b >>= 1) {
+		for (u64 b = _msb; b != 0; b >>= 1) {
 			count++;
 			if (b & temp)
 				asciiBoard[count / 8][count % 8] = names[p];

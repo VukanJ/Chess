@@ -13,6 +13,7 @@ using namespace std;
 Computer is always black. 
 */
 
+const unsigned int targetDepth = 1;
 
 class AI
 {

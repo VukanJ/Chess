@@ -20,9 +20,14 @@ using namespace std;
   #define BITSCANR64(index,mask) _BitScanReverse64(&index,mask)
   #define ROTL64(mask, amount) _rotl64(mask,amount)
   #define ROTR64(mask, amount) _rotr64(mask,amount)
-  #define MOV_PIECE(DATA) DATA & 0xF
-  #define TARGET_PIECE(DATA) (DATA & 0xF0) >> 4
+  #define BIT_AT(x) (0x1ull << x)
+  #define BIT_AT_R(x) (0x1ull << (63-x))
   #define PIECE_PAIR(X,Y) (X | (Y << 4))
+  #define MOV_PIECE(DATA) (DATA & 0xF)
+  #define TARGET_PIECE(DATA) ((DATA & 0xF0) >> 4)
+  #define MOVE_TYPE(DATA) ((DATA & (0xFFull << 8))>>8)
+  #define MOVE_TO(DATA) ((DATA & (0xFFull << 16))>>16)
+  #define MOVE_FROM(DATA) ((DATA & (0xFFull << 24))>>24)
 #elif __linux__
 typedef unsigned long long u64;
 #endif
@@ -31,7 +36,7 @@ typedef unsigned long long u64;
 #define BLACKLOOP(x) for (int x = 0; x < 6;  ++x)
 #define WHITELOOP(x) for (int x = 6; x < 12; ++x)
 
-const u64 _start = 0x11ULL << 63;
+const u64 _msb       = 0x11ULL << 63;
 const u64 _col       = 0x101010101010101ull;
 const u64 _row       = 0xFFull;
 const u64 _noSides   = 0x7E7E7E7E7E7E7E7Eull;
