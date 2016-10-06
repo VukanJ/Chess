@@ -41,6 +41,8 @@ public:
 	void makeMove(const Move&);
 	void unMakeMove(const Move&);
 	bool isCheckMate(color) const;
+
+	float evaluate();
 	
 	// Flooding algorithm
 	enum dir { n, e, s, w, ne, se, sw, nw};
@@ -82,7 +84,7 @@ static string moveString(Move m)
 	else if (m.flags == WCASTLE_2){
 		return "w grand rochade";
 	}
-	string s(1, names[MOV_PIECE(m.Pieces) % 6 + 6]);
+	string s(1, names[MOV_PIECE(m.Pieces)]);
 	if (m.flags == CAPTURE){
 		if (s[0] == 'P'){
 			s.clear();

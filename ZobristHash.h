@@ -13,6 +13,8 @@ public:
 	Zob_Hash();
 	void addEntry(u64 Key, float value, int depth);
 	bool getEntry(u64 Key, float& value, int& depth);
+	bool getEntry(u64 key, float& value);
+	bool hasEntry(u64);
 	vector<vector<u64>> getRandomSet(); // Used once for init
 private:
 	struct entry

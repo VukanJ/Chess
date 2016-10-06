@@ -14,6 +14,22 @@ void Zob_Hash::addEntry(u64 key, float value, int depth)
 	}
 }
 
+bool Zob_Hash::hasEntry(u64 key)
+{
+	int index = key % (u64)entries.size();
+	return (entries[index].search_depth != -1) ? true : false;
+}
+
+bool Zob_Hash::getEntry(u64 key, float& value)
+{
+	int index = key % (u64)entries.size();
+	if (entries[index].search_depth != -1){
+		value = entries[index].value;
+		return true;
+	}
+	return false;
+}
+
 bool Zob_Hash::getEntry(u64 key, float& value, int& depth)
 {
 	int index = key%(u64)entries.size();

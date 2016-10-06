@@ -18,20 +18,23 @@ const unsigned int targetDepth = 1;
 class AI
 {
 public:
+	struct Node{
+		list<Move> moves;
+		int movePtr;
+		float alpha, beta, boardScore;
+	};
 	AI(string FEN);
 	void printDebug(string show);
 	void printBoard();
 
-	void negaMax_Search();
+	/*~~~~~~~~~~~ Master function ~~~~~~~~~~~*/
+	void negaMax_Search(Node* node, int depth);
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
 	void debug();
-	//void search_evaluate(int targetDepth);
-	struct Node{
-		vector<u32> moves;
-		int movePtr;
-		float alpha, beta;
-	};
 private:
-	Board board;
+	Board chessBoard;
+	color sideToMove;
 };
 
 #endif
