@@ -43,6 +43,7 @@ public:
 	bool isCheckMate(color) const;
 
 	float evaluate();
+	inline unsigned blockedPawn(color);
 	
 	// Flooding algorithm
 	enum dir { n, e, s, w, ne, se, sw, nw};
@@ -61,6 +62,7 @@ public:
 	u64 whitePos, blackPos, whiteAtt, blackAtt,hashKey;
 	Zob_Hash hash;
 	vector<vector<u64>> randomSet;
+	color sideToMove; // To be implemented
 };
 
 static string moveString(Move m)

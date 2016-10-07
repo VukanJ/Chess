@@ -7,6 +7,7 @@ Board::Board()
 	pieces = vector<u64>(12, 0x0);
 	attacks = vector<u64>(12, 0x0);
 	randomSet = hash.getRandomSet();
+	sideToMove = black; // To be implemented
 }
 
 Board::Board(string fen) : Board()
@@ -67,12 +68,16 @@ Board::Board(string fen) : Board()
 		if (pieces[wr] & 0x8000000000000000ull && pieces[wk] & 0x1000000000000000ull) castlingRights |= CCK;
 		printBits(castlingRights);
 	}
+	sideToMove = black; // To be implemented
+	printf("blocked black pawns: %d\n", blockedPawn(black));
+	printf("blocked white pawns: %d\n", blockedPawn(white));
 	updateAllAttacks();
 	initHash();
 	
 	// debug
 	auto startingHash = hashKey;
 	list<Move> movelist;
+	cout << "Board value: " << evaluate() << endl;
 	movelist.clear();
 	print();
 	generateMoveList(movelist,white);
@@ -681,4 +686,34 @@ void Board::print()
 		cout << (char)219 << endl;
 	}
 	cout << string(10, 223) << endl;
+}
+
+
+float Board::evaluate()
+{
+	// Computer is black 
+
+	// Material
+	float material = 9.0f * ((float)POPCOUNT(pieces[bq]) - (float)POPCOUNT(pieces[wq]))
+		           + 5.0f * ((float)POPCOUNT(pieces[br]) - (float)POPCOUNT(pieces[wr]))
+		           + 3.0f * ((float)POPCOUNT(pieces[bb]) - (float)POPCOUNT(pieces[wb]))
+		           + 3.0f * ((float)POPCOUNT(pieces[bn]) - (float)POPCOUNT(pieces[wn]))
+		           + 2.0f * ((float)POPCOUNT(pieces[bp]) - (float)POPCOUNT(pieces[wp]));
+	// Mobility
+	float mobility = 0.0f;
+	BLACKLOOP(i) mobility += POPCOUNT(attacks[i]);
+	WHITELOOP(i) mobility -= POPCOUNT(attacks[i]);
+	mobility *= 0.1;
+	// WIP: King safety, pawn structure, special penalties ?
+	return (sideToMove == black ? 1 : -1) * (material + mobility);
+}
+
+unsigned inline Board::blockedPawn(color col)
+{
+	// Returns number of blocked pawns. 
+	// Pawns can be blocked by pieces of any color 
+	if (col == black)
+		return POPCOUNT((pieces[bp] << 8) & (whitePos | blackPos));
+	else
+		return POPCOUNT((pieces[wp] >> 8) & (blackPos | whitePos));
 }

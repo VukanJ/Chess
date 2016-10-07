@@ -4,7 +4,6 @@ AI::AI(string FEN)
 {
 	chessBoard = Board(FEN);
 	debug();
-	sideToMove = black; // To be implemented
 }
 
 void AI::debug()
@@ -40,9 +39,10 @@ void AI::negaMax_Search(Node* node, int depth)
 		chessBoard.makeMove(*mov);
 		if(!chessBoard.hash.hasEntry(chessBoard.hashKey))
 			node->boardScore = chessBoard.evaluate();
-		else node->boardScore = chessBoard.hash.getEntry(chessBoard.hashKey, node->boardScore,);
-
-		mov++;
+		else node->boardScore = chessBoard.hash.getEntry(chessBoard.hashKey, node->boardScore);
+		// calc alpha beta and return if neccessary
+		//negaMax_Search()
+		//mov++;
 	}
 	// Unfinished
 }
