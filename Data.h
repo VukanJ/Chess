@@ -86,6 +86,11 @@ static const vector<u64> noWrap = {
 	0xfefefefefefefe00  // right down
 };
 
+static const vector<u64> standardPosition = {
+	0xFF00, 0x81, 0x42, 0x24, 0x10, 0x8, 0xFF000000000000, 0x8100000000000000,
+	0x4200000000000000, 0x2400000000000000, 0x1000000000000000, 0x800000000000000
+};
+
 static const int shift[8] = {8, -1, -8, 1, 7, -9, -7, 9};
 
 #endif

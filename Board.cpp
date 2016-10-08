@@ -13,18 +13,8 @@ Board::Board()
 Board::Board(string fen) : Board()
 {
 	if (fen == "*"){ // Standard starting position
-		pieces[bp] = 0xFFull << 8;
-		pieces[br] = 0x81ull;
-		pieces[bn] = 0x42ull;
-		pieces[bb] = 0x24ull;
-		pieces[bk] = 0x10ull;
-		pieces[bq] = 0x8ull;
-		pieces[wp] = 0xFFull << 48;
-		pieces[wr] = 0x81ull << 56;
-		pieces[wn] = 0x42ull << 56;
-		pieces[wb] = 0x24ull << 56;
-		pieces[wk] = 0x10ull << 56;
-		pieces[wq] = 0x8ull << 56;
+		for (int i = 0; i < 12; i++)
+			pieces[i] = standardPosition[i];
 		blackPos = 0xFFFFull;
 		whitePos = 0xFFFF000000000000ull;
 		castlingRights = 0xFF;
@@ -37,22 +27,8 @@ Board::Board(string fen) : Board()
 			}
 			else {
 				counter++;
-				switch (p) {
-					case 'p': pieces[bp] |= BIT_AT_R(counter); break;
-					case 'r': pieces[br] |= BIT_AT_R(counter); break;
-					case 'n': pieces[bn] |= BIT_AT_R(counter); break;
-					case 'b': pieces[bb] |= BIT_AT_R(counter); break;
-					case 'k': pieces[bk] |= BIT_AT_R(counter); break;
-					case 'q': pieces[bq] |= BIT_AT_R(counter); break;
-					case 'P': pieces[wp] |= BIT_AT_R(counter); break;
-					case 'R': pieces[wr] |= BIT_AT_R(counter); break;
-					case 'N': pieces[wn] |= BIT_AT_R(counter); break;
-					case 'B': pieces[wb] |= BIT_AT_R(counter); break;
-					case 'K': pieces[wk] |= BIT_AT_R(counter); break;
-					case 'Q': pieces[wq] |= BIT_AT_R(counter); break;
-					case '/': counter--; break;
-					default: cerr << "Bad FEN! (Board::Board())\n"; exit(1); break;
-				}
+				if (p == '/') counter--;
+				else pieces[getPieceIndex(p)] |= BIT_AT_R(counter);
 			}
 		}
 		for (int p = 0; p < 6; p++)
@@ -108,14 +84,10 @@ void Board::updateAllAttacks()
 	for (int i = 0; i < 12; i++)
 		updateAttack((piece)i);
 	// Exclude pieces that attack pieces of same color
-	BLACKLOOP(i)
-		attacks[i] = attacks[i] & ~blackPos;
-	WHITELOOP(i)
-		attacks[i] = attacks[i] & ~whitePos;
-	BLACKLOOP(i)
-		blackAtt |= attacks[i];
-	WHITELOOP(i)
-		whiteAtt |= attacks[i];
+	BLACKLOOP(i) attacks[i] = attacks[i] & ~blackPos;
+	WHITELOOP(i) attacks[i] = attacks[i] & ~whitePos;
+	BLACKLOOP(i) blackAtt |= attacks[i];
+	WHITELOOP(i) whiteAtt |= attacks[i];
 }
 
 void Board::updateAttack(piece p)
@@ -688,17 +660,16 @@ void Board::print()
 	cout << string(10, 223) << endl;
 }
 
-
 float Board::evaluate()
 {
 	// Computer is black 
 
 	// Material
 	float material = 9.0f * ((float)POPCOUNT(pieces[bq]) - (float)POPCOUNT(pieces[wq]))
-		           + 5.0f * ((float)POPCOUNT(pieces[br]) - (float)POPCOUNT(pieces[wr]))
-		           + 3.0f * ((float)POPCOUNT(pieces[bb]) - (float)POPCOUNT(pieces[wb]))
-		           + 3.0f * ((float)POPCOUNT(pieces[bn]) - (float)POPCOUNT(pieces[wn]))
-		           + 2.0f * ((float)POPCOUNT(pieces[bp]) - (float)POPCOUNT(pieces[wp]));
+		+ 5.0f * ((float)POPCOUNT(pieces[br]) - (float)POPCOUNT(pieces[wr]))
+		+ 3.0f * ((float)POPCOUNT(pieces[bb]) - (float)POPCOUNT(pieces[wb]))
+		+ 3.0f * ((float)POPCOUNT(pieces[bn]) - (float)POPCOUNT(pieces[wn]))
+		+ 2.0f * ((float)POPCOUNT(pieces[bp]) - (float)POPCOUNT(pieces[wp]));
 	// Mobility
 	float mobility = 0.0f;
 	BLACKLOOP(i) mobility += POPCOUNT(attacks[i]);

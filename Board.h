@@ -42,6 +42,7 @@ public:
 	void unMakeMove(const Move&);
 	bool isCheckMate(color) const;
 
+	// Evaluation
 	float evaluate();
 	inline unsigned blockedPawn(color);
 	
