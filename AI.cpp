@@ -46,3 +46,8 @@ void AI::negaMax_Search(Node* node, int depth)
 	}
 	// Unfinished
 }
+
+const Board& AI::getBoardRef()
+{
+	return chessBoard;
+}

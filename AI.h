@@ -32,6 +32,7 @@ public:
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 	void debug();
+	const Board& getBoardRef();
 private:
 	Board chessBoard;
 	color sideToMove;
