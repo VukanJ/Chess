@@ -54,10 +54,9 @@ public:
 	// Misc
 	void print();
 
+	// Data
 	vector<u64> pieces, attacks;
-	enum{
-		Ck = 0x1, CCk = 0x2, CK = 0x4, CCK = 0x8
-	};
+	enum{ Ck = 0x1, CCk = 0x2, CK = 0x4, CCK = 0x8 };
 	byte castlingRights;
 	byte b_enpassent, w_enpassent;
 	u64 whitePos, blackPos, whiteAtt, blackAtt,hashKey;
