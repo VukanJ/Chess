@@ -4,3 +4,5 @@ Debug*
 x64/*
 *.sln
 *.PNG
+*.o
+chess2

@@ -1,5 +1,4 @@
 #include <iostream>
-#include <intrin.h>
 
 #include "AI.h"
 #include "gui.h"
@@ -49,7 +48,7 @@ int main()
 	}
 #endif
 
-	
+
 	std::cin.ignore();
 	return 0;
 }
