@@ -52,7 +52,7 @@ Board::Board(string fen) : Board()
 	cout << "Board value: " << evaluate() << endl;
 	movelist.clear();
 	print();
-	generateMoveList(movelist,white);
+	generateMoveList(movelist, black);
 
 	for (auto& m : movelist){
 		makeMove(m);
@@ -410,7 +410,8 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 							 BITLOOP(m, temp2)                                        // Add moves
 							 moveList.push_front(Move(pos, m, CAPTURE | ((pos == 56 ? CK : CCK) << 4), PIECE_PAIR(wr, candidate)));
 					 }
-					 tempMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8))&attacks[wr]; // Non capturing moves
+					 tempMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[wr]; // Non capturing moves
+					 //printBitboard(tempMask);
 					 BITLOOP(m, tempMask)                                             // Add moves
 						 moveList.push_back(Move(pos, m, MOVE | ((pos == 56 ? CK : CCK) << 4), wr));
 				 }
