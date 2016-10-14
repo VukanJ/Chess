@@ -24,7 +24,7 @@ public:
 		float alpha, beta, boardScore;
 	};
 	AI(string FEN);
-	void printDebug(string show);
+	void printDebug(string show = "prnbkqPRNBKQ");
 	void printBoard();
 
 	/*~~~~~~~~~~~ Master function ~~~~~~~~~~~*/

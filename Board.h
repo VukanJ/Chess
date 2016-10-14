@@ -52,7 +52,7 @@ public:
 	void pawnFill(color side);
 
 	// Misc
-	void print();
+	void print() const;
 
 	// Data
 	vector<u64> pieces, attacks;

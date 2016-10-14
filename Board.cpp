@@ -52,15 +52,17 @@ Board::Board(string fen) : Board()
 	cout << "Board value: " << evaluate() << endl;
 	movelist.clear();
 	print();
-	generateMoveList(movelist, black);
+	generateMoveList(movelist, white);
 
+	/*
 	for (auto& m : movelist){
 		makeMove(m);
 		cout << moveString(m) << endl;
-		//print();
+		print();
 		unMakeMove(m);
-		//print();
+		print();
 	}
+	*/
 	
 	if (isCheckMate(black))
 		cout << "CHECKMATE FOR BLACK!\n";
@@ -89,8 +91,8 @@ void Board::updateAllAttacks()
 	// Exclude pieces that attack pieces of same color
 	BLACKLOOP(i) attacks[i] = attacks[i] & ~blackPos;
 	WHITELOOP(i) attacks[i] = attacks[i] & ~whitePos;
-	BLACKLOOP(i) blackAtt |= attacks[i];
-	WHITELOOP(i) whiteAtt |= attacks[i];
+	BLACKLOOP(i) blackAtt  |= attacks[i];
+	WHITELOOP(i) whiteAtt  |= attacks[i];
 }
 
 void Board::updateAttack(piece p)
@@ -637,10 +639,10 @@ bool Board::isCheckMate(color side) const
 	return true;
 }
 
-void Board::print()
+void Board::print() const
 {
 	// Print full chessboard with symbols and borders without attacked squares
-	static vector<string> asciiBoard = vector<string>(8, string(8, '.'));
+	vector<string> asciiBoard = vector<string>(8, string(8, '.'));
 	for (int p = 0; p < 12; p++) {
 		auto temp = pieces[p];
 		auto count = -1;
