@@ -651,7 +651,7 @@ void Board::print() const
 	}
 	cout << string(10, static_cast<char>(220)) << endl;
 	for (auto r : asciiBoard) {
-		cout << static_cast<char>(219) << endl;
+		cout << static_cast<char>(219);
 		for (auto c : r) cout << c;
 		cout << static_cast<char>(219) << endl;
 	}
