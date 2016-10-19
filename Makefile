@@ -26,6 +26,10 @@ Testing.o: Testing.cpp Testing.h
 	@echo Compiling Testing.cpp ...
 	@${CC} -c Testing.cpp ${CFLAGS}
 
+StripMoves.o: StripMoves.cpp
+	@echo Compiling StripMoves.cpp ...
+	@${CC} -c StripMoves.cpp ${CFLAGS}
+
 ZobristHash.o: ZobristHash.cpp ZobristHash.h
 	@echo Compiling ZobristHash.cpp ...
 	@${CC} -c ZobristHash.cpp ${CFLAGS}
