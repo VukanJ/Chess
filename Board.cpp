@@ -32,21 +32,20 @@ Board::Board(string fen) : Board()
 		for (int p = 0; p < 6;  p++) blackPos |= pieces[p];
 		for (int p = 6; p < 12; p++) whitePos |= pieces[p];
 		if (pieces[br] & 0x1 && pieces[bk] & 0x10) castlingRights |= Ck;
-		printBits(castlingRights);
 		if (pieces[br] & 0x80 && pieces[bk] & 0x10) castlingRights |= CCk;
-		printBits(castlingRights);
 		if (pieces[wr] & 0x0100000000000000ull && pieces[wk] & 0x1000000000000000ull) castlingRights |= CK;
-		printBits(castlingRights);
 		if (pieces[wr] & 0x8000000000000000ull && pieces[wk] & 0x1000000000000000ull) castlingRights |= CCK;
-		printBits(castlingRights);
 	}
+	cout << "Castling rights -> "; 
+	printBits(castlingRights);
+
 	sideToMove = black; // To be implemented
-	printf("blocked black pawns: %d\n", blockedPawn(black));
-	printf("blocked white pawns: %d\n", blockedPawn(white));
 	updateAllAttacks();
 	initHash();
 	
 	// debug
+	printf("blocked black pawns: %d\n", blockedPawn(black));
+	printf("blocked white pawns: %d\n", blockedPawn(white));
 	auto startingHash = hashKey;
 	list<Move> movelist;
 	cout << "Board value: " << evaluate() << endl;
@@ -54,26 +53,26 @@ Board::Board(string fen) : Board()
 	print();
 	generateMoveList(movelist, white);
 
-	/*
+	
 	for (auto& m : movelist){
-		makeMove(m);
 		cout << moveString(m) << endl;
+		makeMove(m);
 		print();
 		unMakeMove(m);
 		print();
 	}
-	*/
+	
 	
 	if (isCheckMate(black))
 		cout << "CHECKMATE FOR BLACK!\n";
 	else if (isCheckMate(white))
 		cout << "CHECKMATE FOR WHITE!\n";
 
-	cout << hashKey << endl;
 	if (startingHash != hashKey){
-		cerr << "\t\t\tHASHING ERROR\n" << endl;
+		cerr << "\t\t\t::: HASHING ERROR :::\n";
 		printBitboard(hashKey);
 	}
+	else clog << "::: HASH OK :::\n";
 	if (!pieces[bk] || !pieces[wk])
 		cerr << "Missing Kings!!\n";
 	if (POPCOUNT(pieces[bk]) > 1 || POPCOUNT(pieces[wk]) > 1){
@@ -217,7 +216,7 @@ void Board::initHash()
 		i++;
 	}
 	hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-	cout << "Initial hash --> " << hex << hashKey << endl;
+	//cout << "Initial hash --> " << hex << hashKey << endl;
 }
 
 void Board::generateMoveList(list<Move>& moveList, color side) const
@@ -239,7 +238,7 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 				// Find normal captures:
 				// attackingPieces stands for attacked squares in this case
 				BITLOOP(pos, attackingPieces){
-					tempMask = (0x5ull << (pos - 1+8)) & whitePos;
+					tempMask = (0x5ull << (pos - 1 + 8)) & whitePos;
 					if (tempMask)                                                // If pieces are targeted
 						WHITELOOP(candidate){                                    // Find targeted piece
 						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
@@ -281,7 +280,7 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 							BITLOOP(m, temp2)                                    // Add moves
 							moveList.push_front(Move(pos, m, CAPTURE | ((pos == 0 ? Ck : CCk) << 4), PIECE_PAIR(br, candidate)));
 					}
-					tempMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8))&attacks[br]; // Non capturing moves
+					tempMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[br]; // Non capturing moves
 					BITLOOP(m, tempMask)                                             // Add moves
 						moveList.push_back(Move(pos, m, MOVE | ((pos == 0 ? Ck : CCk) << 4), br));
 				}
