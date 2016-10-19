@@ -42,7 +42,7 @@ Board::Board(string fen) : Board()
 	sideToMove = black; // To be implemented
 	updateAllAttacks();
 	initHash();
-	
+
 	// debug
 	printf("blocked black pawns: %d\n", blockedPawn(black));
 	printf("blocked white pawns: %d\n", blockedPawn(white));
@@ -61,8 +61,7 @@ Board::Board(string fen) : Board()
 		unMakeMove(m);
 		print();
 	}
-	
-	
+
 	if (isCheckMate(black))
 		cout << "CHECKMATE FOR BLACK!\n";
 	else if (isCheckMate(white))
@@ -98,19 +97,19 @@ void Board::updateAttack(piece p)
 {
 	// Fill all the bits that are attacked by individual pieces
 	// including attacked enemy pieces
-	// Patterns: 
+	// Patterns:
 	unsigned long pos = -1;
 	u64 mask = 0;
 	switch (p){
 		case bp:
 			pawnFill(black);
 			break;
-		case br: 
+		case br:
 			attacks[br] = 0x0;
 			for (int i = 0; i < 4;)
 				attacks[br] |= floodFill(pieces[br], ~(whitePos | blackPos), (dir)i++);
 			break;
-		case bn: 
+		case bn:
 			mask = pieces[bn];
 			attacks[bn] = 0x0;
 			BITLOOP(pos,mask) attacks[bn] |= KNIGHT_ATTACKS[pos] & ~blackPos;
@@ -120,7 +119,7 @@ void Board::updateAttack(piece p)
 			for (int i = 4; i < 8;)
 				attacks[bb] |= floodFill(pieces[bb], ~(whitePos | blackPos), (dir)i++);
 			break;
-		case bk: 
+		case bk:
 			mask = pieces[bk];
 			attacks[bk] = 0x0;
 			BITLOOP(pos, mask) attacks[bk] |= KING_ATTACKS[pos] & ~blackPos;
@@ -130,10 +129,10 @@ void Board::updateAttack(piece p)
 			for (int i = 0; i < 8;)
 				attacks[bq] |= floodFill(pieces[bq], ~(whitePos | blackPos), (dir)i++);
 			break;
-		case wp: 
+		case wp:
 			pawnFill(white);
 			break;
-		case wr: 
+		case wr:
 			attacks[wr] = 0x0;
 			for (int i = 0; i < 4;)
 				attacks[wr] |= floodFill(pieces[wr], ~(whitePos | blackPos), (dir)i++);
@@ -143,17 +142,17 @@ void Board::updateAttack(piece p)
 			attacks[wn] = 0x0;
 			BITLOOP(pos, mask) attacks[wn] |= KNIGHT_ATTACKS[pos] & ~whitePos;
 			break;
-		case wb: 
+		case wb:
 			attacks[wb] = 0x0;
 			for (int i = 4; i < 8;)
 				attacks[wb] |= floodFill(pieces[wb], ~(whitePos | blackPos), (dir)i++);
 			break;
-		case wk: 
+		case wk:
 			mask = pieces[wk];
 			attacks[wk] = 0x0;
 			BITLOOP(pos, mask) attacks[wk] |= KING_ATTACKS[pos] & ~whitePos;
 			break;
-		case wq: 
+		case wq:
 			attacks[wq] = 0x0;
 			for (int i = 0; i < 8;)
 				attacks[wq] |= floodFill(pieces[wq], ~(whitePos | blackPos), (dir)i++);
@@ -234,7 +233,7 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 	BLACKLOOP(b){ // Loop through black pieces
 		attackingPieces = pieces[b];
 		switch (b){
-			case bp: 
+			case bp:
 				// Find normal captures:
 				// attackingPieces stands for attacked squares in this case
 				BITLOOP(pos, attackingPieces){
@@ -354,7 +353,7 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 		// Generate castling moves
 		// Black King can castle if there are no pieces between king and rook, both havent moved yet and king
 		// does not cross attacked squares during castling, same for white
-		if (castlingRights & Ck && !(( blackPos | whitePos ) & 0x60ull) && !(whiteAtt & 0x70ull)) 
+		if (castlingRights & Ck && !(( blackPos | whitePos ) & 0x60ull) && !(whiteAtt & 0x70ull))
 			moveList.push_back(Move(castlingRights, BCASTLE));
 		if (castlingRights & CCk && !(( blackPos | whitePos ) & 0xEull) && !(whiteAtt & 0x1Cull)) // Black King can castle (big)
 			moveList.push_back(Move(castlingRights, BCASTLE_2));
@@ -482,7 +481,7 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 				 break;
 		 }
 	 }
-	 // Es muss HIER überprüft werden, ob die Figuren existieren (logisch)
+	 // Es muss HIER ï¿½berprï¿½ft werden, ob die Figuren existieren (logisch)
 	 if (castlingRights & CK && !((whitePos|blackPos) & 0x6000000000000000ull) && !(blackAtt & 0x7000000000000000ull)) // White King can castle
 		moveList.push_back(Move(castlingRights,WCASTLE));
 	 if (castlingRights & CCK && !((whitePos | blackPos) & 0xE00000000000000ull) && !(blackAtt & 0x1C00000000000000ull)) // White King can castle (big)
@@ -509,14 +508,14 @@ void Board::makeMove(const Move& move)
 			break;
 		case PROMOTION:
 			pieces[MOV_PIECE(move.Pieces)] ^= BIT_AT(move.from);     // removes pawn
-			pieces[TARGET_PIECE(move.Pieces)] |= BIT_AT(move.to);    // New piece appears 
+			pieces[TARGET_PIECE(move.Pieces)] |= BIT_AT(move.to);    // New piece appears
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from]; // Update hashKey...
 			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
 			break;
 		case C_PROMOTION:
 			pieces[((move.Pieces&(0x3 << 8)) >> 8) * 6] ^= BIT_AT(move.from);     // removes pawn
 			pieces[MOV_PIECE(move.Pieces)] ^= BIT_AT(move.to);                    // Captured piece disappears
-			pieces[TARGET_PIECE(move.Pieces)] |= BIT_AT(move.to);                 // New piece appears 
+			pieces[TARGET_PIECE(move.Pieces)] |= BIT_AT(move.to);                 // New piece appears
 			hashKey ^= randomSet[((move.Pieces&(0x3 << 8)) >> 8) * 6][move.from]; // Update hashKey...
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
 			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
@@ -524,11 +523,11 @@ void Board::makeMove(const Move& move)
 		case BCASTLE: // Castling short
 			castlingRights &= ~(Ck | CCk);                     // No castling rights after castling
 			makeMove(Move(d1, b1, MOVE, bk));                  // move king and rook...
-			makeMove(Move(a1, c1, MOVE, br));		       
+			makeMove(Move(a1, c1, MOVE, br));
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights]; // update hashKey with new castling rights
 			break;
 		case WCASTLE: // Castling short
-			castlingRights &= ~(CK | CCK);                    
+			castlingRights &= ~(CK | CCK);
 			makeMove(Move(d8, b8, MOVE, wk));
 			makeMove(Move(a8, c8, MOVE, wr));
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
@@ -589,7 +588,7 @@ void Board::unMakeMove(const Move& move)
 			break;
 		case BCASTLE:
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights]; // Reapply new castling rights to hash (inverse operation)
-			makeMove(Move(b1, d1, MOVE, bk)); 
+			makeMove(Move(b1, d1, MOVE, bk));
 			makeMove(Move(c1, a1, MOVE, br));
 			castlingRights = move.from;                        // Restore old rights
 			break;
@@ -650,18 +649,18 @@ void Board::print() const
 			if (b & temp) asciiBoard[count / 8][count % 8] = names[p];
 		}
 	}
-	cout << string(10, 220) << endl;
+	cout << string(10, static_cast<char>(220)) << endl;
 	for (auto r : asciiBoard) {
-		cout << (char)219;
+		cout << static_cast<char>(219);
 		for (auto c : r) cout << c;
-		cout << (char)219 << endl;
+		cout << static_cast<char>(219) << endl;
 	}
-	cout << string(10, 223) << endl;
+	cout << string(10, static_cast<char>(223)) << endl;
 }
 
 float Board::evaluate()
 {
-	// Computer is always black 
+	// Computer is always black
 
 	// Material
 	float material = 9.0f * ((float)POPCOUNT(pieces[bq]) - (float)POPCOUNT(pieces[wq]))
@@ -680,8 +679,8 @@ float Board::evaluate()
 
 unsigned inline Board::blockedPawn(color col)
 {
-	// Returns number of blocked pawns. 
-	// Pawns can be blocked by pieces of any color 
+	// Returns number of blocked pawns.
+	// Pawns can be blocked by pieces of any color
 	if (col == black)
 		return POPCOUNT((pieces[bp] << 8) & (whitePos | blackPos));
 	else
