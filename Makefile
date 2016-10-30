@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -std=c++14 -Wpedantic
+CFLAGS = -std=c++17 -Wpedantic
 LFLAGS = -lsfml-window -lsfml-graphics -lsfml-system
 NAME = chess2
 OBJ = Main.o ZobristHash.o Testing.o gui.o AI.o Board.o
@@ -7,32 +7,28 @@ OBJ = Main.o ZobristHash.o Testing.o gui.o AI.o Board.o
 compile: ${OBJ} EXE
 
 Main.o: Main.cpp
-	@echo Compiling Main.cpp ...
-	@${CC} -c Main.cpp ${CFLAGS}
+	@echo Compiling $< ...
+	@${CC} -c -g $< ${CFLAGS}
 
 AI.o: AI.cpp AI.h
-	@echo Compiling AI.cpp ...
-	@${CC} -c AI.cpp ${CFLAGS}
+	@echo Compiling $< ...
+	@${CC} -c -g $< ${CFLAGS}
 
 Board.o: Board.cpp Board.h
-	@echo Compiling Board.cpp ...
-	@${CC} -c Board.cpp ${CFLAGS}
+	@echo Compiling $< ...
+	@${CC} -c -g $< ${CFLAGS}
 
 gui.o: gui.cpp gui.h
-	@echo Compiling gui.cpp ...
-	@${CC} -c gui.cpp ${CFLAGS}
+	@echo Compiling $< ...
+	@${CC} -c -g $< ${CFLAGS}
 
 Testing.o: Testing.cpp Testing.h
-	@echo Compiling Testing.cpp ...
-	@${CC} -c Testing.cpp ${CFLAGS}
-
-StripMoves.o: StripMoves.cpp
-	@echo Compiling StripMoves.cpp ...
-	@${CC} -c StripMoves.cpp ${CFLAGS}
+	@echo Compiling $< ...
+	@${CC} -c -g $< ${CFLAGS}
 
 ZobristHash.o: ZobristHash.cpp ZobristHash.h
-	@echo Compiling ZobristHash.cpp ...
-	@${CC} -c ZobristHash.cpp ${CFLAGS}
+	@echo Compiling $< ...
+	@${CC} -c -g $< ${CFLAGS}
 
 EXE: ${OBJ}
 	@echo Linking ...

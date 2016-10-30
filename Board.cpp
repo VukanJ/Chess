@@ -36,7 +36,7 @@ Board::Board(string fen) : Board()
 		if (pieces[wr] & 0x0100000000000000ull && pieces[wk] & 0x1000000000000000ull) castlingRights |= CK;
 		if (pieces[wr] & 0x8000000000000000ull && pieces[wk] & 0x1000000000000000ull) castlingRights |= CCK;
 	}
-	cout << "Castling rights -> "; 
+	cout << "Castling rights -> ";
 	printBits(castlingRights);
 
 	sideToMove = black; // To be implemented
@@ -53,7 +53,7 @@ Board::Board(string fen) : Board()
 	print();
 	generateMoveList(movelist, white);
 
-	
+
 	for (auto& m : movelist){
 		cout << moveString(m) << endl;
 		makeMove(m);
@@ -649,13 +649,13 @@ void Board::print() const
 			if (b & temp) asciiBoard[count / 8][count % 8] = names[p];
 		}
 	}
-	cout << string(10, static_cast<char>(220)) << endl;
+	cout << string(10, '@') << endl;
 	for (auto r : asciiBoard) {
-		cout << static_cast<char>(219);
+		cout << '@';
 		for (auto c : r) cout << c;
-		cout << static_cast<char>(219) << endl;
+		cout << "@\n";
 	}
-	cout << string(10, static_cast<char>(223)) << endl;
+	cout << string(10, '@') << '\n';
 }
 
 float Board::evaluate()
