@@ -13,7 +13,7 @@ const uint64 row    = 0xFF;
 const uint64 _right = 0x0303030303030303;
 const uint64 _left  = 0xC0C0C0C0C0C0C0C0;
 
-#define BIT(x) (0x1ull << x)
+
 /*
 void diags(vector<uint64>& nums)
 {
