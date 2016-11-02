@@ -46,7 +46,8 @@ typedef uint8_t  byte;
 										{return ((mask >> amount) | (mask << (-amount & 31)));};
 
 	auto bitscanreverse64 = [&](unsigned long& index, u64 mask)\
-										{index = 63-__builtin_clzll(mask); return index;};
+										{index = mask == 0x0ull ? 0 : 63-__builtin_clzll(mask);\
+										 return index;};
 
 	#define POPCOUNT(x) __builtin_popcountll(x)
 	#define BITSCANR64(index, mask) bitscanreverse64(index, mask)
