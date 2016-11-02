@@ -11,10 +11,10 @@ class Zob_Hash
 {
 public:
 	Zob_Hash();
-	void addEntry(u64 Key, float value, int depth);
-	bool getEntry(u64 Key, float& value, int& depth);
-	bool getEntry(u64 key, float& value);
-	bool hasEntry(u64);
+	void addEntry(const u64 Key, float value, int depth);
+	bool getEntry(const u64 Key, float& value, int& depth) const;
+	bool getEntry(const u64 key, float& value) const;
+	bool hasEntry(const u64) const;
 	vector<vector<u64>> getRandomSet(); // Used once for init
 private:
 	struct entry

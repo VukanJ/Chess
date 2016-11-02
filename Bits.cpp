@@ -162,6 +162,7 @@ void connections(
   }
 }
 
+/*
 int main(int argc, char* argv[])
 {
   vector<uint64> nums  = vector<uint64>(64, 0x0ull);
@@ -230,3 +231,4 @@ int main(int argc, char* argv[])
 
   return 0;
 }
+*/

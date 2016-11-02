@@ -622,7 +622,7 @@ bool Board::isCheckMate(color side) const
 		if (whiteAtt & pieces[bk]){
 			mask = pieces[bk];
 			BITSCANR64(pos, mask);
-			return (KING_ATTACKS[pos] & whiteAtt == KING_ATTACKS[pos]) && (pieces[bk] & whiteAtt);
+			return ((KING_ATTACKS[pos] & whiteAtt) == KING_ATTACKS[pos]) && (pieces[bk] & whiteAtt);
 		}
 		else return false;
 	}
@@ -630,7 +630,7 @@ bool Board::isCheckMate(color side) const
 		if (blackAtt & pieces[bk]){
 			mask = pieces[wk];
 			BITSCANR64(pos, mask);
-			return (KING_ATTACKS[pos] & blackAtt == KING_ATTACKS[pos]) && (pieces[wk] & blackAtt);
+			return ((KING_ATTACKS[pos] & blackAtt) == KING_ATTACKS[pos]) && (pieces[wk] & blackAtt);
 		}
 		else return false;
 	}
@@ -672,7 +672,7 @@ float Board::evaluate()
 	float mobility = 0.0f;
 	BLACKLOOP(i) mobility += POPCOUNT(attacks[i]);
 	WHITELOOP(i) mobility -= POPCOUNT(attacks[i]);
-	mobility *= 0.1;
+	mobility *= 0.1f;
 	// WIP: King safety, pawn structure, special penalties ?
 	return (sideToMove == black ? 1 : -1) * (material + mobility);
 }

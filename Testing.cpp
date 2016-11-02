@@ -28,5 +28,5 @@ void UnitTest::testIntrinsics() const {
     printBitboard(num);
     cout << pos << endl;
   }
-  cout << __builtin_ffsll(0x0) << endl;
+ // cout << __builtin_ffsll(0x0) << endl;
 }
