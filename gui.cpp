@@ -1,5 +1,5 @@
 #include "gui.h"
-
+/*
 Gui::Gui()
 {
 	// Draw board image (8 x 8) pixel
@@ -51,3 +51,4 @@ void Gui::render(sf::RenderWindow& window, const Board& board)
 		pieceIndex++;
 	}
 }
+*/

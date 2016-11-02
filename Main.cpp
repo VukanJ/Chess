@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "AI.h"
-#include "gui.h"
+//#include "gui.h"
 #include "ZobristHash.h"
 #include "Testing.h"
 
@@ -9,6 +9,7 @@
 
 const unsigned int WIDTH = 800, HEIGHT = 600; // GUI SIZE
 
+/*
 int main()
 {
 	UnitTest test;
@@ -16,6 +17,7 @@ int main()
 	test.testIntrinsics();
 	return 0;
 }
+*/
 
 /*
 int main()
@@ -59,4 +61,5 @@ int main()
 	std::cin.ignore();
 	return 0;
 }
+
 */

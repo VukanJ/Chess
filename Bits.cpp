@@ -14,7 +14,7 @@ const uint64 _right = 0x0303030303030303;
 const uint64 _left  = 0xC0C0C0C0C0C0C0C0;
 
 #define BIT(x) (0x1ull << x)
-
+/*
 void diags(vector<uint64>& nums)
 {
   for(int i = 0; i < 64; i++){
@@ -162,7 +162,7 @@ void connections(
   }
 }
 
-/*
+
 int main(int argc, char* argv[])
 {
   vector<uint64> nums  = vector<uint64>(64, 0x0ull);
