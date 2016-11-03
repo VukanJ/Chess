@@ -10,18 +10,18 @@
 const unsigned int WIDTH = 800, HEIGHT = 600; // GUI SIZE
 
 
-int main()
-{
-	UnitTest test;
-	test.testDefines();
-	test.testIntrinsics();
+//int main()
+//{
+//	UnitTest test;
+//	test.testDefines();
+//	test.testIntrinsics();
+//
+//	cin.ignore();
+//	return 0;
+//}
 
-	cin.ignore();
-	return 0;
-}
 
 
-/*
 int main()
 {
 	//AI computer("*");
@@ -63,5 +63,3 @@ int main()
 	std::cin.ignore();
 	return 0;
 }
-
-*/

@@ -649,13 +649,24 @@ void Board::print() const
 			if (b & temp) asciiBoard[count / 8][count % 8] = names[p];
 		}
 	}
-	cout << string(10, '@') << endl;
-	for (auto r : asciiBoard) {
-		cout << '@';
-		for (auto c : r) cout << c;
-		cout << "@\n";
-	}
-	cout << string(10, '@') << '\n';
+	#ifdef WIN32 // Since Unicode is not really supported in C++ yet
+		cout << string(10, static_cast<char>(219)) << endl;
+		for (auto r : asciiBoard) {
+			cout << char(219);
+			for (auto c : r) cout << c;
+			cout << char(219) << '\n';
+		}
+		cout << string(10, static_cast<char>(219)) << '\n';
+	#else
+		auto repChar = [](int c){for(int i = 0; i < c; i++)cout << "\u2588";};
+ 		repChar(10);cout <<  '\n';
+		for (auto r : asciiBoard) {
+			cout << "\u2588";
+			for (auto c : r) cout << c;
+			cout << "\u2588" << '\n';
+		}
+		repChar(10); cout << "\n\n";
+	#endif
 }
 
 float Board::evaluate()

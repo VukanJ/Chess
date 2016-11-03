@@ -33,7 +33,7 @@ public:
 	Board(string fen);
 	// Init
 	void initHash(); // Used only for Init!, this key is updated for each move
-	
+
 	// Move making
 	void updateAttack(piece p);
 	void updateAllAttacks();
@@ -45,7 +45,7 @@ public:
 	// Evaluation
 	float evaluate();
 	inline unsigned blockedPawn(color);
-	
+
 	// Flooding algorithm
 	enum dir { n, e, s, w, ne, se, sw, nw};
 	u64 floodFill(u64 propagator, u64 empty, dir);
@@ -99,4 +99,4 @@ static string moveString(Move m)
 	s += '1'+(m.to / 8);
 	return s;
 }
-#endif 
+#endif
