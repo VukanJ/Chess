@@ -134,7 +134,6 @@ void UnitTest::testIntrinsics() const
 	testNum = ROTL64(testNum, 70);
 	testNum = ROTL64(testNum, 58);
 	assert(testNum == randomCheckNum);
-
 	clog << "bitloop...\n";
 	int j = 0;
 	BITLOOP(index, testNum) {

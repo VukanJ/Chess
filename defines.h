@@ -39,14 +39,13 @@ typedef uint8_t  byte;
 																	(mask) ^= 0x1ull << pos)
 #elif __linux__
 	// Compiler intrinsics compatible with gcc
-	auto rotl64 = [&](u64& mask, uint amount) -> u64 \
-										{return ((mask << amount) | (mask >> (-amount & 31)));};
 
-	auto rotr64 = [&](u64& mask, uint amount) -> u64 \
-										{return ((mask >> amount) | (mask << (-amount & 31)));};
+	auto rotl64 = [&](u64& x, uint n) {return (x << n) | (x >> (64 - n));};
 
-	auto bitscanreverse64 = [&](unsigned long& index, u64 mask)\
-										{index = mask == 0x0ull ? 0 : 63-__builtin_clzll(mask);\
+	auto rotr64 = [&](u64& x, uint n) {return (x >> n) | (x << (64 - n));};
+
+	auto bitscanreverse64 = [&](unsigned long& index, u64 mask) \
+										{index = mask == 0x0ull ? 0 : 63 - __builtin_clzll(mask); \
 										 return index;};
 
 	#define POPCOUNT(x) __builtin_popcountll(x)
@@ -56,8 +55,8 @@ typedef uint8_t  byte;
 	#define ROTL64(mask, amount) rotl64(mask, amount)
 	#define ROTR64(mask, amount) rotr64(mask, amount)
 	#define BITLOOP(pos, mask) for (unsigned long pos = BITSCANR64(pos, (mask)); \
-																	POPCOUNT(mask) != 2; \
-																	(mask) ^= (0x1ull << pos))
+																	BITSCANR64(pos, (mask)); \
+																	(mask) ^= 0x1ull << pos)
 #endif
 
 #define BLACKLOOP(x) for (int x = 0; x < 6;  ++x)
