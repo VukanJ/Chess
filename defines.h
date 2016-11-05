@@ -26,10 +26,6 @@ typedef uint8_t  byte;
 		#pragma message ("X64 ARCHITECTURE RECOMMENDED!\n COMPILATION MAY FAIL")
 	#endif
 	// Compiler intrinsics compatible with WIN32
-	typedef unsigned __int64 u64;
-	typedef unsigned __int32 u32;
-	typedef unsigned __int16 u16;
-	typedef unsigned __int8  byte;
 	#define POPCOUNT(x) __popcnt64(x)                               // Population count
 	#define BITSCANR64(index, mask) _BitScanReverse64(&index, mask) // Reverse Bitscan
 	#define ROTL64(mask, amount) _rotl64(mask,amount)               // Rotate left (64Bit)
