@@ -225,9 +225,9 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 	Aggressive and special moves are generated first and preferably stored
 	at the front of the movelist
 	*/
-	unsigned long pos = nulSq, m = nulSq;
-	u64 tempMask = 0x0;
-	u64 temp2 = 0x0, attackingPieces = 0x0;
+	unsigned long pos = nulSq;
+	u64 attackMask = 0x0;
+	u64 pieceAttacks = 0x0, attackingPieces = 0x0;
 	// Generate all capturing and normal moves
 	if (side == black){////////////////////////////////////////////////BLACK MOVE GENERATION///////////////////////////////////////////////////
 	BLACKLOOP(b){ // Loop through black pieces
@@ -237,18 +237,18 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 				// Find normal captures:
 				// attackingPieces stands for attacked squares in this case
 				BITLOOP(pos, attackingPieces){
-					tempMask = (0x5ull << (pos - 1 + 8)) & whitePos;
-					if (tempMask)                                                // If pieces are targeted
+					attackMask = (0x5ull << (pos - 1 + 8)) & whitePos;
+					if (attackMask)                                                // If pieces are targeted
 						WHITELOOP(candidate){                                    // Find targeted piece
-						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-						if (temp2){
-							BITLOOP(m, temp2){                                   // Add moves
-								if (m > 55){
-									moveList.push_front(Move(pos, m, C_PROMOTION, PIECE_PAIR(candidate, bq)));
-									moveList.push_front(Move(pos, m, C_PROMOTION, PIECE_PAIR(candidate, bn)));
+						pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
+						if (pieceAttacks){
+							BITLOOP(target, pieceAttacks){                                   // Add moves
+								if (target > 55){
+									moveList.push_front(Move(pos, target, C_PROMOTION, PIECE_PAIR(candidate, bq)));
+									moveList.push_front(Move(pos, target, C_PROMOTION, PIECE_PAIR(candidate, bn)));
 								}
 								else{
-									moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(bp, candidate)));
+									moveList.push_front(Move(pos, target, CAPTURE, PIECE_PAIR(bp, candidate)));
 								}
 							}
 						}
@@ -259,7 +259,8 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 				BITLOOP(pos, attackingPieces){
 					if (pos < 56){
 						moveList.push_back(Move(pos - 8, pos, MOVE, bp));
-					} else{
+					} 
+					else{
 						moveList.push_front(Move(pos - 8, pos, PROMOTION, PIECE_PAIR(bp, bq)));
 						moveList.push_front(Move(pos - 8, pos, PROMOTION, PIECE_PAIR(bp, bn)));
 					}
@@ -271,87 +272,87 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 			case br: // BLACK ROOK
 				// Calculate attacked pieces
 				BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind br
-					tempMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[br] & whitePos; // Intersections with opponent pieces
-					if (tempMask)                                                // If pieces are targeted
+					attackMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[br] & whitePos; // Intersections with opponent pieces
+					if (attackMask)                                                // If pieces are targeted
 						WHITELOOP(candidate){                                        // Find targeted piece
-						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-						if (temp2)
-							BITLOOP(m, temp2)                                    // Add moves
-								if (!(CONNECTIONS[pos][m] & (blackPos | whitePos)))   // ..if no piece is in the way
-									moveList.push_front(Move(pos, m, CAPTURE | ((pos == 0 ? Ck : CCk) << 4), PIECE_PAIR(br, candidate)));
+						pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
+						if (pieceAttacks)
+							BITLOOP(target, pieceAttacks)                                    // Add moves
+								if (!(CONNECTIONS[pos][target] & (blackPos | whitePos)))   // ..if no piece is in the way
+									moveList.push_front(Move(pos, target, CAPTURE | ((pos == 0 ? Ck : CCk) << 4), PIECE_PAIR(br, candidate)));
 					}
-					tempMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[br]; // Non capturing moves
-					BITLOOP(m, tempMask)                                             // Add moves
-						if (!(CONNECTIONS[pos][m] & (blackPos | whitePos)))   // ..if no piece is in the way
-							moveList.push_back(Move(pos, m, MOVE | ((pos == 0 ? Ck : CCk) << 4), br));
+					attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[br]; // Non capturing moves
+					BITLOOP(target, attackMask)                                             // Add moves
+						if (!(CONNECTIONS[pos][target] & (blackPos | whitePos)))   // ..if no piece is in the way
+							moveList.push_back(Move(pos, target, MOVE | ((pos == 0 ? Ck : CCk) << 4), br));
 				}
 				break;
 			case bn: //// BLACK KNIGHT
 
 				// Calculate attacked pieces
 				BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind bn
-					tempMask = KNIGHT_ATTACKS[pos] & attacks[bn] & whitePos; // Intersections with opponent pieces
-					if (tempMask)                                                // If pieces are targeted
+					attackMask = KNIGHT_ATTACKS[pos] & attacks[bn] & whitePos; // Intersections with opponent pieces
+					if (attackMask)                                                // If pieces are targeted
 						WHITELOOP(candidate){                                    // Find targeted piece
-						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-						if (temp2)
-							BITLOOP(m, temp2)                                    // Add moves
-							moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(bn,candidate)));
+						pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
+						if (pieceAttacks)
+							BITLOOP(target, pieceAttacks)                                    // Add moves
+							moveList.push_front(Move(pos, target, CAPTURE, PIECE_PAIR(bn, candidate)));
 					}
-					tempMask ^= KNIGHT_ATTACKS[pos] & attacks[bn]; // Non capturing moves
-					BITLOOP(m, tempMask)                        // Add moves
-						moveList.push_back(Move(pos, m, MOVE, bn));
+					attackMask ^= KNIGHT_ATTACKS[pos] & attacks[bn]; // Non capturing moves
+					BITLOOP(target, attackMask)                        // Add moves
+						moveList.push_back(Move(pos, target, MOVE, bn));
 				}
 				break;
 			case bb: // BLACK BISHOP
 				BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind bb
-					tempMask = BISHOP_ATTACKS[pos] & attacks[bb] & whitePos; // Intersections with opponent pieces
-					if (tempMask)                                                // If pieces are targeted
+					attackMask = BISHOP_ATTACKS[pos] & attacks[bb] & whitePos; // Intersections with opponent pieces
+					if (attackMask)                                                // If pieces are targeted
 						WHITELOOP(candidate){                                    // Find targeted piece
-						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-						if (temp2)
-							BITLOOP(m, temp2)                                    // Add moves
-								if (!(CONNECTIONS[pos][m] & (blackPos | whitePos)))   // ..if no piece is in the way
-									moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(bb,candidate)));
+						pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
+						if (pieceAttacks)
+							BITLOOP(target, pieceAttacks)                                    // Add moves
+								if (!(CONNECTIONS[pos][target] & (blackPos | whitePos)))   // ..if no piece is in the way
+									moveList.push_front(Move(pos, target, CAPTURE, PIECE_PAIR(bb, candidate)));
 					}
-					tempMask ^= BISHOP_ATTACKS[pos] & attacks[bb]; // Non capturing moves
-					BITLOOP(m, tempMask)                        // Add moves
-						if (!(CONNECTIONS[pos][m] & (blackPos | whitePos)))   // ..if no piece is in the way
-							moveList.push_back(Move(pos, m, MOVE, bb));
+					attackMask ^= BISHOP_ATTACKS[pos] & attacks[bb]; // Non capturing moves
+					BITLOOP(target, attackMask)                        // Add moves
+						if (!(CONNECTIONS[pos][target] & (blackPos | whitePos)))   // ..if no piece is in the way
+							moveList.push_back(Move(pos, target, MOVE, bb));
 				}
 				break;
 			case bq: // BLACK QUEEN
 				BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind bq
-					tempMask = QUEEN_ATTACKS[pos] & attacks[bq] & whitePos; // Intersections with opponent pieces
-					if (tempMask)                                                // If pieces are targeted
+					attackMask = QUEEN_ATTACKS[pos] & attacks[bq] & whitePos; // Intersections with opponent pieces
+					if (attackMask)                                                // If pieces are targeted
 						WHITELOOP(candidate){                                    // Find targeted piece
-						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-						if (temp2)
-							BITLOOP(m, temp2)                                    // Add moves
-								if (!(CONNECTIONS[pos][m] & (blackPos | whitePos)))   // ..if no piece is in the way
-									moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(bq,candidate)));
+						pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
+						if (pieceAttacks)
+							BITLOOP(target, pieceAttacks)                                    // Add moves
+								if (!(CONNECTIONS[pos][target] & (blackPos | whitePos)))   // ..if no piece is in the way
+									moveList.push_front(Move(pos, target, CAPTURE, PIECE_PAIR(bq, candidate)));
 					}
-					tempMask ^= QUEEN_ATTACKS[pos] & attacks[bq]; // Non capturing moves
-					BITLOOP(m, tempMask)                        // Add moves
-						if (!(CONNECTIONS[pos][m] & (blackPos | whitePos)))   // ..if no piece is in the way
-							moveList.push_back(Move(pos, m, MOVE, bq));
+					attackMask ^= QUEEN_ATTACKS[pos] & attacks[bq]; // Non capturing moves
+					BITLOOP(target, attackMask)                        // Add moves
+						if (!(CONNECTIONS[pos][target] & (blackPos | whitePos)))   // ..if no piece is in the way
+							moveList.push_back(Move(pos, target, MOVE, bq));
 				}
 				break;
 			case bk: // BLACK KING
 
 				// Calculate attacked pieces
 				BITLOOP(pos, attackingPieces){                             // Loop through all positions of pieces of kind bk
-					tempMask = (KING_ATTACKS[pos] & attacks[bk] & whitePos) & ~whiteAtt; // Intersections with opponent pieces that would not place king in check
-					if (tempMask)                                                // If pieces are targeted
+					attackMask = (KING_ATTACKS[pos] & attacks[bk] & whitePos) & ~whiteAtt; // Intersections with opponent pieces that would not place king in check
+					if (attackMask)                                                // If pieces are targeted
 						WHITELOOP(candidate){                                    // Find targeted piece
-						temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-						if (temp2)
-							BITLOOP(m, temp2)                                    // Add moves
-							moveList.push_front(Move(pos, m, CAPTURE | ((Ck | CCk) << 4), PIECE_PAIR(bk, candidate)));
+						pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
+						if (pieceAttacks)
+							BITLOOP(target, pieceAttacks)                                    // Add moves
+							moveList.push_front(Move(pos, target, CAPTURE | ((Ck | CCk) << 4), PIECE_PAIR(bk, candidate)));
 					}
-					tempMask ^= (KING_ATTACKS[pos] & attacks[bk]) & ~whiteAtt; // Non capturing moves
-					BITLOOP(m, tempMask)                        // Add moves
-						moveList.push_back(Move(pos, m, MOVE | ((Ck | CCk) << 4), bk));
+					attackMask ^= (KING_ATTACKS[pos] & attacks[bk]) & ~whiteAtt; // Non capturing moves
+					BITLOOP(target, attackMask)                        // Add moves
+						moveList.push_back(Move(pos, target, MOVE | ((Ck | CCk) << 4), bk));
 				}
 				break;
 			}
@@ -373,18 +374,18 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 				 // Find normal captures:
 				 // attackingPieces stands for attacked squares in this case
 				 BITLOOP(pos, attackingPieces){
-					 tempMask = (0x5ull << (pos - 1 - 8)) & blackPos;
-					 if (tempMask)                                                // If pieces are targeted
+					 attackMask = (0x5ull << (pos - 1 - 8)) & blackPos;
+					 if (attackMask)                                                // If pieces are targeted
 						 BLACKLOOP(candidate){                                    // Find targeted piece
-						 temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-						 if (temp2){
-							 BITLOOP(m, temp2){                                   // Add moves
-								 if (m < 8){
-									 moveList.push_front(Move(pos, m, C_PROMOTION, PIECE_PAIR(candidate, wq)|(0x1<<8)));
-									 moveList.push_front(Move(pos, m, C_PROMOTION, PIECE_PAIR(candidate, wn)|(0x1<<8)));
+						 pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
+						 if (pieceAttacks){
+							 BITLOOP(target, pieceAttacks){                                   // Add moves
+								 if (target < 8){
+									 moveList.push_front(Move(pos, target, C_PROMOTION, PIECE_PAIR(candidate, wq)|(0x1 << 8)));
+									 moveList.push_front(Move(pos, target, C_PROMOTION, PIECE_PAIR(candidate, wn)|(0x1 << 8)));
 								 }
 								 else{
-									 moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(wp,candidate)));
+									 moveList.push_front(Move(pos, target, CAPTURE, PIECE_PAIR(wp,candidate)));
 								 }
 							 }
 						 }
@@ -401,100 +402,99 @@ void Board::generateMoveList(list<Move>& moveList, color side) const
 						 moveList.push_front(Move(pos + 8, pos, PROMOTION, PIECE_PAIR(wp, wn)));
 					 }
 				 }
-				 attackingPieces = (pieces[wp] >> 16)&attacks[wp];
+				 attackingPieces = (pieces[wp] >> 16) & attacks[wp];
 				 BITLOOP(pos, attackingPieces)
 						 moveList.push_back(Move(pos + 16, pos, MOVE, wp));
 				 break;
 			 case wr: // WHITE ROOK
 				 // Calculate attacked pieces
 				 BITLOOP(pos, attackingPieces){                                                         // Loop through all positions of pieces of kind br
-					 tempMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[wr] & blackPos; // Intersections with opponent pieces
-					 if (tempMask)                                                    // If pieces are targeted
+					 attackMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[wr] & blackPos; // Intersections with opponent pieces
+					 if (attackMask)                                                    // If pieces are targeted
 						 BLACKLOOP(candidate){                                        // Find targeted piece
-						 temp2 = pieces[candidate] & tempMask;                        // Set specific attacks
-						 if (temp2)
-							 BITLOOP(m, temp2)                                        // Add moves..
-								if (!(CONNECTIONS[pos][m] & (blackPos | whitePos)))   // ..if no piece is in the way
-									moveList.push_front(Move(pos, m, CAPTURE | ((pos == 56 ? CK : CCK) << 4), PIECE_PAIR(wr, candidate)));
+						 pieceAttacks = pieces[candidate] & attackMask;                        // Set specific attacks
+						 if (pieceAttacks)
+							 BITLOOP(target, pieceAttacks)                                        // Add moves..
+								if (!(CONNECTIONS[pos][target] & (blackPos | whitePos)))   // ..if no piece is in the way
+									moveList.push_front(Move(pos, target, CAPTURE | ((pos == 56 ? CK : CCK) << 4), PIECE_PAIR(wr, candidate)));
 					 }
-					 tempMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[wr]; // Non capturing moves
+					 attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[wr]; // Non capturing moves
 					 //printBitboard(tempMask);
-					 BITLOOP(m, tempMask)                                         // Add moves..
-						 if(!(CONNECTIONS[pos][m] & (blackPos | whitePos)))       // ..if no piece is in the way
-							moveList.push_back(Move(pos, m, MOVE | ((pos == 56 ? CK : CCK) << 4), wr));
+					 BITLOOP(target, attackMask)                                         // Add moves..
+						 if(!(CONNECTIONS[pos][target] & (blackPos | whitePos)))       // ..if no piece is in the way
+							moveList.push_back(Move(pos, target, MOVE | ((pos == 56 ? CK : CCK) << 4), wr));
 				 }
 				 break;
 			 case wn: //// WHITE KNIGHT
-
 				 // Calculate attacked pieces
 				 BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind bn
-					 tempMask = KNIGHT_ATTACKS[pos] & attacks[wn] & blackPos;     // Intersections with opponent pieces
-					 if (tempMask)                                                // If pieces are targeted
+					 attackMask = KNIGHT_ATTACKS[pos] & attacks[wn] & blackPos;     // Intersections with opponent pieces
+					 if (attackMask)                                                // If pieces are targeted
 						 BLACKLOOP(candidate){                                    // Find targeted piece
-						 temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-						 if (temp2)
-							BITLOOP(m, temp2)                                    // Add moves
-								moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(wn, candidate)));
+						 pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
+						 if (pieceAttacks)
+							BITLOOP(target, pieceAttacks)                                    // Add moves
+								moveList.push_front(Move(pos, target, CAPTURE, PIECE_PAIR(wn, candidate)));
 					 }
-					 tempMask ^= KNIGHT_ATTACKS[pos] & attacks[wn]; // Non capturing moves
-					 BITLOOP(m, tempMask)                        // Add moves
-						moveList.push_back(Move(pos, m, MOVE, wn));
+					 attackMask ^= KNIGHT_ATTACKS[pos] & attacks[wn]; // Non capturing moves
+					 BITLOOP(target, attackMask)                        // Add moves
+						moveList.push_back(Move(pos, target, MOVE, wn));
 				 }
 				 break;
 			 case wb: // WHITE BISHOP
 				 BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind bb
-					 tempMask = BISHOP_ATTACKS[pos] & attacks[wb] & blackPos;     // Intersections with opponent pieces
-					 if (tempMask)                                                // If pieces are targeted
+					 attackMask = BISHOP_ATTACKS[pos] & attacks[wb] & blackPos;     // Intersections with opponent pieces
+					 if (attackMask)                                                // If pieces are targeted
 						 BLACKLOOP(candidate){                                    // Find targeted piece
-						 temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-						 if (temp2)
-							 BITLOOP(m, temp2)                                    // Add moves
-								 if (!(CONNECTIONS[pos][m] & (blackPos | whitePos)))   // ..if no piece is in the way
-									 moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(wb, candidate)));
+						 pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
+						 if (pieceAttacks)
+							 BITLOOP(target, pieceAttacks)                                    // Add moves
+								 if (!(CONNECTIONS[pos][target] & (blackPos | whitePos)))   // ..if no piece is in the way
+									 moveList.push_front(Move(pos, target, CAPTURE, PIECE_PAIR(wb, candidate)));
 					 }
-					 tempMask ^= BISHOP_ATTACKS[pos] & attacks[wb]; // Non capturing moves
-					 BITLOOP(m, tempMask)                        // Add moves
-						 if (!(CONNECTIONS[pos][m] & (blackPos | whitePos)))   // ..if no piece is in the way
-							 moveList.push_back(Move(pos, m, MOVE, wb));
+					 attackMask ^= BISHOP_ATTACKS[pos] & attacks[wb]; // Non capturing moves
+					 BITLOOP(target, attackMask)                        // Add moves
+						 if (!(CONNECTIONS[pos][target] & (blackPos | whitePos)))   // ..if no piece is in the way
+							 moveList.push_back(Move(pos, target, MOVE, wb));
 				 }
 				 break;
 			 case wq: // WHITE QUEEN
 				 BITLOOP(pos, attackingPieces){                                   // Loop through all positions of pieces of kind bq
-					 tempMask = QUEEN_ATTACKS[pos] & attacks[wq] & blackPos; // Intersections with opponent pieces
-					 if (tempMask)                                                // If pieces are targeted
+					 attackMask = QUEEN_ATTACKS[pos] & attacks[wq] & blackPos; // Intersections with opponent pieces
+					 if (attackMask)                                                // If pieces are targeted
 						 BLACKLOOP(candidate){                                    // Find targeted piece
-						 temp2 = pieces[candidate] & tempMask;                    // Set specific attacks
-						 if (temp2)
-							 BITLOOP(m, temp2)                                    // Add moves
-								if (!(CONNECTIONS[pos][m] & (blackPos | whitePos)))   // ..if no piece is in the way
-									moveList.push_front(Move(pos, m, CAPTURE, PIECE_PAIR(wq, candidate)));
+						 pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
+						 if (pieceAttacks)
+							 BITLOOP(target, pieceAttacks)                                    // Add moves
+								if (!(CONNECTIONS[pos][target] & (blackPos | whitePos)))   // ..if no piece is in the way
+									moveList.push_front(Move(pos, target, CAPTURE, PIECE_PAIR(wq, candidate)));
 					 }
-					 tempMask ^= QUEEN_ATTACKS[pos] & attacks[wq]; // Non capturing moves
-					 BITLOOP(m, tempMask)                        // Add moves
-						 if (!(CONNECTIONS[pos][m] & (blackPos | whitePos)))   // ..if no piece is in the way
-							moveList.push_back(Move(pos, m, MOVE, wq));
+					 attackMask ^= QUEEN_ATTACKS[pos] & attacks[wq]; // Non capturing moves
+					 BITLOOP(target, attackMask)                        // Add moves
+						 if (!(CONNECTIONS[pos][target] & (blackPos | whitePos)))   // ..if no piece is in the way
+							moveList.push_back(Move(pos, target, MOVE, wq));
 				 }
 				 break;
 			 case wk: // WHITE KING
 				 // Calculate attacked pieces
 				 BITLOOP(pos, attackingPieces){                                           // Loop through all positions of pieces of kind wk
-					 tempMask = (KING_ATTACKS[pos] & attacks[wk] & blackPos) & ~blackAtt; // Intersections with opponent pieces that would not place king in check
-					 if (tempMask)                                                        // If pieces are targeted
+					 attackMask = (KING_ATTACKS[pos] & attacks[wk] & blackPos) & ~blackAtt; // Intersections with opponent pieces that would not place king in check
+					 if (attackMask)                                                        // If pieces are targeted
 						 BLACKLOOP(candidate){                                            // Find targeted piece
-						 temp2 = pieces[candidate] & tempMask;                            // Set specific attacks
-						 if (temp2)
-							 BITLOOP(m, temp2)                                            // Add moves
-							 moveList.push_front(Move(pos, m, CAPTURE | ((CK | CCK) << 4), PIECE_PAIR(wk, candidate)));
+						 pieceAttacks = pieces[candidate] & attackMask;                            // Set specific attacks
+						 if (pieceAttacks)
+							 BITLOOP(target, pieceAttacks)                                            // Add moves
+							 moveList.push_front(Move(pos, target, CAPTURE | ((CK | CCK) << 4), PIECE_PAIR(wk, candidate)));
 					 }
-					 tempMask ^= (KING_ATTACKS[pos] & attacks[wk]) & ~blackAtt; // Non capturing moves
-					 BITLOOP(m, tempMask)                         // Add moves
-						 moveList.push_back(Move(pos, m, MOVE|((CK | CCK) << 4), wk));
+					 attackMask ^= (KING_ATTACKS[pos] & attacks[wk]) & ~blackAtt; // Non capturing moves
+					 BITLOOP(target, attackMask)                         // Add moves
+						 moveList.push_back(Move(pos, target, MOVE|((CK | CCK) << 4), wk));
 				 }
 				 break;
 		 }
 	 }
 	 // Es muss HIER ueberprueft werden, ob die Figuren existieren (logisch)
-	 if (castlingRights & CK && !((whitePos|blackPos) & 0x6000000000000000ull) && !(blackAtt & 0x7000000000000000ull)) // White King can castle
+	 if (castlingRights & CK && !((whitePos | blackPos) & 0x6000000000000000ull) && !(blackAtt & 0x7000000000000000ull)) // White King can castle
 		moveList.push_back(Move(castlingRights,WCASTLE));
 	 if (castlingRights & CCK && !((whitePos | blackPos) & 0xE00000000000000ull) && !(blackAtt & 0x1C00000000000000ull)) // White King can castle (big)
 		 moveList.push_back(Move(castlingRights, WCASTLE_2));
