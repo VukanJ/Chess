@@ -10,7 +10,7 @@ using namespace std;
 
 // Conventions:
 /*
-Computer is always black. 
+Computer is always black.
 */
 
 const unsigned int targetDepth = 1;

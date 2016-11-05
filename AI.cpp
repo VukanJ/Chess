@@ -2,13 +2,16 @@
 
 AI::AI(string FEN)
 {
+	exit(1);
 	chessBoard = Board(FEN);
+	genChessData data;
+	data.gen();
 	debug();
 }
 
 void AI::debug()
 {
-	
+
 }
 
 void AI::printBoard()

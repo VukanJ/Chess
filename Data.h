@@ -3,6 +3,19 @@
 
 #include "misc.h"
 
+const u64 col    = 0x101010101010101;
+const u64 row    = 0xFF;
+const u64 _right = 0x0303030303030303;
+const u64 _left  = 0xC0C0C0C0C0C0C0C0;
+
+class genChessData final
+{
+public:
+	void gen();
+private:
+	void genConnections();
+};
+
 static const vector<u64> KNIGHT_ATTACKS = {
 	0x20400, 0x50800, 0xa1100, 0x142200, 0x284400, 0x508800, 0xa01000, 0x402000,
 	0x2040004, 0x5080008, 0xa110011, 0x14220022, 0x28440044, 0x50880088,
@@ -73,6 +86,8 @@ static const vector<u64> KING_ATTACKS = {
 	0x141c000000000000, 0x2838000000000000, 0x5070000000000000, 0xa0e0000000000000,
 	0x40c0000000000000
 };
+
+static vector<vector<u64>> CONNECTIONS;
 
 static const vector<u64> noWrap = {
 	0xffffffffffffff00, // down

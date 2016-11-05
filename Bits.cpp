@@ -6,14 +6,6 @@
 
 using namespace std;
 
-typedef unsigned long long uint64;
-
-const uint64 col    = 0x101010101010101;
-const uint64 row    = 0xFF;
-const uint64 _right = 0x0303030303030303;
-const uint64 _left  = 0xC0C0C0C0C0C0C0C0;
-
-
 /*
 void diags(vector<uint64>& nums)
 {
