@@ -2,10 +2,9 @@
 
 AI::AI(string FEN)
 {
-	exit(1);
-	chessBoard = Board(FEN);
 	genChessData data;
 	data.gen();
+	chessBoard = Board(FEN);
 	debug();
 }
 

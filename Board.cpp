@@ -649,7 +649,7 @@ void Board::print() const
 			if (b & temp) asciiBoard[count / 8][count % 8] = names[p];
 		}
 	}
-	#ifdef WIN32 // Since Unicode is not really supported in C++ yet
+	#ifdef _WIN32 // Since Unicode is not really supported in C++ yet
 		cout << string(10, static_cast<char>(219)) << endl;
 		for (auto r : asciiBoard) {
 			cout << char(219);

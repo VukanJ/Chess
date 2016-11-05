@@ -11,7 +11,7 @@ IntrinError::IntrinError(string msg, string name) : fname(name), ChessError(msg)
 
 void IntrinError::what() const
 {
-	printf("Error in %s intrinsic\n", fname);
+	printf("Error in %s intrinsic\n", fname.c_str());
 	cerr << errMsg << '\n';
 }
 

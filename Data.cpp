@@ -1,16 +1,17 @@
 #include "Data.h"
 
+vector<vector<u64>> CONNECTIONS = vector<vector<u64>>(64, vector<u64>(64, 0x0));
+
 void genChessData::gen()
 {
   genConnections();
 }
-
+	
 void genChessData::genConnections()
 {
-  exit(1);
   cout << "Generating Bitboards...\n";
   // Generate rectangular rays
-  vector<u64> rects(64,0x0);
+  vector<u64> rects(64, 0x0);
   for(int i = 0; i < 64; i++)
     rects[i] |= (col<<(i%8))^(row<<(i/8)*8);
   // Generate Diagnoal rays
@@ -25,8 +26,6 @@ void genChessData::genConnections()
     for(int j = 1; j < 8-i%8; j++)
       diags[i] |= ((u64) 0x1 << i) >> j*7;
   }
-
-  CONNECTIONS = vector<vector<u64>>(64, vector<u64>(64, 0x0));
 
   u64 temp = 0x0;
   for(int i = 0; i < 64; i++){
