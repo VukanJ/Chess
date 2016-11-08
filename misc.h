@@ -10,7 +10,7 @@
 
 using namespace std;
 
-const u64 _msb       = 0x11ULL << 63;
+const u64 _msb       = 0x11ull << 63;
 const u64 _col       = 0x101010101010101ull;
 const u64 _row       = 0xFFull;
 const u64 _noSides   = 0x7E7E7E7E7E7E7E7Eull;
@@ -21,7 +21,7 @@ const string names = "prnbkqPRNBKQ";
 static void printBits(byte num)
 {
 	int c = 0;
-	for (byte p = 0x1 << 7; p; p >>= 1)
+	for (byte p = 0x1ull << 7; p ; p >>= 1)
 		cout << (p & num ? '1' : '0');
 	cout << endl;
 }
@@ -30,7 +30,7 @@ static void printBitboard(u64 board)
 {
 	// Prints Bitboard and occupied pieces
 	int c = 0;
-	for (u64 p = (u64)1 << 63; p; p >>= 1){
+	for (u64 p = 1ull << 63; p; p >>= 1){
 		cout << (p & board ? '@' : '.');
 		if (++c % 8 == 0) cout << endl;
 	}
@@ -41,7 +41,7 @@ static void printBitboardFigAttack(u64 board, u64 att, char piece)
 {
 	// Print Bitboard for specific figure and attackes squares
 	int c = 0;
-	for (u64 p = (u64)1 << 63; p; p >>= 1){
+	for (u64 p = 1ull << 63; p; p >>= 1){
 		if (board & p) cout << piece;
 		else if (att & p) cout << '#';
 		else cout << '.';

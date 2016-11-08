@@ -13,18 +13,18 @@ void genChessData::genConnections()
   // Generate rectangular rays
   vector<u64> rects(64, 0x0);
   for(int i = 0; i < 64; i++)
-    rects[i] |= (col<<(i%8))^(row<<(i/8)*8);
+    rects[i] |= (col << (i % 8)) ^ (row << (i / 8) * 8);
   // Generate Diagnoal rays
-  vector<u64> diags(64,0x0);
+  vector<u64> diags(64, 0x0);
   for(int i = 0; i < 64; i++){
-    for(int j = 1; j < 8-i%8; j++)
-      diags[i] |= ((u64) 0x1 << i) << j*9;
-    for(int j = 1; j < i%8+1; j++)
-      diags[i] |= ((u64) 0x1 << i) << j*7;
-    for(int j = 1; j < i%8+1; j++)
-      diags[i] |= ((u64) 0x1 << i) >> j*9;
-    for(int j = 1; j < 8-i%8; j++)
-      diags[i] |= ((u64) 0x1 << i) >> j*7;
+    for(int j = 1; j < 8 - i % 8; j++)
+      diags[i] |= (0x1ull << i) << j * 9;
+    for(int j = 1; j < i % 8 + 1; j++)
+      diags[i] |= (0x1ull << i) << j * 7;
+    for(int j = 1; j < i % 8 + 1; j++)
+      diags[i] |= (0x1ull << i) >> j * 9;
+    for(int j = 1; j < 8 - i % 8; j++)
+      diags[i] |= (0x1ull << i) >> j * 7;
   }
 
   u64 temp = 0x0;

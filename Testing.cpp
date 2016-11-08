@@ -76,7 +76,7 @@ void UnitTest::testIntrinsics() const
 	assert(POPCOUNT(static_cast<u64>(0x0)) == 0);
 	for (u64 p = 0x1; i < 64; p |= p << 1, ++i)
 		assert(POPCOUNT(p) == i + 1);
-	assert(POPCOUNT(0xFFULL << 56) == 8); // Check if popcnt is really 64 bit
+	assert(POPCOUNT(0xFFull << 56) == 8); // Check if popcnt is really 64 bit
 	clog << "bitscan...\n";
 	BITSCANR64(index, 0x1ull << 10); // counts from least significant bit
 	assert(index == 10);

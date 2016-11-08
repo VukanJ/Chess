@@ -43,8 +43,8 @@ void AI::negaMax_Search(Node* node, int depth)
 			node->boardScore = chessBoard.evaluate();
 		else node->boardScore = chessBoard.hash.getEntry(chessBoard.hashKey, node->boardScore);
 		// calc alpha beta and return if neccessary
-		//negaMax_Search()
-		//mov++;
+		// negaMax_Search()
+		// mov++;
 	}
 	// Unfinished
 }

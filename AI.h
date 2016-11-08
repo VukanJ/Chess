@@ -19,7 +19,7 @@ class AI
 {
 public:
 	struct Node{
-		list<Move> moves;
+		vector<Move> moves;
 		int movePtr;
 		float alpha, beta, boardScore;
 	};

@@ -11,7 +11,7 @@ class Zob_Hash
 {
 public:
 	Zob_Hash();
-	void addEntry(const u64 Key, float value, int depth);
+	void addEntry(const u64 Key, float  value, int depth);
 	bool getEntry(const u64 Key, float& value, int& depth) const;
 	bool getEntry(const u64 key, float& value) const;
 	bool hasEntry(const u64) const;
