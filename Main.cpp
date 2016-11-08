@@ -29,7 +29,7 @@ int main()
 	//AI computer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5");
 	//AI computer("3KR38888882rk4"); //
 	//AI computer("RNBQ1RK1/PPPN1PPP/4P3/3Pp3/1B1p4/2nb1n2/ppp2ppp/r1bqk2r");
-	AI computer("RP3PRq/PP4PP/888888"); // ERROR: Blocked rook gets attacks
+	AI computer("84P3888888");
 	//AI computer("R1BKQBNR/P1PPPPPP/1PP5/84q3/6p1/ppppppbp/rnbkq1nr");
 	computer.printDebug();
 

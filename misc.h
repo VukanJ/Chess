@@ -60,7 +60,7 @@ enum piece {
 enum color { black, white };
 
 enum moveType{ 
-	MOVE, 
+	MOVE,
 	CAPTURE, 
 	PAWN2, 
 	PROMOTION,
@@ -98,7 +98,7 @@ enum attacks {
 	att_wp, att_wr, att_wn, att_wb, att_wk, att_wq
 };
 
-enum hashPosition{CASTLE_HASH=12,ENPASSENT_HASH=13};
+enum hashPosition{CASTLE_HASH = 12, ENPASSENT_HASH = 13};
 
 enum {
 	h1, g1, f1, e1, d1, c1, b1, a1,

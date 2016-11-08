@@ -6,7 +6,6 @@
 #include <typeinfo>
 #include <string>
 #include <stack>
-#include <list>
 #include <chrono>
 
 #include "Data.h"
@@ -17,11 +16,11 @@ using namespace std;
 
 struct Move
 {
-	Move() : from(0), to(0), flags(0),Pieces(nulPiece){}
+	Move() : from(0), to(0), flags(0), Pieces(nulPiece) {}
 	Move(byte OldCastlingRights, byte _flags)
-		: from(OldCastlingRights), to(nulSq), flags(_flags), Pieces(nulPiece){}
+		: from(OldCastlingRights), to(nulSq), flags(_flags), Pieces(nulPiece) {}
 	Move(byte _from, byte _to, byte _flags, byte _pieces)
-		: from(_from), to(_to), flags(_flags), Pieces(_pieces){}
+		: from(_from), to(_to), flags(_flags), Pieces(_pieces) {}
 	byte from, to, flags, Pieces;
 	// Flagbits: 1-4: castlingRuleReset?[k,K,w,W]; 5-8: Movetype
 };
@@ -57,8 +56,7 @@ public:
 	// Data
 	vector<u64> pieces, attacks;
 	enum{ Ck = 0x1, CCk = 0x2, CK = 0x4, CCK = 0x8 };
-	byte castlingRights;
-	byte b_enpassent, w_enpassent;
+	byte castlingRights, b_enpassent, w_enpassent;
 	u64 whitePos, blackPos, whiteAtt, blackAtt,hashKey;
 	Zob_Hash hash;
 	vector<vector<u64>> randomSet;

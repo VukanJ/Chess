@@ -53,7 +53,7 @@ Board::Board(string fen) : Board()
 	print();
 	generateMoveList(movelist, white);
 
-
+	cout << "Start hash " << hex << hashKey << endl;
 	for (auto& m : movelist){
 		cout << moveString(m) << endl;
 		makeMove(m);
@@ -61,7 +61,7 @@ Board::Board(string fen) : Board()
 		unMakeMove(m);
 		//print();
 	}
-
+	cout << "End hash   " << hex << hashKey << endl;
 	if (isCheckMate(black))
 		cout << "CHECKMATE FOR BLACK!\n";
 	else if (isCheckMate(white))
@@ -229,7 +229,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 	u64 attackMask = 0x0;
 	u64 pieceAttacks = 0x0, attackingPieces = 0x0;
 	// Generate all capturing and normal moves
-	if (side == black){////////////////////////////////////////////////BLACK MOVE GENERATION///////////////////////////////////////////////////
+	if (side == black){ ////////////////////////////////////////////////BLACK MOVE GENERATION///////////////////////////////////////////////////
 	BLACKLOOP(b){ // Loop through black pieces
 		attackingPieces = pieces[b];
 		switch (b){
@@ -265,9 +265,10 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, PIECE_PAIR(bp, bn)));
 					}
 				}
+				// Double pawn move
 				attackingPieces = (pieces[bp] << 16) & attacks[bp];
 				BITLOOP(pos, attackingPieces)
-					moveList.push_back(Move(pos - 16, pos, MOVE, bp));
+					moveList.push_back(Move(pos - 16, pos, PAWN2, bp));
 				break;
 			case br: // BLACK ROOK
 				// Calculate attacked pieces
@@ -404,7 +405,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 				 }
 				 attackingPieces = (pieces[wp] >> 16) & attacks[wp];
 				 BITLOOP(pos, attackingPieces)
-						 moveList.push_back(Move(pos + 16, pos, MOVE, wp));
+						 moveList.push_back(Move(pos + 16, pos, PAWN2, wp));
 				 break;
 			 case wr: // WHITE ROOK
 				 // Calculate attacked pieces
@@ -518,6 +519,14 @@ void Board::makeMove(const Move& move)
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
 			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
 			break;
+		case PAWN2:
+			pieces[MOV_PIECE(move.Pieces)] ^= BIT_AT(move.from);     // Piece disappears from departure
+			pieces[MOV_PIECE(move.Pieces)] |= BIT_AT(move.to);       // Piece appears at destination
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from]; // Update hashKey...
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
+			hashKey ^= randomSet[ENPASSENT_HASH][move.from % 8];
+			(move.Pieces == bp ? b_enpassent : w_enpassent) |= 0x1 << move.from % 8;
+			break;
 		case PROMOTION:
 			pieces[MOV_PIECE(move.Pieces)] ^= BIT_AT(move.from);     // removes pawn
 			pieces[TARGET_PIECE(move.Pieces)] |= BIT_AT(move.to);    // New piece appears
@@ -583,6 +592,14 @@ void Board::unMakeMove(const Move& move)
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from]; // Update hashKey...
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
 			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
+			break;
+		case PAWN2:
+			pieces[MOV_PIECE(move.Pieces)] ^= BIT_AT(move.to);       // Piece disappears from destination
+			pieces[MOV_PIECE(move.Pieces)] |= BIT_AT(move.from);     // Piece appears at departure
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to]; // Update hashKey...
+			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from];
+			hashKey ^= randomSet[ENPASSENT_HASH][move.from % 8];
+			b_enpassent = w_enpassent = 0x0;
 			break;
 		case PROMOTION:
 			pieces[MOV_PIECE(move.Pieces)]    |= BIT_AT(move.from);
