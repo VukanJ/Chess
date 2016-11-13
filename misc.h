@@ -54,7 +54,8 @@ static void printBitboardFigAttack(u64 board, u64 att, char piece)
 	if (board&att) cout << "Warning: Attacking same color!\n"; 
 }
 
-enum piece {
+enum piece { 
+	// Do not change ordering!
 	bp, br, bn, bb, bk, bq,
 	wp, wr, wn, wb, wk, wq,
 	nulPiece = -1

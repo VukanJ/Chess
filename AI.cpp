@@ -36,16 +36,17 @@ void AI::negaMax_Search(Node* node, int depth)
 	// Sort moves
 	// Evaluate board(s)
 	// Use negamax
-	chessBoard.generateMoveList(node->moves, black);
-	for (auto mov = node->moves.begin(); mov != node->moves.end();){
-		chessBoard.makeMove(*mov);
-		if(!chessBoard.hash.hasEntry(chessBoard.hashKey))
-			node->boardScore = chessBoard.evaluate();
-		else node->boardScore = chessBoard.hash.getEntry(chessBoard.hashKey, node->boardScore);
-		// calc alpha beta and return if neccessary
-		// negaMax_Search()
-		// mov++;
-	}
+
+	///chessBoard.generateMoveList(node->moves, black);
+	///for (auto mov = node->moves.begin(); mov != node->moves.end();){
+	///	chessBoard.makeMove(*mov);
+	///	if(!chessBoard.hash.hasEntry(chessBoard.hashKey))
+	///		node->boardScore = chessBoard.evaluate();
+	///	else node->boardScore = chessBoard.hash.getEntry(chessBoard.hashKey, node->boardScore);
+	///	// calc alpha beta and return if neccessary
+	///	// negaMax_Search()
+	///	// mov++;
+	///}
 	// Unfinished
 }
 

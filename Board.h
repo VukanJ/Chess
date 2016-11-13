@@ -37,8 +37,8 @@ public:
 	void updateAttack(piece p);
 	void updateAllAttacks();
 	void generateMoveList(vector<Move>&, color) const;
-	void makeMove(const Move&);
-	void unMakeMove(const Move&);
+	void makeMove(const Move&, color side);
+	void unMakeMove(const Move&, color side);
 	bool isCheckMate(color) const;
 
 	// Evaluation
