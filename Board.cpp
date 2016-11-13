@@ -16,6 +16,7 @@ Board::Board(string fen) : Board()
 		for (int i = 0; i < 12; i++) pieces[i] = standardPosition[i];
 		blackPos = 0xFFFFull;
 		whitePos = 0xFFFF000000000000ull;
+		allPos = blackPos | whitePos;
 		castlingRights = 0xFFull;
 	}
 	else { // Setup board according to FEN
@@ -35,6 +36,7 @@ Board::Board(string fen) : Board()
 		if (pieces[br] & 0x80ull && pieces[bk] & 0x10ull) castlingRights |= CCk;
 		if (pieces[wr] & 0x0100000000000000ull && pieces[wk] & 0x1000000000000000ull) castlingRights |= CK;
 		if (pieces[wr] & 0x8000000000000000ull && pieces[wk] & 0x1000000000000000ull) castlingRights |= CCK;
+		allPos = blackPos | whitePos;
 	}
 	cout << "Castling rights -> ";
 	printBits(castlingRights);
@@ -57,9 +59,9 @@ Board::Board(string fen) : Board()
 	for (auto& m : movelist){
 		cout << moveString(m) << endl;
 		makeMove(m);
-		//print();
+		print();
 		unMakeMove(m);
-		//print();
+		print();
 	}
 	cout << "End hash   " << hex << hashKey << endl;
 	if (isCheckMate(black))
@@ -269,6 +271,28 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 				attackingPieces = (pieces[bp] << 16) & attacks[bp];
 				BITLOOP(pos, attackingPieces)
 					moveList.push_back(Move(pos - 16, pos, PAWN2, bp));
+				// Enpassent
+				if (b_enpassent) { // if enpassent is available possible
+					// Check if pawns are able to do enpassent
+					attackingPieces = (pieces[bp] << 1) & pieces[wp] & (_row << 32);
+					// Are white pawns left of black pawns?
+					if (attackingPieces) {
+						// Add move
+						BITSCANR64(pos, attackingPieces);
+						if (BIT_AT(pos + 8) & (whitePos | blackPos));
+							moveList.insert(moveList.begin(), Move(pos, pos + 8, ENPASSENT, bp));
+					}
+					else{
+						// Are white pawns right of black pawns?
+						attackingPieces = (pieces[bp] >> 1) & pieces[wp] & (_row << 32);
+						if (attackingPieces) {
+							// Add move
+							BITSCANR64(pos, attackingPieces);
+							if (BIT_AT(pos + 8) & (whitePos | blackPos));
+								moveList.insert(moveList.begin(), Move(pos, pos + 8, ENPASSENT, bp));
+						}
+					}
+				}
 				break;
 			case br: // BLACK ROOK
 				// Calculate attacked pieces
@@ -406,6 +430,27 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 				 attackingPieces = (pieces[wp] >> 16) & attacks[wp];
 				 BITLOOP(pos, attackingPieces)
 						 moveList.push_back(Move(pos + 16, pos, PAWN2, wp));
+				 if (w_enpassent) { // if enpassent is available possible
+				 // Check if pawns are able to do enpassent
+					 attackingPieces = (pieces[wp] << 1) & pieces[bp] & (_row << 24);
+					 // Are white pawns left of black pawns?
+					 if (attackingPieces) {
+						 // Add move
+						 BITSCANR64(pos, attackingPieces);
+						 if (BIT_AT(pos - 8) & (whitePos | blackPos));
+						 moveList.insert(moveList.begin(), Move(pos, pos - 8, ENPASSENT, wp));
+					 }
+					 else {
+						 // Are white pawns right of black pawns?
+						 attackingPieces = (pieces[wp] >> 1) & pieces[bp] & (_row << 24);
+						 if (attackingPieces) {
+							 // Add move
+							 BITSCANR64(pos, attackingPieces);
+							 if (BIT_AT(pos - 8) & (whitePos | blackPos));
+							 moveList.insert(moveList.begin(), Move(pos, pos - 8, ENPASSENT, wp));
+						 }
+					 }
+				 }
 				 break;
 			 case wr: // WHITE ROOK
 				 // Calculate attacked pieces
@@ -504,12 +549,13 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 
 void Board::makeMove(const Move& move)
 {
+	// TODO: check if MOV_PIECE(move.Pieces) is required for MOVE case in makeMove.
 	switch (move.flags & 0xFull){
 		case MOVE:
-			pieces[MOV_PIECE(move.Pieces)] ^= BIT_AT(move.from);     // Piece disappears from departure
-			pieces[MOV_PIECE(move.Pieces)] |= BIT_AT(move.to);       // Piece appears at destination
-			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from]; // Update hashKey...
-			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
+			pieces[move.Pieces] ^= BIT_AT(move.from);     // Piece disappears from departure
+			pieces[move.Pieces] |= BIT_AT(move.to);       // Piece appears at destination
+			hashKey ^= randomSet[move.Pieces][move.from]; // Update hashKey...
+			hashKey ^= randomSet[move.Pieces][move.to];
 			break;
 		case CAPTURE:
 			pieces[MOV_PIECE(move.Pieces)] ^= BIT_AT(move.from);     // Piece disappears from departure
@@ -520,12 +566,12 @@ void Board::makeMove(const Move& move)
 			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];
 			break;
 		case PAWN2:
-			pieces[MOV_PIECE(move.Pieces)] ^= BIT_AT(move.from);     // Piece disappears from departure
-			pieces[MOV_PIECE(move.Pieces)] |= BIT_AT(move.to);       // Piece appears at destination
+			pieces[move.Pieces] ^= BIT_AT(move.from);     // Piece disappears from departure
+			pieces[move.Pieces] |= BIT_AT(move.to);       // Piece appears at destination
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.from]; // Update hashKey...
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
 			hashKey ^= randomSet[ENPASSENT_HASH][move.from % 8];
-			(move.Pieces == bp ? b_enpassent : w_enpassent) |= 0x1 << move.from % 8;
+			(move.Pieces == bp ? w_enpassent : b_enpassent) |= 0x1 << (move.from % 8); // The other player can then perform enpassent
 			break;
 		case PROMOTION:
 			pieces[MOV_PIECE(move.Pieces)] ^= BIT_AT(move.from);     // removes pawn
@@ -564,6 +610,16 @@ void Board::makeMove(const Move& move)
 			makeMove(Move(d8, f8, MOVE, wk));
 			makeMove(Move(h8, e8, MOVE, wr));
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
+			break;
+		case ENPASSENT:
+			if (move.Pieces == bp) {
+				pieces[bp] ^= BIT_AT(move.from);
+				pieces[bp] |= BIT_AT(move.to);
+				pieces[wp] ^= BIT_AT(move.to + 8);
+			}
+			else {
+				// WIP
+			}
 			break;
 	}
 	// Check if castling still permitted
@@ -638,6 +694,8 @@ void Board::unMakeMove(const Move& move)
 			makeMove(Move(f8, d8, MOVE, wk));
 			makeMove(Move(e8, h8, MOVE, wr));
 			castlingRights = move.from;
+			break;
+		case ENPASSENT:
 			break;
 	}
 }

@@ -57,7 +57,7 @@ public:
 	vector<u64> pieces, attacks;
 	enum{ Ck = 0x1, CCk = 0x2, CK = 0x4, CCK = 0x8 };
 	byte castlingRights, b_enpassent, w_enpassent;
-	u64 whitePos, blackPos, whiteAtt, blackAtt,hashKey;
+	u64 whitePos, blackPos, allPos, whiteAtt, blackAtt,hashKey;
 	Zob_Hash hash;
 	vector<vector<u64>> randomSet;
 	color sideToMove; // To be implemented
