@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstdint>
 
+
 typedef unsigned uint;
 typedef uint64_t u64;
 typedef uint32_t u32;
@@ -55,6 +56,7 @@ typedef uint8_t  byte;
 																	(mask) ^= 0x1ull << pos)
 #endif
 
+// TODO: Use range based or iterator loops instead of these
 #define BLACKLOOP(x) for (int x = 0; x < 6;  ++x)
 #define WHITELOOP(x) for (int x = 6; x < 12; ++x)
 

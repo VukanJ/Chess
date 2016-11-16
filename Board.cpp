@@ -62,11 +62,11 @@ Board::Board(string fen) : Board()
 	for (auto& m : movelist){
 		cout << moveString(m) << endl;
 		makeMove(m, debugPlayerColor);
-		print();
-		printBitboard(whitePos);
+		//print();
+		//printBitboard(whitePos);
 		unMakeMove(m, debugPlayerColor);
-		print();
-		printBitboard(whitePos);
+		//print();
+		//printBitboard(whitePos);
 	}
 	cout << "End hash   " << hex << hashKey << endl;
 	if (isCheckMate(black))
@@ -91,11 +91,16 @@ Board::Board(string fen) : Board()
 void Board::updateAllAttacks()
 {
 	whiteAtt = blackAtt = 0x0;
-	for (int i = 0; i < 12; i++)
-		updateAttack((piece)i);
+	for (int i = 0; i < 12; i++){
+		 // Generate only if bitboard not empty
+		if(pieces[i])
+			updateAttack((piece)i);
+		else
+			attacks[i] = 0x0;
+	}
 	// Exclude pieces that attack pieces of same color
-	BLACKLOOP(i) attacks[i] = attacks[i] & ~blackPos;
-	WHITELOOP(i) attacks[i] = attacks[i] & ~whitePos;
+	BLACKLOOP(i) attacks[i] &= ~blackPos;
+	WHITELOOP(i) attacks[i] &= ~whitePos;
 	BLACKLOOP(i) blackAtt  |= attacks[i];
 	WHITELOOP(i) whiteAtt  |= attacks[i];
 }
@@ -127,6 +132,7 @@ void Board::updateAttack(piece p)
 				attacks[bb] |= floodFill(pieces[bb], ~allPos, (dir)i++);
 			break;
 		case bk:
+			// TODO: No bitloop needed
 			mask = pieces[bk];
 			attacks[bk] = 0x0;
 			BITLOOP(pos, mask) attacks[bk] |= KING_ATTACKS[pos] & ~blackPos;
@@ -232,6 +238,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 	Aggressive and special moves are generated first and preferably stored
 	at the front of the movelist
 	*/
+	// TODO: Do not generate empty boards
 	unsigned long pos = nulSq;
 	u64 attackMask = 0x0;
 	u64 pieceAttacks = 0x0, attackingPieces = 0x0;
@@ -266,7 +273,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 				BITLOOP(pos, attackingPieces){
 					if (pos < 56){
 						moveList.push_back(Move(pos - 8, pos, MOVE, bp));
-					} 
+					}
 					else{
 						moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, PIECE_PAIR(bp, bq)));
 						moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, PIECE_PAIR(bp, bn)));
@@ -397,7 +404,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 	}
  else{////////////////////////////////////////////////WHITE MOVE GENERATION///////////////////////////////////////////////////
 	  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	WHITELOOP(w){ // Loop through black pieces
+	WHITELOOP(w){ // Loop through white pieces
 		 attackingPieces = pieces[w];
 		 switch (w){
 			 case wp:
@@ -556,7 +563,7 @@ void Board::makeMove(const Move& move, color side)
 {
 	// TODO: Check if castling does enough hash updates
 	switch (move.flags & 0xFull){
-		case MOVE:             
+		case MOVE:
 			pieces[move.Pieces] ^= BIT_AT(move.from);     // Piece disappears from departure
 			pieces[move.Pieces] |= BIT_AT(move.to);       // Piece appears at destination
 			hashKey ^= randomSet[move.Pieces][move.from]; // Update hashKey...
@@ -766,7 +773,7 @@ void Board::unMakeMove(const Move& move, color side)
 
 			blackPos ^= (blackPos & 0xFull); // turn 00001100 into 00010001
 			blackPos |= 0x11ull;
-			break; 
+			break;
 		case WCASTLE_2: // Castling long
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
 			makeMove(Move(f8, d8, MOVE, wk), white);
@@ -861,7 +868,7 @@ unsigned inline Board::blockedPawn(color col)
 {
 	// Returns number of blocked pawns.
 	// Pawns can be blocked by pieces of any color
-	if (col == black) 
+	if (col == black)
 		 return POPCOUNT((pieces[bp] << 8) & allPos);
 	else return POPCOUNT((pieces[wp] >> 8) & allPos);
 }
