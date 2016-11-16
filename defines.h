@@ -60,4 +60,7 @@ typedef uint8_t  byte;
 #define BLACKLOOP(x) for (int x = 0; x < 6;  ++x)
 #define WHITELOOP(x) for (int x = 6; x < 12; ++x)
 
+#define BLACKLOOP_IT(x) for (auto& x = pieces.begin(); x != pieces.end() - 5; x++)
+#define WHITELOOP_IT(x) for (auto& x = pieces.begin() + 6; x != pieces.end(); x++)
+
 #endif

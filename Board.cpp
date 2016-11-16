@@ -238,7 +238,6 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 	Aggressive and special moves are generated first and preferably stored
 	at the front of the movelist
 	*/
-	// TODO: Do not generate empty boards
 	unsigned long pos = nulSq;
 	u64 attackMask = 0x0;
 	u64 pieceAttacks = 0x0, attackingPieces = 0x0;
@@ -246,6 +245,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 	if (side == black){ ////////////////////////////////////////////////BLACK MOVE GENERATION///////////////////////////////////////////////////
 	BLACKLOOP(b){ // Loop through black pieces
 		attackingPieces = pieces[b];
+		if(attackingPieces)
 		switch (b){
 			case bp:
 				// Find normal captures:
@@ -406,6 +406,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 	  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	WHITELOOP(w){ // Loop through white pieces
 		 attackingPieces = pieces[w];
+		 if(attackingPieces)
 		 switch (w){
 			 case wp:
 				 // Find normal captures:
