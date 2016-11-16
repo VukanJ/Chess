@@ -38,6 +38,10 @@ Board::Board(string fen) : Board()
 		if (pieces[wr] & 0x8000000000000000ull && pieces[wk] & 0x1000000000000000ull) castlingRights |= CCK;
 		allPos = blackPos | whitePos;
 	}
+}
+
+void Board::debug()
+{
 	cout << "Castling rights -> ";
 	printBits(castlingRights);
 
@@ -59,7 +63,7 @@ Board::Board(string fen) : Board()
 	generateMoveList(movelist, debugPlayerColor);
 
 	cout << "Start hash " << hex << hashKey << endl;
-	for (auto& m : movelist){
+	for (auto& m : movelist) {
 		cout << moveString(m) << endl;
 		makeMove(m, debugPlayerColor);
 		//print();
@@ -74,14 +78,14 @@ Board::Board(string fen) : Board()
 	else if (isCheckMate(white))
 		cout << "CHECKMATE FOR WHITE!\n";
 
-	if (startingHash != hashKey){
+	if (startingHash != hashKey) {
 		cerr << "\t\t\t::: HASHING ERROR :::\n";
 		printBitboard(hashKey);
 	}
 	else clog << "::: HASH OK :::\n";
 	if (!pieces[bk] || !pieces[wk])
 		cerr << "Missing Kings!!\n";
-	if (POPCOUNT(pieces[bk]) > 1 || POPCOUNT(pieces[wk]) > 1){
+	if (POPCOUNT(pieces[bk]) > 1 || POPCOUNT(pieces[wk]) > 1) {
 		// No need to handle multiple kings
 		cerr << "Too many kings. Invalid Board!\n" << endl;
 		exit(1);
@@ -245,7 +249,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 	if (side == black){ ////////////////////////////////////////////////BLACK MOVE GENERATION///////////////////////////////////////////////////
 	BLACKLOOP(b){ // Loop through black pieces
 		attackingPieces = pieces[b];
-		if(attackingPieces)
+		if(attackingPieces) // Only consider non-empty boards
 		switch (b){
 			case bp:
 				// Find normal captures:

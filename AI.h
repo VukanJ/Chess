@@ -17,6 +17,7 @@ const unsigned int targetDepth = 1;
 
 class AI
 {
+friend class Benchmark;
 public:
 	struct Node{
 		vector<Move> moves;

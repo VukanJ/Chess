@@ -3,12 +3,17 @@
 #include <iostream>
 #include <climits>
 #include <string>
+#include <chrono>
 
 #include "misc.h"
 #include "Data.h"
 #include "defines.h"
+#include "AI.h"
+#include "Board.h"
 
 using namespace std;
+
+typedef pair<string, string> stringpair;
 
 class ChessError
 {
@@ -35,6 +40,27 @@ public:
 	UnitTest();
 	void testDefines() const;
 	void testIntrinsics() const;
+};
+
+#pragma optimize( "[optimization-list]", {on | off} )
+
+class Benchmark 
+{
+public:
+	Benchmark();
+	void performAllbenchmarks();
+	void summarize();
+
+	void benchmarkMoveGeneration();
+	void benchmarkMovemaking();
+private:
+	bool performingAll;
+	struct result {
+		string name; 
+		string msg;
+		double value;
+	};
+	vector<result> results;
 };
 
 #endif

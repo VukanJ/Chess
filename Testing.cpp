@@ -146,3 +146,113 @@ void UnitTest::testIntrinsics() const
 
 	cout << "Intrinsics passed all tests!\n";
 }
+
+Benchmark::Benchmark() : performingAll(false){}
+
+void Benchmark::performAllbenchmarks() 
+{
+	clog << "\t::: STARTED ALL BENCHMARK :::\n";
+	performingAll = true;
+	benchmarkMoveGeneration();
+	benchmarkMovemaking();
+	performingAll = false;
+	clog << "\t::: END OF ALL BENCHMARKS :::\n";
+}
+
+#pragma optimize( "", off ) // Never "optimize" benchmarks
+void Benchmark::benchmarkMoveGeneration()
+{
+	if (performingAll) {
+		results.push_back(result{ "generateMoveList","",0 });
+	}
+	else {
+		clog << "\t::: BENCHMARK :::\n";
+		clog << "Started Benchmarking Board::generateMoveList(...)\n";
+	}
+	// Measure move generation time
+	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5");
+	vector<Move> moves;
+
+	vector<double> measurement;
+	int testSize = 1e6;
+	measurement.reserve(testSize);
+	moves.reserve(testSize);
+
+	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
+	for (int i = 0; i < testSize; i++) {
+		samplePlayer.chessBoard.generateMoveList(moves, black);
+	}
+	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
+	measurement.push_back(chrono::duration_cast<chrono::microseconds>(t2 - t1).count());
+	moves.clear();
+	double sum = 0;
+	for (auto& m : measurement) sum += m;
+	double averageMoveGenTime = (sum / testSize) * 1e-6; // in seconds
+
+	if (performingAll) {
+		results.back().msg = "Number of million boards per second: ";
+		results.back().value = averageMoveGenTime;
+	}
+	else {
+		printf("Move generation takes approx. %f microseconds\n", averageMoveGenTime*1e6);
+		printf("Generates %f million boards per second\n", (1.0 / averageMoveGenTime)*1e-6);
+		clog << "\t::: END OF BENCHMARK :::\n";
+	}
+}
+#pragma optimize( "", on )
+
+#pragma optimize( "", off ) // Never "optimize" benchmarks
+void Benchmark::benchmarkMovemaking()
+{
+	// Measure move generation time
+	if (performingAll) {
+		results.push_back(result{ "makeMove/unMakeMove","",0 });
+	}
+	else {
+		clog << "\t::: BENCHMARK :::\n";
+		clog << "Started Benchmarking Board::makeMove/unMakeMove(...)\n";
+	}
+
+	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5");
+	vector<Move> moves;
+	samplePlayer.chessBoard.generateMoveList(moves, black);
+	auto& boardref = samplePlayer.chessBoard;
+	int numOfMoves = moves.size();
+	int testsize = 1e6;
+	vector<double> measurement;
+	measurement.reserve(testsize);
+
+	for (int i = 0; i < testsize; i++) {
+		chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
+		for (auto& move : moves) {
+			boardref.makeMove(move, black);
+			boardref.unMakeMove(move, black);
+		}
+		chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
+		measurement.push_back(chrono::duration_cast<chrono::microseconds>(t2 - t1).count());
+	}
+	double sum = 0;
+	for (auto& m : measurement) sum += m;
+	double averageMoveMakeTime = (sum / (numOfMoves*testsize)) * 1e-6; // in seconds
+
+	if (performingAll) {
+		results.back().msg = "Number of million moves and unmake per second: ";
+		results.back().value = averageMoveMakeTime;
+	}
+	else {
+		printf("Move making and undoing takes approx. %f microseconds\n", averageMoveMakeTime*1e6);
+		printf("Makes %f move/unmakemoves per second\n", 1.0 / averageMoveMakeTime);
+		clog << "\t::: END OF BENCHMARK :::\n";
+	}
+}
+#pragma optimize( "", on )
+
+void Benchmark::summarize()
+{
+	clog << "\t::: BENCHMARK SUMMARY:::\n" << string(40, '~') << '\n';
+	for (auto& result : results) {
+		clog << result.name << '\n';
+		clog << result.msg << '\t' << result.value << '\n';
+	}
+	clog << "\t::: END OF SUMMARY :::\n" << string(40, '~') << '\n';
+}

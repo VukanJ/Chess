@@ -32,6 +32,7 @@ public:
 	Board(string fen);
 	// Init
 	void initHash(); // Used only for Init!, this key is updated for each move
+	void debug();
 
 	// Move making
 	void updateAttack(piece p);
