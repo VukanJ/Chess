@@ -149,7 +149,7 @@ void UnitTest::testIntrinsics() const
 
 Benchmark::Benchmark() : performingAll(false){}
 
-void Benchmark::performAllbenchmarks() 
+void Benchmark::performAllbenchmarks()
 {
 	clog << "\t::: STARTED ALL BENCHMARK :::\n";
 	performingAll = true;
@@ -163,7 +163,7 @@ void Benchmark::performAllbenchmarks()
 void Benchmark::benchmarkMoveGeneration()
 {
 	if (performingAll) {
-		results.push_back(result{ "generateMoveList","",0 });
+		results.push_back(result{MOVEGEN ,"generateMoveList","",0 });
 	}
 	else {
 		clog << "\t::: BENCHMARK :::\n";
@@ -206,7 +206,7 @@ void Benchmark::benchmarkMovemaking()
 {
 	// Measure move generation time
 	if (performingAll) {
-		results.push_back(result{ "makeMove/unMakeMove","",0 });
+		results.push_back(result{MAKEMOVE, "makeMove/unMakeMove","",0 });
 	}
 	else {
 		clog << "\t::: BENCHMARK :::\n";
@@ -249,10 +249,17 @@ void Benchmark::benchmarkMovemaking()
 
 void Benchmark::summarize()
 {
-	clog << "\t::: BENCHMARK SUMMARY:::\n" << string(40, '~') << '\n';
+	clog << "\t::: BENCHMARK SUMMARY:::\n" << string(80, '~') << '\n';
 	for (auto& result : results) {
 		clog << result.name << '\n';
-		clog << result.msg << '\t' << result.value << '\n';
+		switch(result.type){
+			case MOVEGEN:
+				clog << result.msg << '\t' << (1.0/result.value)*1e-6 << '\n';
+			break;
+			case MAKEMOVE:
+				clog << result.msg << '\t' << (1.0/result.value)*1e-6 << '\n';
+			break;
+		}
 	}
-	clog << "\t::: END OF SUMMARY :::\n" << string(40, '~') << '\n';
+	clog << "\t::: END OF SUMMARY :::\n" << string(80, '~') << '\n';
 }

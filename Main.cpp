@@ -16,9 +16,9 @@ int main()
 	test.testDefines();
 	test.testIntrinsics();
 
-	//Benchmark bench;
-	//bench.performAllbenchmarks();
-	//bench.summarize();
+	Benchmark bench;
+	bench.performAllbenchmarks();
+	bench.summarize();
 
 	cin.ignore();
 	return 0;

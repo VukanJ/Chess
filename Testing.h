@@ -44,7 +44,7 @@ public:
 
 #pragma optimize( "[optimization-list]", {on | off} )
 
-class Benchmark 
+class Benchmark
 {
 public:
 	Benchmark();
@@ -54,9 +54,11 @@ public:
 	void benchmarkMoveGeneration();
 	void benchmarkMovemaking();
 private:
+	enum bType{MOVEGEN, MAKEMOVE};
 	bool performingAll;
 	struct result {
-		string name; 
+		bType type;
+		string name;
 		string msg;
 		double value;
 	};
