@@ -30,7 +30,7 @@ void AI::printDebug(string showPieces)
 	}
 }
 
-void AI::negaMax_Search(Node* node, int depth)
+void AI::negaMax_Search(unique_ptr<AI::Node*> node, int depth)
 {
 	// Calculate move list
 	// Sort moves

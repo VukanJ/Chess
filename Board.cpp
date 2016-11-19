@@ -38,12 +38,15 @@ Board::Board(string fen) : Board()
 		if (pieces[wr] & 0x8000000000000000ull && pieces[wk] & 0x1000000000000000ull) castlingRights |= CCK;
 		allPos = blackPos | whitePos;
 	}
+
+	debug();
+
 }
 
 void Board::debug()
 {
-	cout << "Castling rights -> ";
-	printBits(castlingRights);
+	//cout << "Castling rights -> ";
+	//printBits(castlingRights);
 
 	sideToMove = black; // To be implemented
 	updateAllAttacks();
@@ -63,8 +66,10 @@ void Board::debug()
 	generateMoveList(movelist, debugPlayerColor);
 
 	cout << "Start hash " << hex << hashKey << endl;
+	int count = 0;
 	for (auto& m : movelist) {
-		cout << moveString(m) << endl;
+		cout << moveString(m) << (count % 10 == 0 ? "\n" : "  ");
+		count++;
 		makeMove(m, debugPlayerColor);
 		//print();
 		//printBitboard(whitePos);
@@ -72,7 +77,7 @@ void Board::debug()
 		//print();
 		//printBitboard(whitePos);
 	}
-	cout << "End hash   " << hex << hashKey << endl;
+	cout << "\nEnd hash   " << hex << hashKey << endl;
 	if (isCheckMate(black))
 		cout << "CHECKMATE FOR BLACK!\n";
 	else if (isCheckMate(white))
@@ -852,7 +857,7 @@ void Board::print() const
 
 float Board::evaluate()
 {
-	// Computer is always black
+	// Computer is always maximizing player
 
 	// Material
 	float material = 9.0f * ((float)POPCOUNT(pieces[bq]) - (float)POPCOUNT(pieces[wq]))
