@@ -1,9 +1,9 @@
 #include "AI.h"
 
-AI::AI(string FEN)
+AI::AI(string FEN, color computerColor) : aiColor(computerColor)
 {
 	genChessData data;
-	data.gen();
+	data.gen(); // Generates bitboards needed for move generation
 	chessBoard = Board(FEN);
 	debug();
 }
@@ -30,27 +30,50 @@ void AI::printDebug(string showPieces)
 	}
 }
 
-void AI::negaMax_Search(unique_ptr<AI::Node*> node, int depth)
+void AI::Play()
 {
+	targetDepth = 1;
+	// Builds gametree and determines best move and plays it
+	// Root == current board position with depth = 0
+	for (;;) { 
+		// Loop until time is up or set maximum iteration 
+		// depth is reached (depends on game options) 
+		negaMax_Search(Root, 0, aiColor);
+		targetDepth++;
+	}
+}
+
+void AI::negaMax_Search(nodePtr& node, int depth, color side)
+{
+	// TODO: Check if mate
 	// Calculate move list
 	// Sort moves
 	// Evaluate board(s)
 	// Use negamax
-
-	///chessBoard.generateMoveList(node->moves, black);
-	///for (auto mov = node->moves.begin(); mov != node->moves.end();){
-	///	chessBoard.makeMove(*mov);
-	///	if(!chessBoard.hash.hasEntry(chessBoard.hashKey))
-	///		node->boardScore = chessBoard.evaluate();
-	///	else node->boardScore = chessBoard.hash.getEntry(chessBoard.hashKey, node->boardScore);
-	///	// calc alpha beta and return if neccessary
-	///	// negaMax_Search()
-	///	// mov++;
-	///}
-	// Unfinished
+	// Toggle side to move
+	chessBoard.generateMoveList(node->moves, sideToMove);
+	for (auto move = node->moves.begin(); move != node->moves.end();){
+		// Do all moves
+		if (chessBoard.makeMove(*move, side)) {
+			// Move invalid => discard
+			chessBoard.unMakeMove(*move, side);
+			move = node->moves.erase(move);
+		}
+		else {
+			// If BoardPosition already known, use hashed value
+			if (!chessBoard.hash.hasEntry(chessBoard.hashKey))
+				node->boardValue = chessBoard.evaluate();
+			else chessBoard.hash.getEntry(chessBoard.hashKey, node->boardValue);
+		}
+	}
 }
 
 const Board& AI::getBoardRef()
 {
 	return chessBoard;
+}
+
+AI::Node::Node() : ordering(0), boardValue(0), alpha(-INFINITY), beta(INFINITY){
+	moves.reserve(10);
+	nodes.reserve(10);
 }

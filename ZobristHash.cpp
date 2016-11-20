@@ -16,13 +16,13 @@ void Zob_Hash::addEntry(const u64 key, float value, int depth)
 
 bool Zob_Hash::hasEntry(const u64 key) const
 {
-	int index = key % (u64)entries.size();
+	auto index = (unsigned)(key % (u64)entries.size());
 	return (entries[index].search_depth != -1) ? true : false;
 }
 
 bool Zob_Hash::getEntry(const u64 key, float& value) const
 {
-	int index = key % (u64)entries.size();
+	auto index = (unsigned)(key % (u64)entries.size());
 	if (entries[index].search_depth != -1){
 		value = entries[index].value;
 		return true;
@@ -32,7 +32,7 @@ bool Zob_Hash::getEntry(const u64 key, float& value) const
 
 bool Zob_Hash::getEntry(const u64 key, float& value, int& depth) const
 {
-	int index = key % (u64)entries.size();
+	int index = (unsigned)(key % (u64)entries.size());
 	if (entries[index].search_depth != -1){
 		value = entries[index].value;
 		depth = entries[index].search_depth;

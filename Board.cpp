@@ -1,5 +1,7 @@
 #include "Board.h"
 
+// TODO: Fully implement FEN interpretation, so that black is always generated facing down. 
+
 Board::Board()
 	: whitePos(0x0), blackPos(0x0), whiteAtt(0x0), blackAtt(0x0), hashKey(0x0),
 	castlingRights(0x0), b_enpassent(0x0), w_enpassent(0x0)
@@ -7,7 +9,8 @@ Board::Board()
 	pieces  = vector<u64>(12, 0x0);
 	attacks = vector<u64>(12, 0x0);
 	randomSet  = hash.getRandomSet();
-	sideToMove = black; // To be implemented
+	// White always makes the first move
+	sideToMove = white;
 }
 
 Board::Board(string fen) : Board()
@@ -20,35 +23,41 @@ Board::Board(string fen) : Board()
 		castlingRights = 0xFFull;
 	}
 	else { // Setup board according to FEN
-		int counter = -1;
-		for (auto& p : fen) {
-			if (isdigit(p))
-				counter += p - 48;
-			else {
-				counter++;
-				if (p == '/') counter--;
-				else pieces[getPieceIndex(p)] |= BIT_AT_R(counter);
-			}
-		}
-		for (int p = 0; p < 6;  p++) blackPos |= pieces[p];
-		for (int p = 6; p < 12; p++) whitePos |= pieces[p];
-		if (pieces[br] & 0x1ull  && pieces[bk] & 0x10ull) castlingRights |= Ck;
-		if (pieces[br] & 0x80ull && pieces[bk] & 0x10ull) castlingRights |= CCk;
-		if (pieces[wr] & 0x0100000000000000ull && pieces[wk] & 0x1000000000000000ull) castlingRights |= CK;
-		if (pieces[wr] & 0x8000000000000000ull && pieces[wk] & 0x1000000000000000ull) castlingRights |= CCK;
-		allPos = blackPos | whitePos;
+		// FEN = [position sideToMove castlingrights enpassentSquares NofHalfMoves MoveNumber]
+
+		boost::trim(fen);
+		//list<string> fenArgs;
+		//boost::split(fenArgs, fen, boost::is_any_of(" "));
+		//for (auto a : fenArgs) {
+		//	cout << a << '$';
+		//}
+		//cout << endl;
+		///int counter = -1;
+		///for (auto& p : fen) {
+		///	if (isdigit(p))
+		///		counter += p - 48;
+		///	else {
+		///		counter++;
+		///		if (p == '/') counter--;
+		///		else pieces[getPieceIndex(p)] |= BIT_AT_R(counter);
+		///	}
+		///}
+		///for (int p = 0; p < 6;  p++) blackPos |= pieces[p];
+		///for (int p = 6; p < 12; p++) whitePos |= pieces[p];
+		///if (pieces[br] & 0x1ull  && pieces[bk] & 0x10ull) castlingRights |= Ck;
+		///if (pieces[br] & 0x80ull && pieces[bk] & 0x10ull) castlingRights |= CCk;
+		///if (pieces[wr] & 0x0100000000000000ull && pieces[wk] & 0x1000000000000000ull) castlingRights |= CK;
+		///if (pieces[wr] & 0x8000000000000000ull && pieces[wk] & 0x1000000000000000ull) castlingRights |= CCK;
+		///allPos = blackPos | whitePos;
 	}
-
+	sideToMove = white; // To be implemented
 	debug();
-
 }
 
 void Board::debug()
 {
 	//cout << "Castling rights -> ";
 	//printBits(castlingRights);
-
-	sideToMove = black; // To be implemented
 	updateAllAttacks();
 	initHash();
 
@@ -77,6 +86,7 @@ void Board::debug()
 		//print();
 		//printBitboard(whitePos);
 	}
+
 	cout << "\nEnd hash   " << hex << hashKey << endl;
 	if (isCheckMate(black))
 		cout << "CHECKMATE FOR BLACK!\n";
@@ -300,7 +310,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 					if (attackingPieces) {
 						// Add move
 						BITSCANR64(pos, attackingPieces);
-						if (BIT_AT(pos + 8) & allPos);
+						if (BIT_AT(pos + 8) & allPos)
 							moveList.insert(moveList.begin(), Move(pos, pos + 8, ENPASSENT, bp));
 					}
 					else{
@@ -309,7 +319,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						if (attackingPieces) {
 							// Add move
 							BITSCANR64(pos, attackingPieces);
-							if (BIT_AT(pos + 8) & allPos);
+							if (BIT_AT(pos + 8) & allPos)
 								moveList.insert(moveList.begin(), Move(pos, pos + 8, ENPASSENT, bp));
 						}
 					}
@@ -459,8 +469,8 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 					 if (attackingPieces) {
 						 // Add move
 						 BITSCANR64(pos, attackingPieces);
-						 if (BIT_AT(pos - 8) & allPos);
-						 moveList.insert(moveList.begin(), Move(pos, pos - 8, ENPASSENT, wp));
+						 if (BIT_AT(pos - 8) & allPos)
+							moveList.insert(moveList.begin(), Move(pos, pos - 8, ENPASSENT, wp));
 					 }
 					 else {
 						 // Are white pawns right of black pawns?
@@ -468,8 +478,8 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						 if (attackingPieces) {
 							 // Add move
 							 BITSCANR64(pos, attackingPieces);
-							 if (BIT_AT(pos - 8) & allPos);
-							 moveList.insert(moveList.begin(), Move(pos, pos - 8, ENPASSENT, wp));
+							 if (BIT_AT(pos - 8) & allPos)
+								 moveList.insert(moveList.begin(), Move(pos, pos - 8, ENPASSENT, wp));
 						 }
 					 }
 				 }
@@ -569,8 +579,10 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 	}
 }
 
-void Board::makeMove(const Move& move, color side)
+bool Board::makeMove(const Move& move, color side)
 {
+	// Returns true if move is invalid (King is in check)
+
 	// TODO: Check if castling does enough hash updates
 	switch (move.flags & 0xFull){
 		case MOVE:
@@ -679,6 +691,9 @@ void Board::makeMove(const Move& move, color side)
 				// WIP
 			}
 			break;
+		default:
+			cerr << "Invalid move encountered!\n";
+			exit(1);
 	}
 	// Check if castling still permitted
 	byte cast = (move.flags & 0xF0ull)>>4;
@@ -689,6 +704,11 @@ void Board::makeMove(const Move& move, color side)
 		else if (cast & CCK){ castlingRights &= ~CCK; }
 	}
 	allPos = blackPos | whitePos;
+	if (((side == black) && (pieces[bk] & whiteAtt))
+		|| ((side == white) && (pieces[wk] & blackAtt))) {
+		return true; // Move is invalid, king left in check
+	}
+	else return false;
 }
 
 void Board::unMakeMove(const Move& move, color side)
@@ -795,6 +815,9 @@ void Board::unMakeMove(const Move& move, color side)
 			break;
 		case ENPASSENT:
 			break;
+		default:
+			cerr << "Invalid move encountered!\n";
+			exit(1);
 	}
 	allPos = blackPos | whitePos;
 }
@@ -836,13 +859,13 @@ void Board::print() const
 		}
 	}
 	#ifdef _WIN32 // Since Unicode is not really supported in C++ yet
-		cout << string(10, static_cast<char>(219)) << endl;
+		cout << string(10, (char)(219)) << endl;
 		for (auto r : asciiBoard) {
 			cout << char(219);
 			for (auto c : r) cout << c;
 			cout << char(219) << '\n';
 		}
-		cout << string(10, static_cast<char>(219)) << '\n';
+		cout << string(10, (char)(219)) << '\n';
 	#else
 		auto repChar = [](int c){for(int i = 0; i < c; i++)cout << "\u2588";};
  		repChar(10);cout <<  '\n';
@@ -879,6 +902,6 @@ unsigned inline Board::blockedPawn(color col)
 	// Returns number of blocked pawns.
 	// Pawns can be blocked by pieces of any color
 	if (col == black)
-		 return POPCOUNT((pieces[bp] << 8) & allPos);
-	else return POPCOUNT((pieces[wp] >> 8) & allPos);
+		 return (unsigned) POPCOUNT((pieces[bp] << 8) & allPos);
+	else return (unsigned) POPCOUNT((pieces[wp] >> 8) & allPos);
 }

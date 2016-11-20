@@ -170,11 +170,11 @@ void Benchmark::benchmarkMoveGeneration()
 		clog << "Started Benchmarking Board::generateMoveList(...)\n";
 	}
 	// Measure move generation time
-	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5");
+	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5", black);
 	vector<Move> moves;
 
 	vector<double> measurement;
-	int testSize = 1e6;
+	int testSize = (int)1e6;
 	measurement.reserve(testSize);
 	moves.reserve(testSize);
 
@@ -183,7 +183,7 @@ void Benchmark::benchmarkMoveGeneration()
 		samplePlayer.chessBoard.generateMoveList(moves, black);
 	}
 	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-	measurement.push_back(chrono::duration_cast<chrono::microseconds>(t2 - t1).count());
+	measurement.push_back((double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count());
 	moves.clear();
 	double sum = 0;
 	for (auto& m : measurement) sum += m;
@@ -213,12 +213,12 @@ void Benchmark::benchmarkMovemaking()
 		clog << "Started Benchmarking Board::makeMove/unMakeMove(...)\n";
 	}
 
-	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5");
+	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5", black);
 	vector<Move> moves;
 	samplePlayer.chessBoard.generateMoveList(moves, black);
 	auto& boardref = samplePlayer.chessBoard;
-	int numOfMoves = moves.size();
-	int testsize = 1e6;
+	size_t numOfMoves = moves.size();
+	int testsize = (int)1e6;
 	vector<double> measurement;
 	measurement.reserve(testsize);
 
@@ -229,7 +229,7 @@ void Benchmark::benchmarkMovemaking()
 			boardref.unMakeMove(move, black);
 		}
 		chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-		measurement.push_back(chrono::duration_cast<chrono::microseconds>(t2 - t1).count());
+		measurement.push_back((double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count());
 	}
 	double sum = 0;
 	for (auto& m : measurement) sum += m;

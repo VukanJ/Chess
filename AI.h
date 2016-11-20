@@ -19,10 +19,9 @@ const unsigned int targetDepth = 1;
 class AI
 {
 friend class Benchmark;
+class Node;
+typedef unique_ptr<AI::Node> nodePtr;
 private:
-	Board chessBoard;
-	color sideToMove;
-
 	enum moveOrdering{
 		QUIET,
 		CAPTURE,
@@ -34,22 +33,32 @@ private:
 	{
 	public:
 		Node();
-		Move move;
 		float boardValue, alpha, beta;
 		byte ordering;
-		vector<unique_ptr<AI::Node*>> nodes;
+		vector<Move> moves;
+		vector<nodePtr> nodes;
 	};
+
+	/*~~~~~~~~~~~~~~~~~~~ Master function ~~~~~~~~~~~~~~~~~~~*/
+	void negaMax_Search(nodePtr& node, int depth, color side);
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+	nodePtr Root;
+	Board chessBoard;
+	color sideToMove;
+	int targetDepth; // Needed for iterative deepening
 public:
-	AI(string FEN);
+	AI(string FEN, color computerColor);
 	void printDebug(string show = "prnbkqPRNBKQ");
 	void printBoard();
 
-	/*~~~~~~~~~~~ Master function ~~~~~~~~~~~*/
-	void negaMax_Search(unique_ptr<AI::Node*> node, int depth);
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-
+	void Play(); // Play
+	
 	void debug();
 	const Board& getBoardRef();
+
+	// Piece color of computer
+	const color aiColor;
 };
 
 #endif

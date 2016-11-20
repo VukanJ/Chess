@@ -7,6 +7,7 @@
 #include <string>
 #include <stack>
 #include <chrono>
+#include <boost/algorithm/string.hpp>
 
 #include "Data.h"
 #include "ZobristHash.h"
@@ -21,6 +22,10 @@ struct Move
 		: from(OldCastlingRights), to(nulSq), flags(_flags), Pieces(nulPiece) {}
 	Move(byte _from, byte _to, byte _flags, byte _pieces)
 		: from(_from), to(_to), flags(_flags), Pieces(_pieces) {}
+	Move(unsigned long _from, unsigned long _to, byte _flags, byte _pieces)
+		: from((byte)_from), to((byte)_to), flags(_flags), Pieces(_pieces) {}
+	Move(int _from, int _to, byte _flags, byte _pieces)
+		: from((byte)_from), to((byte)_to), flags(_flags), Pieces(_pieces) {}
 	byte from, to, flags, Pieces;
 	// Flagbits: 1-4: castlingRuleReset?[k,K,w,W]; 5-8: Movetype
 };
@@ -38,7 +43,7 @@ public:
 	void updateAttack(piece p);
 	void updateAllAttacks();
 	void generateMoveList(vector<Move>&, color) const;
-	void makeMove(const Move&, color side);
+	bool makeMove(const Move&, color side);
 	void unMakeMove(const Move&, color side);
 	bool isCheckMate(color) const;
 

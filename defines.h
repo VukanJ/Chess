@@ -11,16 +11,16 @@ typedef uint32_t u32;
 typedef uint16_t u16;
 typedef uint8_t  byte;
 
-#define BIT_AT(x) (0x1ull << x)                         // Sets nth bit in number counting from least significant bit
-#define BIT_AT_R(x) (0x1ull << (63 - x))                // Sets nth bit in number counting from most significant bit
-#define PIECE_PAIR(X,Y) (X | (Y << 4))                  // Pairs up 4-bit piece information
+#define BIT_AT(x) (0x1ull << (x))                         // Sets nth bit in number counting from least significant bit
+#define BIT_AT_R(x) (0x1ull << (63 - (x)))                // Sets nth bit in number counting from most significant bit
+#define PIECE_PAIR(X,Y) ((X) | ((Y) << 4))                  // Pairs up 4-bit piece information
 
 // Move formatting macros:
-#define MOV_PIECE(DATA) (DATA & 0xF)                     // Piece that moves
-#define TARGET_PIECE(DATA) ((DATA & 0xF0) >> 4)          // Target piece
-#define MOVE_TYPE(DATA) ((DATA & (0xFFull << 8)) >> 8)   // Move type
-#define MOVE_TO(DATA) ((DATA & (0xFFull << 16)) >> 16)   // To-Square
-#define MOVE_FROM(DATA) ((DATA & (0xFFull << 24)) >> 24) // From-Square
+#define MOV_PIECE(DATA) ((DATA) & 0xF)                     // Piece that moves
+#define TARGET_PIECE(DATA) (((DATA) & 0xF0) >> 4)          // Target piece
+#define MOVE_TYPE(DATA) (((DATA) & (0xFFull << 8)) >> 8)   // Move type
+#define MOVE_TO(DATA) (((DATA) & (0xFFull << 16)) >> 16)   // To-Square
+#define MOVE_FROM(DATA) (((DATA) & (0xFFull << 24)) >> 24) // From-Square
 
 #ifdef _WIN32
 	#ifndef __MACHINEX64
