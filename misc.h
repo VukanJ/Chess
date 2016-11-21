@@ -10,9 +10,6 @@
 
 using namespace std;
 
-// TODO: Check if variable for all pieces is necessarry
-// TODO: Update Positions after move
-
 const u64 _msb       = 0x11ull << 63;
 const u64 _col       = 0x101010101010101ull;
 const u64 _row       = 0xFFull;
@@ -63,19 +60,6 @@ enum piece {
 
 enum color { black, white };
 
-enum moveType{ 
-	MOVE,        // Quiet move
-	CAPTURE,     // Capture
-	PAWN2,       // Double pawn push
-	PROMOTION,   // Pawn promotion
-	C_PROMOTION, // Capture and promotion
-	ENPASSENT,   // Enpassent
-	WCASTLE,     // White castle o-o
-	WCASTLE_2,   // White castle o-o-o
-	BCASTLE,     // Black castle o-o
-	BCASTLE_2,   // Black castle o-o-o
-};
-
 static piece getPieceIndex(char p)
 {
 	piece res;
@@ -96,13 +80,6 @@ static piece getPieceIndex(char p)
 	}
 	return res;
 }
-
-enum attacks {
-	att_bp, att_br, att_bn, att_bb, att_bk, att_bq,
-	att_wp, att_wr, att_wn, att_wb, att_wk, att_wq
-};
-
-enum hashPosition{CASTLE_HASH = 12, ENPASSENT_HASH = 13};
 
 enum {
 	h1, g1, f1, e1, d1, c1, b1, a1,

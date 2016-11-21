@@ -7,6 +7,8 @@
 // Zob_Hash stores already evaluated Boards
 // by Zobrist-key
 
+enum hashPosition { CASTLE_HASH = 12, ENPASSENT_HASH = 13 };
+
 class Zob_Hash
 {
 public:

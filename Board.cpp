@@ -1,7 +1,5 @@
 #include "Board.h"
 
-// TODO: Fully implement FEN interpretation, so that black is always generated facing down. 
-
 Board::Board()
 	: whitePos(0x0), blackPos(0x0), whiteAtt(0x0), blackAtt(0x0), hashKey(0x0),
 	castlingRights(0x0), b_enpassent(0x0), w_enpassent(0x0)
@@ -13,45 +11,68 @@ Board::Board()
 	sideToMove = white;
 }
 
-Board::Board(string fen) : Board()
+Board::Board(string fen, color aiColor) : Board()
 {
 	if (fen == "*"){ // Standard starting position
-		for (int i = 0; i < 12; i++) pieces[i] = standardPosition[i];
+		for (int i = 0; i < 12; i++) 
+			pieces[i] = standardPosition[i];
 		blackPos = 0xFFFFull;
 		whitePos = 0xFFFF000000000000ull;
 		allPos = blackPos | whitePos;
-		castlingRights = 0xFFull;
+		castlingRights = 0xFull;
+		sideToMove = white;
 	}
 	else { // Setup board according to FEN
-		// FEN = [position sideToMove castlingrights enpassentSquares NofHalfMoves MoveNumber]
-
-		boost::trim(fen);
-		//list<string> fenArgs;
-		//boost::split(fenArgs, fen, boost::is_any_of(" "));
-		//for (auto a : fenArgs) {
-		//	cout << a << '$';
-		//}
-		//cout << endl;
-		///int counter = -1;
-		///for (auto& p : fen) {
-		///	if (isdigit(p))
-		///		counter += p - 48;
-		///	else {
-		///		counter++;
-		///		if (p == '/') counter--;
-		///		else pieces[getPieceIndex(p)] |= BIT_AT_R(counter);
-		///	}
-		///}
-		///for (int p = 0; p < 6;  p++) blackPos |= pieces[p];
-		///for (int p = 6; p < 12; p++) whitePos |= pieces[p];
-		///if (pieces[br] & 0x1ull  && pieces[bk] & 0x10ull) castlingRights |= Ck;
-		///if (pieces[br] & 0x80ull && pieces[bk] & 0x10ull) castlingRights |= CCk;
-		///if (pieces[wr] & 0x0100000000000000ull && pieces[wk] & 0x1000000000000000ull) castlingRights |= CK;
-		///if (pieces[wr] & 0x8000000000000000ull && pieces[wk] & 0x1000000000000000ull) castlingRights |= CCK;
-		///allPos = blackPos | whitePos;
+		setupBoard(fen, aiColor);
 	}
-	sideToMove = white; // To be implemented
 	debug();
+}
+
+void Board::setupBoard(string FEN, color aiColor)
+{
+	// Sets up Board according to FEN
+	// FEN = [position(white's perspective) sideToMove castlingrights enpassentSquares NofHalfMoves MoveNumber]
+	boost::trim(FEN);
+	vector<string> fenArgs = { "" };
+	for (auto it = FEN.begin() + 1; it != FEN.end();) {
+		if (*it == ' ' && *(it - 1) == ' ')
+			it = FEN.erase(it);
+		else it++;
+	}
+	for (auto f : FEN) {
+		if (f == ' ')
+			fenArgs.push_back("");
+		else fenArgs.back().push_back(f);
+	}
+	if (fenArgs.size() != 5) {
+		cerr << "Invalid FEN!\n";
+		exit(1);
+	}
+	int counter = -1;
+	for (auto& f : fenArgs[0]) {
+		if (isdigit(f))
+			counter += f - 48;
+		else {
+			if (f != '/') {
+				counter++;
+				pieces[getPieceIndex(f)] |= BIT_AT_R(63 - counter);
+			}
+		}
+	}
+	for (int p = 0; p < 6; p++) blackPos |= pieces[p];
+	for (int p = 6; p < 12; p++) whitePos |= pieces[p];
+	// Set castling rights
+	sideToMove = fenArgs[1][0] == 'w' ? white : black;
+	for (auto c : fenArgs[2]) {
+		switch(c){
+		case 'k': castlingRights |= castle_k;  break;
+		case 'K': castlingRights |= castle_K;  break;
+		case 'q': castlingRights |= castle_q; break;
+		case 'Q': castlingRights |= castle_Q; break;
+		}
+	}
+	allPos = blackPos | whitePos;
+	print();
 }
 
 void Board::debug()
@@ -70,7 +91,7 @@ void Board::debug()
 	movelist.clear();
 	print();
 
-	color debugPlayerColor = white;
+	color debugPlayerColor = black;
 
 	generateMoveList(movelist, debugPlayerColor);
 
@@ -335,12 +356,12 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						if (pieceAttacks)
 							BITLOOP(target, pieceAttacks)                                    // Add moves
 								if (!(CONNECTIONS[pos][target] & allPos))   // ..if no piece is in the way
-									moveList.insert(moveList.begin(), Move(pos, target, CAPTURE | ((pos == 0 ? Ck : CCk) << 4), PIECE_PAIR(br, candidate)));
+									moveList.insert(moveList.begin(), Move(pos, target, CAPTURE | ((pos == 0 ? castle_k : castle_q) << 4), PIECE_PAIR(br, candidate)));
 					}
 					attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[br]; // Non capturing moves
 					BITLOOP(target, attackMask)                                             // Add moves
 						if (!(CONNECTIONS[pos][target] & allPos))   // ..if no piece is in the way
-							moveList.push_back(Move(pos, target, MOVE | ((pos == 0 ? Ck : CCk) << 4), br));
+							moveList.push_back(Move(pos, target, MOVE | ((pos == 0 ? castle_k : castle_q) << 4), br));
 				}
 				break;
 			case bn: //// BLACK KNIGHT
@@ -404,11 +425,11 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
 						if (pieceAttacks)
 							BITLOOP(target, pieceAttacks)                                    // Add moves
-							moveList.insert(moveList.begin(), Move(pos, target, CAPTURE | ((Ck | CCk) << 4), PIECE_PAIR(bk, candidate)));
+							moveList.insert(moveList.begin(), Move(pos, target, CAPTURE | ((castle_k | castle_q) << 4), PIECE_PAIR(bk, candidate)));
 					}
 					attackMask ^= (KING_ATTACKS[pos] & attacks[bk]) & ~whiteAtt; // Non capturing moves
 					BITLOOP(target, attackMask)                        // Add moves
-						moveList.push_back(Move(pos, target, MOVE | ((Ck | CCk) << 4), bk));
+						moveList.push_back(Move(pos, target, MOVE | ((castle_k | castle_q) << 4), bk));
 				}
 				break;
 			}
@@ -416,9 +437,9 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 		// Generate castling moves
 		// Black King can castle if there are no pieces between king and rook, both havent moved yet and king
 		// does not cross attacked squares during castling, same for white
-		if (castlingRights & Ck && !(allPos & 0x60ull) && !(whiteAtt & 0x70ull))
+		if (castlingRights & castle_k && !(allPos & 0x60ull) && !(whiteAtt & 0x70ull))
 			moveList.push_back(Move(castlingRights, BCASTLE));
-		if (castlingRights & CCk && !(allPos & 0xEull) && !(whiteAtt & 0x1Cull)) // Black King can castle (big)
+		if (castlingRights & castle_q && !(allPos & 0xEull) && !(whiteAtt & 0x1Cull)) // Black King can castle (big)
 			moveList.push_back(Move(castlingRights, BCASTLE_2));
 	}
  else{////////////////////////////////////////////////WHITE MOVE GENERATION///////////////////////////////////////////////////
@@ -494,13 +515,13 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						 if (pieceAttacks)
 							 BITLOOP(target, pieceAttacks)                                        // Add moves..
 								if (!(CONNECTIONS[pos][target] & allPos))   // ..if no piece is in the way
-									moveList.insert(moveList.begin(), Move(pos, target, CAPTURE | ((pos == 56 ? CK : CCK) << 4), PIECE_PAIR(wr, candidate)));
+									moveList.insert(moveList.begin(), Move(pos, target, CAPTURE | ((pos == 56 ? castle_K : castle_Q) << 4), PIECE_PAIR(wr, candidate)));
 					 }
 					 attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[wr]; // Non capturing moves
 					 //printBitboard(tempMask);
 					 BITLOOP(target, attackMask)                                         // Add moves..
 						 if(!(CONNECTIONS[pos][target] & allPos))       // ..if no piece is in the way
-							moveList.push_back(Move(pos, target, MOVE | ((pos == 56 ? CK : CCK) << 4), wr));
+							moveList.push_back(Move(pos, target, MOVE | ((pos == 56 ? castle_K : castle_Q) << 4), wr));
 				 }
 				 break;
 			 case wn: //// WHITE KNIGHT
@@ -562,19 +583,19 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						 pieceAttacks = pieces[candidate] & attackMask;                            // Set specific attacks
 						 if (pieceAttacks)
 							 BITLOOP(target, pieceAttacks)                                            // Add moves
-							 moveList.insert(moveList.begin(), Move(pos, target, CAPTURE | ((CK | CCK) << 4), PIECE_PAIR(wk, candidate)));
+							 moveList.insert(moveList.begin(), Move(pos, target, CAPTURE | ((castle_K | castle_Q) << 4), PIECE_PAIR(wk, candidate)));
 					 }
 					 attackMask ^= (KING_ATTACKS[pos] & attacks[wk]) & ~blackAtt; // Non capturing moves
 					 BITLOOP(target, attackMask)                         // Add moves
-						 moveList.push_back(Move(pos, target, MOVE|((CK | CCK) << 4), wk));
+						 moveList.push_back(Move(pos, target, MOVE|((castle_K | castle_Q) << 4), wk));
 				 }
 				 break;
 		 }
 	 }
 	 // Es muss HIER ueberprueft werden, ob die Figuren existieren (logisch)
-	 if (castlingRights & CK && !(allPos & 0x6000000000000000ull) && !(blackAtt & 0x7000000000000000ull)) // White King can castle
+	 if (castlingRights & castle_K && !(allPos & 0x6000000000000000ull) && !(blackAtt & 0x7000000000000000ull)) // White King can castle
 		moveList.push_back(Move(castlingRights, WCASTLE));
-	 if (castlingRights & CCK && !(allPos & 0xE00000000000000ull) && !(blackAtt & 0x1C00000000000000ull)) // White King can castle (big)
+	 if (castlingRights & castle_Q && !(allPos & 0xE00000000000000ull) && !(blackAtt & 0x1C00000000000000ull)) // White King can castle (big)
 		 moveList.push_back(Move(castlingRights, WCASTLE_2));
 	}
 }
@@ -648,7 +669,7 @@ bool Board::makeMove(const Move& move, color side)
 			}
 			break;
 		case BCASTLE: // Castling short
-			castlingRights &= ~(Ck | CCk);                     // No castling rights after castling
+			castlingRights &= ~(castle_k | castle_q);                     // No castling rights after castling
 			makeMove(Move(d1, b1, MOVE, bk), black);           // move king and rook...
 			makeMove(Move(a1, c1, MOVE, br), black);
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights]; // update hashKey with new castling rights
@@ -657,7 +678,7 @@ bool Board::makeMove(const Move& move, color side)
 			blackPos |= 0x60ull;
 			break;
 		case WCASTLE: // Castling short
-			castlingRights &= ~(CK | CCK);
+			castlingRights &= ~(castle_K | castle_Q);
 			makeMove(Move(d8, b8, MOVE, wk), white);
 			makeMove(Move(a8, c8, MOVE, wr), white);
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
@@ -666,7 +687,7 @@ bool Board::makeMove(const Move& move, color side)
 			whitePos |= 0x6000000000000000ull;
 			break;
 		case BCASTLE_2: // Castling long
-			castlingRights &= ~(Ck | CCk);
+			castlingRights &= ~(castle_k | castle_q);
 			makeMove(Move(d1, f1, MOVE, bk), black);
 			makeMove(Move(h1, e1, MOVE, br), black);
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
@@ -674,7 +695,7 @@ bool Board::makeMove(const Move& move, color side)
 			blackPos |= 0xCull;
 			break;
 		case WCASTLE_2: // Castling long
-			castlingRights &= ~(CK | CCK);
+			castlingRights &= ~(castle_K | castle_Q);
 			makeMove(Move(d8, f8, MOVE, wk), white);
 			makeMove(Move(h8, e8, MOVE, wr), white);
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
@@ -698,10 +719,10 @@ bool Board::makeMove(const Move& move, color side)
 	// Check if castling still permitted
 	byte cast = (move.flags & 0xF0ull)>>4;
 	if (cast){
-		if (cast & Ck)      { castlingRights &= ~Ck;  }
-		else if (cast & CCk){ castlingRights &= ~CCk; }
-		if (cast & CK)      { castlingRights &= ~CK;  }
-		else if (cast & CCK){ castlingRights &= ~CCK; }
+		if (cast & castle_k)      { castlingRights &= ~castle_k;  }
+		else if (cast & castle_q){ castlingRights &= ~castle_q; }
+		if (cast & castle_K)      { castlingRights &= ~castle_K;  }
+		else if (cast & castle_Q){ castlingRights &= ~castle_Q; }
 	}
 	allPos = blackPos | whitePos;
 	if (((side == black) && (pieces[bk] & whiteAtt))

@@ -9,35 +9,21 @@
 #include <chrono>
 #include <boost/algorithm/string.hpp>
 
+#include "Move.h"
 #include "Data.h"
 #include "ZobristHash.h"
-#include "misc.h"
 
 using namespace std;
-
-struct Move
-{
-	Move() : from(0), to(0), flags(0), Pieces(nulPiece) {}
-	Move(byte OldCastlingRights, byte _flags)
-		: from(OldCastlingRights), to(nulSq), flags(_flags), Pieces(nulPiece) {}
-	Move(byte _from, byte _to, byte _flags, byte _pieces)
-		: from(_from), to(_to), flags(_flags), Pieces(_pieces) {}
-	Move(unsigned long _from, unsigned long _to, byte _flags, byte _pieces)
-		: from((byte)_from), to((byte)_to), flags(_flags), Pieces(_pieces) {}
-	Move(int _from, int _to, byte _flags, byte _pieces)
-		: from((byte)_from), to((byte)_to), flags(_flags), Pieces(_pieces) {}
-	byte from, to, flags, Pieces;
-	// Flagbits: 1-4: castlingRuleReset?[k,K,w,W]; 5-8: Movetype
-};
 
 class Board
 {
 public:
 	Board();
-	Board(string fen);
+	Board(string fen, color aiColor);
 	// Init
 	void initHash(); // Used only for Init!, this key is updated for each move
 	void debug();
+	void setupBoard(string FEN, color aiColor);
 
 	// Move making
 	void updateAttack(piece p);
@@ -61,7 +47,8 @@ public:
 
 	// Data
 	vector<u64> pieces, attacks;
-	enum{ Ck = 0x1, CCk = 0x2, CK = 0x4, CCK = 0x8 };
+	// TODO: Needs better names
+	enum{ castle_k = 0x1, castle_q = 0x2, castle_K = 0x4, castle_Q = 0x8 };
 	byte castlingRights, b_enpassent, w_enpassent;
 	u64 whitePos, blackPos, allPos, whiteAtt, blackAtt,hashKey;
 	Zob_Hash hash;
@@ -69,38 +56,4 @@ public:
 	color sideToMove; // To be implemented
 };
 
-static string moveString(Move m)
-{
-	// Short algebraic notation (AN)
-	if (m.flags == BCASTLE){
-		return "b o-o";
-	}
-	else if (m.flags == WCASTLE){
-		return "w o-o";
-	}
-	else if (m.flags == PROMOTION){
-		return TARGET_PIECE(m.Pieces) == bq || TARGET_PIECE(m.Pieces) == wq ? "Queen prom" : "Knight prom";
-	}
-	else if (m.flags == C_PROMOTION){
-		return TARGET_PIECE(m.Pieces) == bq || TARGET_PIECE(m.Pieces) == wq ? "Queen c_prom" : "Knight c_prom";
-	}
-	else if (m.flags == BCASTLE_2){
-		return "b O--O";
-	}
-	else if (m.flags == WCASTLE_2){
-		return "w O--O";
-	}
-	string s(1, names[MOV_PIECE(m.Pieces)]);
-	if (m.flags == CAPTURE){
-		if (s[0] == 'P'){
-			s.clear();
-			s += 'h' - (m.to % 8);
-		}
-		s += 'x';
-	}
-	if (s[0] == 'P')s.clear();
-	s += 'h'-(m.to % 8);
-	s += '1'+(m.to / 8);
-	return s;
-}
 #endif

@@ -51,6 +51,5 @@ vector<vector<u64>> Zob_Hash::getRandomSet()
 	for (auto& r1 : randSet)
 		for (auto& r2 : r1)
 			r2 = distr(generator);
-	// TODO: make last vector shorter
 	return randSet;
 }
