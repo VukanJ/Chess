@@ -21,7 +21,7 @@ void Board::setupBoard(string FEN)
 {
 	// Sets up Board according to FEN
 	// FEN = [position(white's perspective) sideToMove castlingrights enpassentSquares NofHalfMoves MoveNumber]
-	if (FEN == "*") { // Standard starting position
+	if (FEN[0] == '*') { // Standard starting position
 		for (int i = 0; i < 12; i++)
 			pieces[i] = standardPosition[i];
 		blackPos = 0xFFFF000000000000ull;
@@ -291,13 +291,13 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 				// Find normal captures:
 				// attackingPieces stands for attacked squares in this case
 				BITLOOP(pos, attackingPieces){
-					attackMask = (0x5ull << (pos - 1 + 8)) & whitePos;
+					attackMask = (0x5ull >> (pos - 1 + 8)) & whitePos; // TODO: Check this line
 					if (attackMask)                                                // If pieces are targeted
 						WHITELOOP(candidate){                                    // Find targeted piece
 						pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
 						if (pieceAttacks){
 							BITLOOP(target, pieceAttacks){                                   // Add moves
-								if (target > 55){
+								if (target < 8){
 									moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, PIECE_PAIR(candidate, bq)));
 									moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, PIECE_PAIR(candidate, bn)));
 								}
@@ -309,39 +309,39 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 					}
 				}
 				// Find normal upwards moves and double pawn steps:
-				attackingPieces = (pieces[bp] << 8) & ~allPos;
+				attackingPieces = (pieces[bp] >> 8) & ~allPos;
 				BITLOOP(pos, attackingPieces){
-					if (pos < 56){
-						moveList.push_back(Move(pos - 8, pos, MOVE, bp));
+					if (pos > 15){
+						moveList.push_back(Move(pos + 8, pos, MOVE, bp));
 					}
 					else{
-						moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, PIECE_PAIR(bp, bq)));
-						moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, PIECE_PAIR(bp, bn)));
+						moveList.insert(moveList.begin(), Move(pos + 8, pos, PROMOTION, PIECE_PAIR(bp, bq)));
+						moveList.insert(moveList.begin(), Move(pos + 8, pos, PROMOTION, PIECE_PAIR(bp, bn)));
 					}
 				}
 				// Double pawn move
-				attackingPieces = (pieces[bp] << 16) & attacks[bp];
+				attackingPieces = (pieces[bp] >> 16) & attacks[bp];
 				BITLOOP(pos, attackingPieces)
-					moveList.push_back(Move(pos - 16, pos, PAWN2, bp));
+					moveList.push_back(Move(pos + 16, pos, PAWN2, bp));
 				// Enpassent
-				if (b_enpassent) { // if enpassent is available possible
+				if (b_enpassent) { // if enpassent is available/possible
 					// Check if pawns are able to do enpassent
-					attackingPieces = (pieces[bp] << 1) & pieces[wp] & (_row << 32);
+					attackingPieces = (pieces[bp] >> 1) & pieces[wp] & (_row << 24);
 					// Are white pawns left of black pawns?
 					if (attackingPieces) {
 						// Add move
 						BITSCANR64(pos, attackingPieces);
-						if (BIT_AT(pos + 8) & allPos)
-							moveList.insert(moveList.begin(), Move(pos, pos + 8, ENPASSENT, bp));
+						if (BIT_AT(pos - 8) & allPos)
+							moveList.insert(moveList.begin(), Move(pos, pos - 8, ENPASSENT, bp));
 					}
 					else{
 						// Are white pawns right of black pawns?
-						attackingPieces = (pieces[bp] >> 1) & pieces[wp] & (_row << 32);
+						attackingPieces = (pieces[bp] << 1) & pieces[wp] & (_row << 24);
 						if (attackingPieces) {
 							// Add move
 							BITSCANR64(pos, attackingPieces);
-							if (BIT_AT(pos + 8) & allPos)
-								moveList.insert(moveList.begin(), Move(pos, pos + 8, ENPASSENT, bp));
+							if (BIT_AT(pos - 8) & allPos)
+								moveList.insert(moveList.begin(), Move(pos, pos - 8, ENPASSENT, bp));
 						}
 					}
 				}
@@ -453,14 +453,14 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 				 // attackingPieces stands for attacked squares in this case
 				 BITLOOP(pos, attackingPieces){
 					 attackMask = (0x5ull << (pos - 1 - 8)) & blackPos;
-					 if (attackMask)                                                // If pieces are targeted
+					 if (attackMask)                                              // If pieces are targeted
 						 BLACKLOOP(candidate){                                    // Find targeted piece
-						 pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
+						 pieceAttacks = pieces[candidate] & attackMask;           // Set specific attacks
 						 if (pieceAttacks){
-							 BITLOOP(target, pieceAttacks){                                   // Add moves
-								 if (target < 8){
-									 moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, PIECE_PAIR(candidate, wq)|(0x1 << 8)));
-									 moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, PIECE_PAIR(candidate, wn)|(0x1 << 8)));
+							 BITLOOP(target, pieceAttacks){                       // Add moves
+								 if (target > 55){
+									   moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, PIECE_PAIR(candidate, wq)));
+									   moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, PIECE_PAIR(candidate, wn)));
 								 }
 								 else{
 									 moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, PIECE_PAIR(wp,candidate)));
@@ -470,37 +470,37 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 					 }
 				 }
 				 // Find normal upwards moves and double pawn steps:
-				 attackingPieces = (pieces[wp] >> 8) & ~allPos;
+				 attackingPieces = (pieces[wp] << 8) & ~allPos;
 				 BITLOOP(pos, attackingPieces){
-					 if (pos > 7){
-						 moveList.push_back(Move(pos + 8, pos, MOVE, wp));
+					 if (pos < 48){
+						 moveList.push_back(Move(pos - 8, pos, MOVE, wp));
 					 }
 					 else{
-						 moveList.insert(moveList.begin(), Move(pos + 8, pos, PROMOTION, PIECE_PAIR(wp, wq)));
-						 moveList.insert(moveList.begin(), Move(pos + 8, pos, PROMOTION, PIECE_PAIR(wp, wn)));
+						 moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, PIECE_PAIR(wp, wq)));
+						 moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, PIECE_PAIR(wp, wn)));
 					 }
 				 }
-				 attackingPieces = (pieces[wp] >> 16) & attacks[wp];
+				 attackingPieces = (pieces[wp] << 16) & attacks[wp];
 				 BITLOOP(pos, attackingPieces)
-						 moveList.push_back(Move(pos + 16, pos, PAWN2, wp));
+						 moveList.push_back(Move(pos - 16, pos, PAWN2, wp));
 				 if (w_enpassent) { // if enpassent is available possible
 				 // Check if pawns are able to do enpassent
-					 attackingPieces = (pieces[wp] << 1) & pieces[bp] & (_row << 24);
+					 attackingPieces = (pieces[wp] >> 1) & pieces[bp] & (_row << 32);
 					 // Are white pawns left of black pawns?
 					 if (attackingPieces) {
 						 // Add move
 						 BITSCANR64(pos, attackingPieces);
-						 if (BIT_AT(pos - 8) & allPos)
-							moveList.insert(moveList.begin(), Move(pos, pos - 8, ENPASSENT, wp));
+						 if (BIT_AT(pos + 8) & allPos)
+							moveList.insert(moveList.begin(), Move(pos, pos + 8, ENPASSENT, wp));
 					 }
 					 else {
 						 // Are white pawns right of black pawns?
-						 attackingPieces = (pieces[wp] >> 1) & pieces[bp] & (_row << 24);
+						 attackingPieces = (pieces[wp] << 1) & pieces[bp] & (_row << 32);
 						 if (attackingPieces) {
 							 // Add move
 							 BITSCANR64(pos, attackingPieces);
-							 if (BIT_AT(pos - 8) & allPos)
-								 moveList.insert(moveList.begin(), Move(pos, pos - 8, ENPASSENT, wp));
+							 if (BIT_AT(pos + 8) & allPos)
+								 moveList.insert(moveList.begin(), Move(pos, pos + 8, ENPASSENT, wp));
 						 }
 					 }
 				 }
