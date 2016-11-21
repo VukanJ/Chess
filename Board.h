@@ -19,11 +19,11 @@ class Board
 {
 public:
 	Board();
-	Board(string fen, color aiColor);
+	Board(string fen);
 	// Init
 	void initHash(); // Used only for Init!, this key is updated for each move
 	void debug();
-	void setupBoard(string FEN, color aiColor);
+	void setupBoard(string FEN);
 
 	// Move making
 	void updateAttack(piece p);
@@ -47,7 +47,6 @@ public:
 
 	// Data
 	vector<u64> pieces, attacks;
-	// TODO: Needs better names
 	enum{ castle_k = 0x1, castle_q = 0x2, castle_K = 0x4, castle_Q = 0x8 };
 	byte castlingRights, b_enpassent, w_enpassent;
 	u64 whitePos, blackPos, allPos, whiteAtt, blackAtt,hashKey;

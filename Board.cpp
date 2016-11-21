@@ -4,74 +4,74 @@ Board::Board()
 	: whitePos(0x0), blackPos(0x0), whiteAtt(0x0), blackAtt(0x0), hashKey(0x0),
 	castlingRights(0x0), b_enpassent(0x0), w_enpassent(0x0)
 {
-	pieces  = vector<u64>(12, 0x0);
-	attacks = vector<u64>(12, 0x0);
-	randomSet  = hash.getRandomSet();
+	pieces    = vector<u64>(12, 0x0);
+	attacks   = vector<u64>(12, 0x0);
+	randomSet = hash.getRandomSet();
 	// White always makes the first move
 	sideToMove = white;
 }
 
-Board::Board(string fen, color aiColor) : Board()
+Board::Board(string fen) : Board()
 {
-	if (fen == "*"){ // Standard starting position
-		for (int i = 0; i < 12; i++) 
+	setupBoard(fen);
+	debug();
+}
+
+void Board::setupBoard(string FEN)
+{
+	// Sets up Board according to FEN
+	// FEN = [position(white's perspective) sideToMove castlingrights enpassentSquares NofHalfMoves MoveNumber]
+	if (FEN == "*") { // Standard starting position
+		for (int i = 0; i < 12; i++)
 			pieces[i] = standardPosition[i];
-		blackPos = 0xFFFFull;
-		whitePos = 0xFFFF000000000000ull;
+		blackPos = 0xFFFF000000000000ull;
+		whitePos = 0xFFFFull;
 		allPos = blackPos | whitePos;
 		castlingRights = 0xFull;
 		sideToMove = white;
 	}
-	else { // Setup board according to FEN
-		setupBoard(fen, aiColor);
-	}
-	debug();
-}
-
-void Board::setupBoard(string FEN, color aiColor)
-{
-	// Sets up Board according to FEN
-	// FEN = [position(white's perspective) sideToMove castlingrights enpassentSquares NofHalfMoves MoveNumber]
-	boost::trim(FEN);
-	vector<string> fenArgs = { "" };
-	for (auto it = FEN.begin() + 1; it != FEN.end();) {
-		if (*it == ' ' && *(it - 1) == ' ')
-			it = FEN.erase(it);
-		else it++;
-	}
-	for (auto f : FEN) {
-		if (f == ' ')
-			fenArgs.push_back("");
-		else fenArgs.back().push_back(f);
-	}
-	if (fenArgs.size() != 5) {
-		cerr << "Invalid FEN!\n";
-		exit(1);
-	}
-	int counter = -1;
-	for (auto& f : fenArgs[0]) {
-		if (isdigit(f))
-			counter += f - 48;
-		else {
-			if (f != '/') {
-				counter++;
-				pieces[getPieceIndex(f)] |= BIT_AT_R(63 - counter);
+	else {
+		boost::trim(FEN);
+		vector<string> fenArgs = { "" };
+		for (auto it = FEN.begin() + 1; it != FEN.end();) {
+			if (*it == ' ' && *(it - 1) == ' ')
+				it = FEN.erase(it);
+			else it++;
+		}
+		for (auto f : FEN) {
+			if (f == ' ')
+				fenArgs.push_back("");
+			else fenArgs.back().push_back(f);
+		}
+		if (fenArgs.size() != 5) {
+			cerr << "Invalid FEN!\n";
+			exit(1);
+		}
+		int counter = -1;
+		for (auto& f : fenArgs[0]) {
+			if (isdigit(f))
+				counter += f - 48;
+			else {
+				if (f != '/') {
+					counter++;
+					pieces[getPieceIndex(f)] |= BIT_AT_R(counter);
+				}
 			}
 		}
-	}
-	for (int p = 0; p < 6; p++) blackPos |= pieces[p];
-	for (int p = 6; p < 12; p++) whitePos |= pieces[p];
-	// Set castling rights
-	sideToMove = fenArgs[1][0] == 'w' ? white : black;
-	for (auto c : fenArgs[2]) {
-		switch(c){
-		case 'k': castlingRights |= castle_k;  break;
-		case 'K': castlingRights |= castle_K;  break;
-		case 'q': castlingRights |= castle_q; break;
-		case 'Q': castlingRights |= castle_Q; break;
+		for (int p = 0; p < 6; p++) blackPos |= pieces[p];
+		for (int p = 6; p < 12; p++) whitePos |= pieces[p];
+		// Set castling rights
+		sideToMove = fenArgs[1][0] == 'w' ? white : black;
+		for (auto c : fenArgs[2]) {
+			switch (c) {
+			case 'k': castlingRights |= castle_k;  break;
+			case 'K': castlingRights |= castle_K;  break;
+			case 'q': castlingRights |= castle_q; break;
+			case 'Q': castlingRights |= castle_Q; break;
+			}
 		}
+		allPos = blackPos | whitePos;
 	}
-	allPos = blackPos | whitePos;
 	print();
 }
 
@@ -235,26 +235,26 @@ void Board::pawnFill(color side)
 	if (side == black){
 		attacks[bp] = 0x0;
 		// Normal step
-		attacks[bp] |= (pieces[bp] << 8) & ~allPos;
+		attacks[bp] |= (pieces[bp] >> 8) & ~allPos;
 		// Double step
-		attacks[bp] |= ((((pieces[bp] & 0xFF00ull) << 8) & ~allPos) << 8) & ~allPos;
+		attacks[bp] |= ((((pieces[bp] & 0xFF000000000000ull) >> 8) & ~allPos) >> 8) & ~allPos;
 		// Side Attacks
-		attacks[bp] |= ((pieces[bp] & _noSides)              << 9) & whitePos;
-		attacks[bp] |= ((pieces[bp] & _noSides)              << 7) & whitePos;
-		attacks[bp] |= ((pieces[bp] & 0x0101010101010101ull) << 9) & whitePos;
-		attacks[bp] |= ((pieces[bp] & 0x8080808080808080ull) << 7) & whitePos;
+		attacks[bp] |= ((pieces[bp] & _noSides) >> 9) & whitePos;
+		attacks[bp] |= ((pieces[bp] & _noSides) >> 7) & whitePos;
+		attacks[bp] |= ((pieces[bp] & _left)    >> 9) & whitePos;
+		attacks[bp] |= ((pieces[bp] & _right)   >> 7) & whitePos;
 	}
 	else{
 		attacks[wp] = 0x0;
 		// Normal step
-		attacks[wp] |= (pieces[wp] >> 8) & ~allPos;
+		attacks[wp] |= (pieces[wp] << 8) & ~allPos;
 		// Double step
-		attacks[wp] |= ((((pieces[wp] & 0xFF000000000000ull) >> 8) & ~allPos) >> 8) & ~allPos;
+		attacks[wp] |= ((((pieces[wp] & 0xFF00ull) << 8) & ~allPos) << 8) & ~allPos;
 		// Side Attacks
-		attacks[wp] |= ((pieces[wp] & _noSides)              >> 9) & blackPos;
-		attacks[wp] |= ((pieces[wp] & _noSides)              >> 7) & blackPos;
-		attacks[wp] |= ((pieces[wp] & 0x0101010101010101ull) >> 7) & blackPos;
-		attacks[wp] |= ((pieces[wp] & 0x8080808080808080ull) >> 9) & blackPos;
+		attacks[wp] |= ((pieces[wp] & _noSides) << 9) & blackPos;
+		attacks[wp] |= ((pieces[wp] & _noSides) << 7) & blackPos;
+		attacks[wp] |= ((pieces[wp] & _right)    << 7) & blackPos;
+		attacks[wp] |= ((pieces[wp] & _left)   << 9) & blackPos;
 	}
 }
 
@@ -587,7 +587,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 					 }
 					 attackMask ^= (KING_ATTACKS[pos] & attacks[wk]) & ~blackAtt; // Non capturing moves
 					 BITLOOP(target, attackMask)                         // Add moves
-						 moveList.push_back(Move(pos, target, MOVE|((castle_K | castle_Q) << 4), wk));
+						 moveList.push_back(Move(pos, target, MOVE | ((castle_K | castle_Q) << 4), wk));
 				 }
 				 break;
 		 }
@@ -604,7 +604,6 @@ bool Board::makeMove(const Move& move, color side)
 {
 	// Returns true if move is invalid (King is in check)
 
-	// TODO: Check if castling does enough hash updates
 	switch (move.flags & 0xFull){
 		case MOVE:
 			pieces[move.Pieces] ^= BIT_AT(move.from);     // Piece disappears from departure

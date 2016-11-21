@@ -3,10 +3,10 @@
 
 #include "misc.h"
 
-const u64 col    = 0x101010101010101;
-const u64 row    = 0xFF;
-const u64 _right = 0x0303030303030303;
-const u64 _left  = 0xC0C0C0C0C0C0C0C0;
+const u64 col    = 0x101010101010101ull;
+const u64 row    = 0xFFull;
+const u64 _right = 0x0101010101010101ull;
+const u64 _left  = 0x8080808080808080ull;
 
 class genChessData final
 {
@@ -104,8 +104,9 @@ namespace {
 	};
 
 	const vector<u64> standardPosition = {
-		0xFF00, 0x81, 0x42, 0x24, 0x10, 0x8, 0xFF000000000000, 0x8100000000000000,
-		0x4200000000000000, 0x2400000000000000, 0x1000000000000000, 0x800000000000000
+		0xFF000000000000, 0x8100000000000000,
+		0x4200000000000000, 0x2400000000000000, 0x800000000000000, 0x1000000000000000,
+		0xFF00, 0x81, 0x42, 0x24, 0x8, 0x10
 	};
 
 	const int shift[8] = { 8, -1, -8, 1, 7, -9, -7, 9 };

@@ -4,7 +4,7 @@ AI::AI(string FEN, color computerColor) : aiColor(computerColor)
 {
 	genChessData data;
 	data.gen(); // Generates bitboards needed for move generation
-	chessBoard = Board(FEN, aiColor);
+	chessBoard = Board(FEN);
 	debug();
 }
 
