@@ -34,10 +34,10 @@ static string moveString(Move m)
 {
 	// Short algebraic notation (AN)
 	if (m.flags == BCASTLE) {
-		return "b o-o";
+		return "b-o-o";
 	}
 	else if (m.flags == WCASTLE) {
-		return "w o-o";
+		return "w-o-o";
 	}
 	else if (m.flags == PROMOTION) {
 		return TARGET_PIECE(m.Pieces) == bq || TARGET_PIECE(m.Pieces) == wq ? "Queen prom" : "Knight prom";
@@ -46,10 +46,10 @@ static string moveString(Move m)
 		return TARGET_PIECE(m.Pieces) == bq || TARGET_PIECE(m.Pieces) == wq ? "Queen c_prom" : "Knight c_prom";
 	}
 	else if (m.flags == BCASTLE_2) {
-		return "b O--O";
+		return "b-O--O";
 	}
 	else if (m.flags == WCASTLE_2) {
-		return "w O--O";
+		return "w-O--O";
 	}
 	string s(1, names[MOV_PIECE(m.Pieces)]);
 	if (m.flags == CAPTURE) {

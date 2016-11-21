@@ -93,17 +93,17 @@ void Board::debug()
 
 	color debugPlayerColor = black;
 
-	generateMoveList(movelist, debugPlayerColor);
+	generateMoveList(movelist, sideToMove);
 
 	cout << "Start hash " << hex << hashKey << endl;
 	int count = 0;
 	for (auto& m : movelist) {
 		cout << moveString(m) << (count % 10 == 0 ? "\n" : "  ");
 		count++;
-		makeMove(m, debugPlayerColor);
+		makeMove(m, sideToMove);
 		//print();
 		//printBitboard(whitePos);
-		unMakeMove(m, debugPlayerColor);
+		unMakeMove(m, sideToMove);
 		//print();
 		//printBitboard(whitePos);
 	}
