@@ -44,6 +44,7 @@ public:
 	void testGenerationAlgorithms();
 private:
 	void testPawnFill();
+	void testCastling();
 };
 
 #pragma optimize( "[optimization-list]", {on | off} )

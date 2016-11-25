@@ -152,16 +152,56 @@ void UnitTest::testGenerationAlgorithms()
 	clog << string(8,'~') << "::: Testing moveGenerator :::" << string(8, '~') << '\n';
 	cout << "Testing Board::pawnfill()...\n";
 	testPawnFill();
+	cout << "Testing castling...\n";
+	testCastling();
 }
 
 void UnitTest::testPawnFill()
 {
-	AI testAI("8/7p/P7/2P5/8/1p4p1/P2PP2P/8 w - 1 0", black);
-	assert(testAI.chessBoard.attacks[wp] == 0x80200099db0000ull);
-	assert(testAI.chessBoard.attacks[bp] == 0x1010000c300ull);
-	testAI.chessBoard.setupBoard("8/p2pp2p/1P4P1/8/8/pp4p1/7P/8 w - 1 0");
-	assert(testAI.chessBoard.attacks[wp] == 0xc3000001030000);
-	assert(testAI.chessBoard.attacks[bp] == 0xdb990000c300);
+	AI ai("8/7p/P7/2P5/8/1p4p1/P2PP2P/8 w - 1 0", black);
+	assert(ai.chessBoard.attacks[wp] == 0x80200099db0000ull);
+	assert(ai.chessBoard.attacks[bp] == 0x1010000c300ull);
+	ai.chessBoard.setupBoard("8/p2pp2p/1P4P1/8/8/pp4p1/7P/8 w - 1 0");
+	assert(ai.chessBoard.attacks[wp] == 0xc3000001030000);
+	assert(ai.chessBoard.attacks[bp] == 0xdb990000c300);
+}
+
+void UnitTest::testCastling()
+{
+	vector<Move> moveList;
+	AI ai("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w - 1 0", black);
+	printBits(ai.chessBoard.castlingRights);
+	ai.chessBoard.generateMoveList(moveList, black);
+
+	assert(!any_of(moveList.begin(), moveList.end(), [](Move& move) {
+		return move.flags == BCASTLE || move.flags == BCASTLE_2; }));
+
+	ai.chessBoard.setupBoard("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KkQq 1 0");
+	printBits(ai.chessBoard.castlingRights);
+
+	moveList.clear();
+	ai.chessBoard.generateMoveList(moveList, black);
+	auto hashKey = ai.chessBoard.hashKey;
+	assert(find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == BCASTLE;   }) != moveList.end()
+		&& find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == BCASTLE_2; }) != moveList.end());
+	ai.chessBoard.makeMove(Move(ai.chessBoard.castlingRights,   BCASTLE),   black);
+	ai.chessBoard.unMakeMove(Move(ai.chessBoard.castlingRights, BCASTLE),   black);
+	ai.chessBoard.makeMove(Move(ai.chessBoard.castlingRights,   BCASTLE_2), black);
+	ai.chessBoard.unMakeMove(Move(ai.chessBoard.castlingRights, BCASTLE_2), black);
+	assert(ai.chessBoard.hashKey == hashKey);
+
+	moveList.clear();
+	ai.chessBoard.generateMoveList(moveList, white);
+	hashKey = ai.chessBoard.hashKey;
+	assert(find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == WCASTLE;   }) != moveList.end()
+		&& find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == WCASTLE_2; }) != moveList.end());
+	ai.chessBoard.makeMove(  Move(ai.chessBoard.castlingRights, WCASTLE),   white);
+	ai.chessBoard.unMakeMove(Move(ai.chessBoard.castlingRights, WCASTLE),   white);
+	ai.chessBoard.makeMove(Move(ai.chessBoard.castlingRights,   WCASTLE_2), white); 
+	ai.chessBoard.unMakeMove(Move(ai.chessBoard.castlingRights, WCASTLE_2), white); 
+	assert(ai.chessBoard.hashKey == hashKey);
+
+	ai.chessBoard.print();
 }
 
 Benchmark::Benchmark() : performingAll(false){}
