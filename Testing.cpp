@@ -151,9 +151,9 @@ void UnitTest::testGenerationAlgorithms()
 {
 	clog << string(8,'~') << "::: Testing moveGenerator :::" << string(8, '~') << '\n';
 	cout << "Testing Board::pawnfill()...\n";
-	//testPawnFill();
+	testPawnFill();
 	cout << "Testing castling...\n";
-	//testCastling();
+	testCastling();
 	cout << "Testing pawn promotion...\n";
 	testProm();
 }
@@ -166,20 +166,31 @@ void UnitTest::testPawnFill()
 	ai.chessBoard.setupBoard("8/p2pp2p/1P4P1/8/8/pp4p1/7P/8 w - 1 0");
 	assert(ai.chessBoard.attacks[wp] == 0xc3000001030000);
 	assert(ai.chessBoard.attacks[bp] == 0xdb990000c300);
+
+	// Is pawn capture oriented correctly
+	ai.chessBoard.setupBoard("8/4p3/3N1N2/88888 w - 1 0");
+	vector<Move> moveList;
+	ai.chessBoard.generateMoveList(moveList, black);
+	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == CAPTURE && move.from > move.to; }) == 2);
+	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == MOVE && move.from > move.to; }) == 1);
+	ai.chessBoard.setupBoard("8/8/3n1n2/4P3/8888 w - 1 0");
+	moveList.clear();
+	ai.chessBoard.generateMoveList(moveList, white);
+	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == CAPTURE && move.from < move.to; }) == 2);
+	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == MOVE && move.from < move.to; }) == 1);
+
 }
 
 void UnitTest::testCastling()
 {
 	vector<Move> moveList;
 	AI ai("r3k2r/8/8/8/8/8/8/R3K2R w - 1 0", black);
-	printBits(ai.chessBoard.castlingRights);
 	ai.chessBoard.generateMoveList(moveList, black);
 
 	assert(!any_of(moveList.begin(), moveList.end(), [](Move& move) {
 		return move.flags == BCASTLE || move.flags == BCASTLE_2; }));
 
 	ai.chessBoard.setupBoard("r3k2r/8/8/8/8/8/8/R3K2R w KkQq 1 0");
-	printBits(ai.chessBoard.castlingRights);
 
 	moveList.clear();
 	ai.chessBoard.generateMoveList(moveList, black);
@@ -206,8 +217,6 @@ void UnitTest::testCastling()
 	ai.chessBoard.makeMove(wOO,   white);
 	ai.chessBoard.unMakeMove(wOO, white);
 	assert(ai.chessBoard.hashKey == hashKey);
-
-	ai.chessBoard.print();
 }
 
 void UnitTest::testProm()
