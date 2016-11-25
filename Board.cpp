@@ -279,6 +279,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 	Aggressive and special moves are generated first and preferably stored
 	at the front of the movelist
 	*/
+	// TODO: Check pawn side attacks stripping
 	unsigned long pos = nulSq;
 	u64 attackMask = 0x0;
 	u64 pieceAttacks = 0x0, attackingPieces = 0x0;
@@ -290,14 +291,13 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 		switch (b){
 			case bp:
 				// Find normal captures:
-				// attackingPieces stands for attacked squares in this case
 				BITLOOP(pos, attackingPieces){
-					attackMask = (0x5ull >> (pos - 1 + 8)) & whitePos; // TODO: Check this line
-					if (attackMask)                                                // If pieces are targeted
+					attackMask = (0x5ull << (pos - 1 - 8)) & whitePos; // TODO: Check this line
+					if (attackMask)                                              // If pieces are targeted
 						WHITELOOP(candidate){                                    // Find targeted piece
-						pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
+						pieceAttacks = pieces[candidate] & attackMask;           // Set specific attacks
 						if (pieceAttacks){
-							BITLOOP(target, pieceAttacks){                                   // Add moves
+							BITLOOP(target, pieceAttacks){                       // Add moves
 								if (target < 8){
 									moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, PIECE_PAIR(candidate, bq)));
 									moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, PIECE_PAIR(candidate, bn)));
@@ -453,7 +453,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 				 // Find normal captures:
 				 // attackingPieces stands for attacked squares in this case
 				 BITLOOP(pos, attackingPieces){
-					 attackMask = (0x5ull << (pos - 1 - 8)) & blackPos;
+					 attackMask = (0x5ull << (pos - 1 + 8)) & blackPos;
 					 if (attackMask)                                              // If pieces are targeted
 						 BLACKLOOP(candidate){                                    // Find targeted piece
 						 pieceAttacks = pieces[candidate] & attackMask;           // Set specific attacks
@@ -774,8 +774,8 @@ void Board::unMakeMove(const Move& move, color side)
 			break;
 		case C_PROMOTION:
 			pieces[((move.Pieces&(0x3ull << 8)) >> 8) * 6] |= BIT_AT(move.from);     // Pawn reappears
-			pieces[MOV_PIECE(move.Pieces)]    |= BIT_AT(move.to);                 // Captured piece reappears
-			pieces[TARGET_PIECE(move.Pieces)] ^= BIT_AT(move.to);                 // Promoted piece disappears
+			pieces[MOV_PIECE(move.Pieces)]    |= BIT_AT(move.to);                    // Captured piece reappears
+			pieces[TARGET_PIECE(move.Pieces)] ^= BIT_AT(move.to);                    // Promoted piece disappears
 			hashKey ^= randomSet[((move.Pieces&(0x3ull << 8)) >> 8) * 6][move.from]; // Update hashKey...
 			hashKey ^= randomSet[MOV_PIECE(move.Pieces)][move.to];
 			hashKey ^= randomSet[TARGET_PIECE(move.Pieces)][move.to];

@@ -1,6 +1,7 @@
 #ifndef TESTING_H
 #define TESTING_H
 #include <iostream>
+#include <algorithm>
 #include <climits>
 #include <string>
 #include <chrono>
@@ -45,6 +46,7 @@ public:
 private:
 	void testPawnFill();
 	void testCastling();
+	void testProm();
 };
 
 #pragma optimize( "[optimization-list]", {on | off} )

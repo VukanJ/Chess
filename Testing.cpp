@@ -151,9 +151,11 @@ void UnitTest::testGenerationAlgorithms()
 {
 	clog << string(8,'~') << "::: Testing moveGenerator :::" << string(8, '~') << '\n';
 	cout << "Testing Board::pawnfill()...\n";
-	testPawnFill();
+	//testPawnFill();
 	cout << "Testing castling...\n";
-	testCastling();
+	//testCastling();
+	cout << "Testing pawn promotion...\n";
+	testProm();
 }
 
 void UnitTest::testPawnFill()
@@ -199,13 +201,25 @@ void UnitTest::testCastling()
 		&& find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == WCASTLE_2; }) != moveList.end());
 	Move woo(ai.chessBoard.castlingRights, WCASTLE);
 	Move wOO(ai.chessBoard.castlingRights, WCASTLE_2);
-	ai.chessBoard.makeMove(woo, white);
+	ai.chessBoard.makeMove(woo,   white);
 	ai.chessBoard.unMakeMove(woo, white);
-	ai.chessBoard.makeMove(wOO, white);
+	ai.chessBoard.makeMove(wOO,   white);
 	ai.chessBoard.unMakeMove(wOO, white);
 	assert(ai.chessBoard.hashKey == hashKey);
 
 	ai.chessBoard.print();
+}
+
+void UnitTest::testProm()
+{
+	AI ai("5n2/1P4P1/8/8/8/8/1p4p1/5N w - 1 0", black);
+	vector<Move> whiteMoves, blackMoves;
+	ai.chessBoard.generateMoveList(whiteMoves, white);
+	ai.chessBoard.generateMoveList(blackMoves, black);
+	assert(count_if(whiteMoves.begin(), whiteMoves.end(), [](Move& move) {return move.flags == PROMOTION; }) == 4);
+	assert(count_if(whiteMoves.begin(), whiteMoves.end(), [](Move& move) {return move.flags == C_PROMOTION; }) == 2);
+	assert(count_if(blackMoves.begin(), blackMoves.end(), [](Move& move) {return move.flags == PROMOTION; }) == 4);
+	assert(count_if(blackMoves.begin(), blackMoves.end(), [](Move& move) {return move.flags == C_PROMOTION; }) == 2);
 }
 
 Benchmark::Benchmark() : performingAll(false){}
