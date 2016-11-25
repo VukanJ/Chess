@@ -14,11 +14,15 @@ Board::Board()
 Board::Board(string fen) : Board()
 {
 	setupBoard(fen);
-	debug();
+	//debug();
 }
 
 void Board::setupBoard(string FEN)
 {
+	for (auto& p : pieces) p = 0x0;
+	for (auto& a : attacks) a = 0x0;
+	blackPos = whitePos = castlingRights = b_enpassent = w_enpassent = 0x0;
+
 	// Sets up Board according to FEN
 	// FEN = [position(white's perspective) sideToMove castlingrights enpassentSquares NofHalfMoves MoveNumber]
 	if (FEN[0] == '*') { // Standard starting position
@@ -72,19 +76,18 @@ void Board::setupBoard(string FEN)
 		}
 		allPos = blackPos | whitePos;
 	}
-	print();
+	updateAllAttacks();
+	initHash();
 }
 
 void Board::debug()
 {
 	//cout << "Castling rights -> ";
 	//printBits(castlingRights);
-	updateAllAttacks();
-	initHash();
 
 	// debug
-	printf("blocked black pawns: %d\n", blockedPawn(black));
-	printf("blocked white pawns: %d\n", blockedPawn(white));
+	//printf("blocked black pawns: %d\n", blockedPawn(black));
+	//printf("blocked white pawns: %d\n", blockedPawn(white));
 	auto startingHash = hashKey;
 	vector<Move> movelist;
 	cout << "Board value: " << evaluate() << endl;
@@ -148,8 +151,10 @@ void Board::updateAllAttacks()
 void Board::updateAttack(piece p)
 {
 	// Fill all the bits that are attacked by individual pieces
-	// including attacked enemy pieces
+	// including attacked enemy pieces. This method is only invoked
+	// for non empty pieces
 	// Patterns:
+
 	unsigned long pos = -1;
 	u64 mask = 0;
 	switch (p){
@@ -239,10 +244,8 @@ void Board::pawnFill(color side)
 		// Double step
 		attacks[bp] |= ((((pieces[bp] & 0xFF000000000000ull) >> 8) & ~allPos) >> 8) & ~allPos;
 		// Side Attacks
-		attacks[bp] |= ((pieces[bp] & _noSides) >> 9) & whitePos;
-		attacks[bp] |= ((pieces[bp] & _noSides) >> 7) & whitePos;
-		attacks[bp] |= ((pieces[bp] & _left)    >> 9) & whitePos;
-		attacks[bp] |= ((pieces[bp] & _right)   >> 7) & whitePos;
+		attacks[bp] |= whitePos & ((pieces[bp] & ~_right) >> 9);
+		attacks[bp] |= whitePos & ((pieces[bp] & ~_left)  >> 7);
 	}
 	else{
 		attacks[wp] = 0x0;
@@ -251,10 +254,8 @@ void Board::pawnFill(color side)
 		// Double step
 		attacks[wp] |= ((((pieces[wp] & 0xFF00ull) << 8) & ~allPos) << 8) & ~allPos;
 		// Side Attacks
-		attacks[wp] |= ((pieces[wp] & _noSides) << 9) & blackPos;
-		attacks[wp] |= ((pieces[wp] & _noSides) << 7) & blackPos;
-		attacks[wp] |= ((pieces[wp] & _right)    << 7) & blackPos;
-		attacks[wp] |= ((pieces[wp] & _left)   << 9) & blackPos;
+		attacks[wp] |= blackPos & ((pieces[wp] & ~_left)  << 9);
+		attacks[wp] |= blackPos & ((pieces[wp] & ~_right) << 7);
 	}
 }
 

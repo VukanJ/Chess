@@ -71,7 +71,7 @@ void UnitTest::testIntrinsics() const
 	};
 
 	unsigned long index;
-	clog << "\t::: Testing intrinsics :::\npopcnt...\n";
+	clog << string(8, '~') << "::: Testing intrinsics :::" << string(8, '~') << '\n';
 	int i = 0;
 	assert(POPCOUNT(static_cast<u64>(0x0)) == 0);
 	for (u64 p = 0x1; i < 64; p |= p << 1, ++i)
@@ -145,6 +145,23 @@ void UnitTest::testIntrinsics() const
 	}
 
 	cout << "Intrinsics passed all tests!\n";
+}
+
+void UnitTest::testGenerationAlgorithms()
+{
+	clog << string(8,'~') << "::: Testing moveGenerator :::" << string(8, '~') << '\n';
+	cout << "Testing Board::pawnfill()...\n";
+	testPawnFill();
+}
+
+void UnitTest::testPawnFill()
+{
+	AI testAI("8/7p/P7/2P5/8/1p4p1/P2PP2P/8 w - 1 0", black);
+	assert(testAI.chessBoard.attacks[wp] == 0x80200099db0000ull);
+	assert(testAI.chessBoard.attacks[bp] == 0x1010000c300ull);
+	testAI.chessBoard.setupBoard("8/p2pp2p/1P4P1/8/8/pp4p1/7P/8 w - 1 0");
+	assert(testAI.chessBoard.attacks[wp] == 0xc3000001030000);
+	assert(testAI.chessBoard.attacks[bp] == 0xdb990000c300);
 }
 
 Benchmark::Benchmark() : performingAll(false){}

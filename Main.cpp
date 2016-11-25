@@ -61,6 +61,12 @@ void testing(){
 	UnitTest test;
 	test.testDefines();
 	test.testIntrinsics();
+
+	test.testGenerationAlgorithms();
+		
+	cout << "EOP\n";
+	cin.ignore();
+	exit(0);
 }
 
 void benchmark()

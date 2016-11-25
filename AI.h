@@ -19,6 +19,7 @@ const unsigned int targetDepth = 1;
 class AI
 {
 friend class Benchmark;
+friend class UnitTest;
 class Node;
 typedef unique_ptr<AI::Node> nodePtr;
 private:

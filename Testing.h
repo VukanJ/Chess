@@ -40,6 +40,10 @@ public:
 	UnitTest();
 	void testDefines() const;
 	void testIntrinsics() const;
+
+	void testGenerationAlgorithms();
+private:
+	void testPawnFill();
 };
 
 #pragma optimize( "[optimization-list]", {on | off} )
