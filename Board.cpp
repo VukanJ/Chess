@@ -177,10 +177,10 @@ void Board::updateAttack(piece p)
 				attacks[bb] |= floodFill(pieces[bb], ~allPos, (dir)i++);
 			break;
 		case bk:
-			// TODO: No bitloop needed
 			mask = pieces[bk];
 			attacks[bk] = 0x0;
-			BITLOOP(pos, mask) attacks[bk] |= KING_ATTACKS[pos] & ~blackPos;
+			BITSCANR64(pos, mask);
+			attacks[bk] |= KING_ATTACKS[pos] & ~blackPos;
 			break;
 		case bq:
 			attacks[bq] = 0x0;
@@ -208,7 +208,8 @@ void Board::updateAttack(piece p)
 		case wk:
 			mask = pieces[wk];
 			attacks[wk] = 0x0;
-			BITLOOP(pos, mask) attacks[wk] |= KING_ATTACKS[pos] & ~whitePos;
+			BITSCANR64(pos, mask);
+			attacks[wk] |= KING_ATTACKS[pos] & ~whitePos;
 			break;
 		case wq:
 			attacks[wq] = 0x0;
