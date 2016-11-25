@@ -280,7 +280,6 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 	Aggressive and special moves are generated first and preferably stored
 	at the front of the movelist
 	*/
-	// TODO: Check pawn side attacks stripping
 	unsigned long pos = nulSq;
 	u64 attackMask = 0x0;
 	u64 pieceAttacks = 0x0, attackingPieces = 0x0;
@@ -293,7 +292,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 			case bp:
 				// Find normal captures:
 				BITLOOP(pos, attackingPieces){
-					attackMask = (0x5ull << (pos - 1 - 8)) & whitePos; // TODO: Check this line
+					attackMask = (0x5ull << (pos - 1 - 8)) & whitePos;
 					if (attackMask)                                              // If pieces are targeted
 						WHITELOOP(candidate){                                    // Find targeted piece
 						pieceAttacks = pieces[candidate] & attackMask;           // Set specific attacks
@@ -358,12 +357,12 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						if (pieceAttacks)
 							BITLOOP(target, pieceAttacks)                                    // Add moves
 								if (!(CONNECTIONS[pos][target] & allPos))   // ..if no piece is in the way
-									moveList.insert(moveList.begin(), Move(pos, target, CAPTURE | ((pos == 0 ? castle_k : castle_q) << 4), PIECE_PAIR(br, candidate)));
+									moveList.insert(moveList.begin(), Move(pos, target, MOVE_METADATA(CAPTURE, pos == h8 ? castle_k : castle_q), PIECE_PAIR(br, candidate)));
 					}
 					attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[br]; // Non capturing moves
 					BITLOOP(target, attackMask)                                             // Add moves
 						if (!(CONNECTIONS[pos][target] & allPos))   // ..if no piece is in the way
-							moveList.push_back(Move(pos, target, MOVE | ((pos == 0 ? castle_k : castle_q) << 4), br));
+							moveList.push_back(Move(pos, target, MOVE_METADATA(MOVE, pos == h8 ? castle_k : castle_q), br));
 				}
 				break;
 			case bn: //// BLACK KNIGHT
@@ -427,11 +426,11 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
 						if (pieceAttacks)
 							BITLOOP(target, pieceAttacks)                                    // Add moves
-							moveList.insert(moveList.begin(), Move(pos, target, CAPTURE | ((castle_k | castle_q) << 4), PIECE_PAIR(bk, candidate)));
+							moveList.insert(moveList.begin(), Move(pos, target, MOVE_METADATA(CAPTURE, castle_k | castle_q), PIECE_PAIR(bk, candidate)));
 					}
 					attackMask ^= (KING_ATTACKS[pos] & attacks[bk]) & ~whiteAtt; // Non capturing moves
 					BITLOOP(target, attackMask)                        // Add moves
-						moveList.push_back(Move(pos, target, MOVE | ((castle_k | castle_q) << 4), bk));
+						moveList.push_back(Move(pos, target, MOVE_METADATA(MOVE, castle_k | castle_q), bk));
 				}
 				break;
 			}
@@ -517,13 +516,13 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						 if (pieceAttacks)
 							 BITLOOP(target, pieceAttacks)                                        // Add moves..
 								if (!(CONNECTIONS[pos][target] & allPos))   // ..if no piece is in the way
-									moveList.insert(moveList.begin(), Move(pos, target, CAPTURE | ((pos == 56 ? castle_K : castle_Q) << 4), PIECE_PAIR(wr, candidate)));
+									moveList.insert(moveList.begin(), Move(pos, target, MOVE_METADATA(CAPTURE, pos == h1 ? castle_K : castle_Q), PIECE_PAIR(wr, candidate)));
 					 }
 					 attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[wr]; // Non capturing moves
 					 //printBitboard(tempMask);
-					 BITLOOP(target, attackMask)                                         // Add moves..
+					 BITLOOP(target, attackMask)                        // Add moves..
 						 if(!(CONNECTIONS[pos][target] & allPos))       // ..if no piece is in the way
-							moveList.push_back(Move(pos, target, MOVE | ((pos == 56 ? castle_K : castle_Q) << 4), wr));
+							moveList.push_back(Move(pos, target, MOVE_METADATA(MOVE, pos == h1 ? castle_K : castle_Q), wr));
 				 }
 				 break;
 			 case wn: //// WHITE KNIGHT
@@ -585,17 +584,17 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						 pieceAttacks = pieces[candidate] & attackMask;                            // Set specific attacks
 						 if (pieceAttacks)
 							 BITLOOP(target, pieceAttacks)                                            // Add moves
-							 moveList.insert(moveList.begin(), Move(pos, target, CAPTURE | ((castle_K | castle_Q) << 4), PIECE_PAIR(wk, candidate)));
+							 moveList.insert(moveList.begin(), Move(pos, target, MOVE_METADATA(CAPTURE, castle_K | castle_Q), PIECE_PAIR(wk, candidate)));
 					 }
 					 attackMask ^= (KING_ATTACKS[pos] & attacks[wk]) & ~blackAtt; // Non capturing moves
 					 BITLOOP(target, attackMask)                         // Add moves
-						 moveList.push_back(Move(pos, target, MOVE | ((castle_K | castle_Q) << 4), wk));
+						 moveList.push_back(Move(pos, target, MOVE_METADATA(MOVE, castle_K | castle_Q), wk));
 				 }
 				 break;
 		 }
 	 }
 	 // Es muss HIER ueberprueft werden, ob die Figuren existieren (logisch)
-	 // TODO: Check if castling rights are updated, when opponent captures rook, for example opponents rook
+	 // TODO: Check if castling rights are updated, when opponent captures rook, for example opponents rook, solve by checking if pieces existent ?
 	 if (castlingRights & castle_K && !(allPos & 0x6ull) && !(blackAtt & 0xEull)) // White King can castle
 		moveList.push_back(Move(castlingRights, WCASTLE));
 	 if (castlingRights & castle_Q && !(allPos & 0x70ull) && !(blackAtt & 0x38ull)) // White King can castle (big)

@@ -231,6 +231,9 @@ void UnitTest::testCastling()
 	ai.chessBoard.makeMove(wOO,   white);
 	ai.chessBoard.unMakeMove(wOO, white);
 	assert(ai.chessBoard.hashKey == hashKey);
+
+	Move Rook1(a1, a2, MOVE_METADATA(MOVE, pos == 56 ? castle_K : castle_Q), wr);
+
 }
 
 void UnitTest::testProm()

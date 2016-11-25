@@ -4,7 +4,6 @@
 #include <cassert>
 #include <cstdint>
 
-
 typedef unsigned uint;
 typedef uint64_t u64;
 typedef uint32_t u32;
@@ -16,9 +15,9 @@ typedef uint8_t  byte;
 #define PIECE_PAIR(X,Y) ((X) | ((Y) << 4))                  // Pairs up 4-bit piece information
 
 // Move formatting macros:
-// TODO: Remove some of those
 #define MOV_PIECE(DATA) ((DATA) & 0xF)                     // Piece that moves
-#define TARGET_PIECE(DATA) (((DATA) & 0xF0) >> 4)          // Target piece
+#define TARGET_PIECE(DATA) (((DATA) & 0xF0) >> 4)
+#define MOVE_METADATA(TYPE,DATA) ((TYPE) | ((DATA) << 4))
 
 #ifdef _WIN32
 	#ifndef __MACHINEX64
@@ -54,7 +53,6 @@ typedef uint8_t  byte;
 																	(mask) ^= 0x1ull << pos)
 #endif
 
-// TODO: Use range based or iterator loops instead of these
 #define BLACKLOOP(x) for (int x = 0; x < 6;  ++x)
 #define WHITELOOP(x) for (int x = 6; x < 12; ++x)
 

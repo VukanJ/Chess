@@ -7,8 +7,6 @@
 
 //#define GUI_MODE
 
-// TODO: Write test functions for all move generating functions
-
 const unsigned int WIDTH = 800, HEIGHT = 600; // GUI SIZE
 
 void testing();
