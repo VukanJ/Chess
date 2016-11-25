@@ -652,6 +652,7 @@ bool Board::makeMove(const Move& move, color side)
 			// update position mask
 			side == black ? (blackPos = ((blackPos ^ BIT_AT(move.from)) | BIT_AT(move.to)))
 				          : (whitePos = ((whitePos ^ BIT_AT(move.from)) | BIT_AT(move.to)));
+			break;
 		case C_PROMOTION:
 			pieces[((move.Pieces&(0x3ull << 8)) >> 8) * 6] ^= BIT_AT(move.from);     // removes pawn
 			pieces[MOV_PIECE(move.Pieces)] ^= BIT_AT(move.to);                    // Captured piece disappears

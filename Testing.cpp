@@ -168,16 +168,30 @@ void UnitTest::testPawnFill()
 	assert(ai.chessBoard.attacks[bp] == 0xdb990000c300);
 
 	// Is pawn capture oriented correctly
+
 	ai.chessBoard.setupBoard("8/4p3/3N1N2/88888 w - 1 0");
+	auto hashKey = ai.chessBoard.hashKey;
 	vector<Move> moveList;
 	ai.chessBoard.generateMoveList(moveList, black);
 	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == CAPTURE && move.from > move.to; }) == 2);
 	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == MOVE && move.from > move.to; }) == 1);
+	for (auto& m : moveList) {
+		ai.chessBoard.makeMove(m, black);
+		ai.chessBoard.unMakeMove(m, black);
+	}
+	assert(hashKey == ai.chessBoard.hashKey);
+
 	ai.chessBoard.setupBoard("8/8/3n1n2/4P3/8888 w - 1 0");
+	hashKey = ai.chessBoard.hashKey;
 	moveList.clear();
 	ai.chessBoard.generateMoveList(moveList, white);
 	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == CAPTURE && move.from < move.to; }) == 2);
 	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == MOVE && move.from < move.to; }) == 1);
+	for (auto& m : moveList) {
+		ai.chessBoard.makeMove(m, white);
+		ai.chessBoard.unMakeMove(m, white);
+	}
+	assert(hashKey == ai.chessBoard.hashKey);
 
 }
 
@@ -229,6 +243,17 @@ void UnitTest::testProm()
 	assert(count_if(whiteMoves.begin(), whiteMoves.end(), [](Move& move) {return move.flags == C_PROMOTION; }) == 2);
 	assert(count_if(blackMoves.begin(), blackMoves.end(), [](Move& move) {return move.flags == PROMOTION; }) == 4);
 	assert(count_if(blackMoves.begin(), blackMoves.end(), [](Move& move) {return move.flags == C_PROMOTION; }) == 2);
+	auto hashKey = ai.chessBoard.hashKey;
+	for (auto& m : blackMoves) {
+		ai.chessBoard.makeMove(m, black);
+		ai.chessBoard.unMakeMove(m, black);
+	}
+	assert(hashKey == ai.chessBoard.hashKey);
+	for (auto& m : whiteMoves) {
+		ai.chessBoard.makeMove(m, white);
+		ai.chessBoard.unMakeMove(m, white);
+	}
+	assert(hashKey == ai.chessBoard.hashKey);
 }
 
 Benchmark::Benchmark() : performingAll(false){}
