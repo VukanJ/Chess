@@ -68,8 +68,8 @@ void Board::setupBoard(string FEN)
 		sideToMove = fenArgs[1][0] == 'w' ? white : black;
 		for (auto c : fenArgs[2]) {
 			switch (c) {
-			case 'k': castlingRights |= castle_k;  break;
-			case 'K': castlingRights |= castle_K;  break;
+			case 'k': castlingRights |= castle_k; break;
+			case 'K': castlingRights |= castle_K; break;
 			case 'q': castlingRights |= castle_q; break;
 			case 'Q': castlingRights |= castle_Q; break;
 			}
@@ -438,6 +438,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 		// Generate castling moves
 		// Black King can castle if there are no pieces between king and rook, both havent moved yet and king
 		// does not cross attacked squares during castling, same for white
+
 		if (castlingRights & castle_k && !(allPos & 0x600000000000000ull) && !(whiteAtt & 0xE00000000000000ull))
 			moveList.push_back(Move(castlingRights, BCASTLE));
 		if (castlingRights & castle_q && !(allPos & 0x7000000000000000ull) && !(whiteAtt & 0x3800000000000000ull)) // Black King can castle (big)
@@ -600,6 +601,22 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 	 if (castlingRights & castle_Q && !(allPos & 0x70ull) && !(blackAtt & 0x38ull)) // White King can castle (big)
 		 moveList.push_back(Move(castlingRights, WCASTLE_2));
 	}
+	// If opponent rook has been captured, he looses castling rights.
+	// TODO: Needs nicer solution
+	for_each(moveList.begin(), moveList.end(), [](Move& move) {
+		if (TARGET_PIECE(move.flags) == wr) {
+			if (move.flags == CAPTURE || move.flags == C_PROMOTION) {
+				if (move.to == a1) move.flags |= castle_Q << 4; 
+				else if (move.to == h1) move.flags |= castle_K << 4;
+			}
+		}
+		else if (TARGET_PIECE(move.flags) == br) {
+			if (move.flags == CAPTURE || move.flags == C_PROMOTION) {
+				if (move.to == a8) move.flags |= castle_q << 4;
+				else if (move.to == h8)  move.flags |= castle_k << 4;
+			}
+		}
+	});
 }
 
 bool Board::makeMove(const Move& move, color side)
@@ -715,6 +732,7 @@ bool Board::makeMove(const Move& move, color side)
 		else if (cast & castle_q) { castlingRights &= ~castle_q; }
 		if (cast & castle_K)      { castlingRights &= ~castle_K; }
 		else if (cast & castle_Q) { castlingRights &= ~castle_Q; }
+		hashKey ^= randomSet[CASTLE_HASH][castlingRights];
 	}
 	allPos = blackPos | whitePos;
 	if (((side == black) && (pieces[bk] & whiteAtt))
@@ -819,6 +837,15 @@ void Board::unMakeMove(const Move& move, color side)
 		default:
 			cerr << "Invalid move encountered!\n";
 			exit(1);
+	}
+	// restore some castling rights
+	byte cast = (move.flags & 0xF0ull) >> 4;
+	if (cast) {
+		hashKey ^= randomSet[CASTLE_HASH][castlingRights];
+		if (cast & castle_k)      { castlingRights |= castle_k; }
+		else if (cast & castle_q) { castlingRights |= castle_q; }
+		if (cast & castle_K)      { castlingRights |= castle_K; }
+		else if (cast & castle_Q) { castlingRights |= castle_Q; }
 	}
 	allPos = blackPos | whitePos;
 }

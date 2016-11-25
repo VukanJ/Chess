@@ -231,9 +231,44 @@ void UnitTest::testCastling()
 	ai.chessBoard.makeMove(wOO,   white);
 	ai.chessBoard.unMakeMove(wOO, white);
 	assert(ai.chessBoard.hashKey == hashKey);
+	// Check partial lost of castling rights
 
-	Move Rook1(a1, a2, MOVE_METADATA(MOVE, pos == 56 ? castle_K : castle_Q), wr);
+	Move Rook1(a1, a2, MOVE_METADATA(MOVE, Board::castle_Q), wr);
+	Move Rook2(h1, h2, MOVE_METADATA(MOVE, Board::castle_K), wr);
+	Move rook1(a8, a7, MOVE_METADATA(MOVE, Board::castle_q), br);
+	Move rook2(h8, h7, MOVE_METADATA(MOVE, Board::castle_k), br);
 
+	hashKey = ai.chessBoard.hashKey;
+
+	ai.chessBoard.makeMove(Rook1, white);
+	ai.chessBoard.unMakeMove(Rook1, white);
+	ai.chessBoard.makeMove(Rook2, white);
+	ai.chessBoard.unMakeMove(Rook2, white);
+	assert(hashKey == ai.chessBoard.hashKey);
+
+	ai.chessBoard.makeMove(rook1, black);
+	ai.chessBoard.unMakeMove(rook1, black);
+	ai.chessBoard.makeMove(rook2, black);
+	ai.chessBoard.unMakeMove(rook2, black);
+	assert(hashKey == ai.chessBoard.hashKey);
+
+	ai.chessBoard.setupBoard("8/8/8/8/8/8/7r/R3K2R w KQ 1 0");
+	hashKey = ai.chessBoard.hashKey;
+	printBits(ai.chessBoard.castlingRights);
+	// Metadata should be filled in by MoveGenerator
+	Move captureRook2(h2, h1, MOVE_METADATA(CAPTURE, Board::castle_K), wr);
+	Move captureRook1(a2, a1, MOVE_METADATA(CAPTURE, Board::castle_Q), wr);
+	ai.chessBoard.makeMove(captureRook1,   black);
+	printBits(ai.chessBoard.castlingRights);
+	assert(ai.chessBoard.castlingRights == 0b0100);
+	ai.chessBoard.unMakeMove(captureRook1, black);
+	printBits(ai.chessBoard.castlingRights);
+
+	ai.chessBoard.makeMove(captureRook2,   black);
+	printBits(ai.chessBoard.castlingRights);
+	ai.chessBoard.unMakeMove(captureRook2, black);
+	printBits(ai.chessBoard.castlingRights);
+	assert(hashKey == ai.chessBoard.hashKey);
 }
 
 void UnitTest::testProm()
