@@ -169,14 +169,14 @@ void UnitTest::testPawnFill()
 void UnitTest::testCastling()
 {
 	vector<Move> moveList;
-	AI ai("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w - 1 0", black);
+	AI ai("r3k2r/8/8/8/8/8/8/R3K2R w - 1 0", black);
 	printBits(ai.chessBoard.castlingRights);
 	ai.chessBoard.generateMoveList(moveList, black);
 
 	assert(!any_of(moveList.begin(), moveList.end(), [](Move& move) {
 		return move.flags == BCASTLE || move.flags == BCASTLE_2; }));
 
-	ai.chessBoard.setupBoard("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KkQq 1 0");
+	ai.chessBoard.setupBoard("r3k2r/8/8/8/8/8/8/R3K2R w KkQq 1 0");
 	printBits(ai.chessBoard.castlingRights);
 
 	moveList.clear();
@@ -184,10 +184,12 @@ void UnitTest::testCastling()
 	auto hashKey = ai.chessBoard.hashKey;
 	assert(find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == BCASTLE;   }) != moveList.end()
 		&& find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == BCASTLE_2; }) != moveList.end());
-	ai.chessBoard.makeMove(Move(ai.chessBoard.castlingRights,   BCASTLE),   black);
-	ai.chessBoard.unMakeMove(Move(ai.chessBoard.castlingRights, BCASTLE),   black);
-	ai.chessBoard.makeMove(Move(ai.chessBoard.castlingRights,   BCASTLE_2), black);
-	ai.chessBoard.unMakeMove(Move(ai.chessBoard.castlingRights, BCASTLE_2), black);
+	Move boo(ai.chessBoard.castlingRights, BCASTLE);
+	Move bOO(ai.chessBoard.castlingRights, BCASTLE_2);
+	ai.chessBoard.makeMove(boo,   black);
+	ai.chessBoard.unMakeMove(boo, black);
+	ai.chessBoard.makeMove(bOO,   black);
+	ai.chessBoard.unMakeMove(bOO, black);
 	assert(ai.chessBoard.hashKey == hashKey);
 
 	moveList.clear();
@@ -195,10 +197,12 @@ void UnitTest::testCastling()
 	hashKey = ai.chessBoard.hashKey;
 	assert(find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == WCASTLE;   }) != moveList.end()
 		&& find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == WCASTLE_2; }) != moveList.end());
-	ai.chessBoard.makeMove(  Move(ai.chessBoard.castlingRights, WCASTLE),   white);
-	ai.chessBoard.unMakeMove(Move(ai.chessBoard.castlingRights, WCASTLE),   white);
-	ai.chessBoard.makeMove(Move(ai.chessBoard.castlingRights,   WCASTLE_2), white); 
-	ai.chessBoard.unMakeMove(Move(ai.chessBoard.castlingRights, WCASTLE_2), white); 
+	Move woo(ai.chessBoard.castlingRights, WCASTLE);
+	Move wOO(ai.chessBoard.castlingRights, WCASTLE_2);
+	ai.chessBoard.makeMove(woo, white);
+	ai.chessBoard.unMakeMove(woo, white);
+	ai.chessBoard.makeMove(wOO, white);
+	ai.chessBoard.unMakeMove(wOO, white);
 	assert(ai.chessBoard.hashKey == hashKey);
 
 	ai.chessBoard.print();

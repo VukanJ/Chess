@@ -708,12 +708,12 @@ bool Board::makeMove(const Move& move, color side)
 			exit(1);
 	}
 	// Check if castling still permitted
-	byte cast = (move.flags & 0xF0ull)>>4;
+	byte cast = (move.flags & 0xF0ull) >> 4;
 	if (cast){
-		if (cast & castle_k)      { castlingRights &= ~castle_k;  }
-		else if (cast & castle_q){ castlingRights &= ~castle_q; }
-		if (cast & castle_K)      { castlingRights &= ~castle_K;  }
-		else if (cast & castle_Q){ castlingRights &= ~castle_Q; }
+		if (cast & castle_k)      { castlingRights &= ~castle_k; }
+		else if (cast & castle_q) { castlingRights &= ~castle_q; }
+		if (cast & castle_K)      { castlingRights &= ~castle_K; }
+		else if (cast & castle_Q) { castlingRights &= ~castle_Q; }
 	}
 	allPos = blackPos | whitePos;
 	if (((side == black) && (pieces[bk] & whiteAtt))
