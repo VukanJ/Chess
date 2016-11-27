@@ -2,6 +2,7 @@
 #define TESTING_H
 #include <iostream>
 #include <algorithm>
+#include <memory>
 #include <climits>
 #include <string>
 #include <chrono>
@@ -39,10 +40,32 @@ class UnitTest
 {
 public:
 	UnitTest();
+
+	// Intrinsics testing
 	void testDefines() const;
 	void testIntrinsics() const;
 
+	// Move generation testing
 	void testGenerationAlgorithms();
+
+	// Tree testing
+	class TestingTree {
+	public:
+		TestingTree(Board& _chessBoard, int _targetDepth);
+		struct Node {
+			Node(float _boardValue);
+			float boardValue, value_alphabeta;
+			vector<Move> moveList;
+			vector<unique_ptr<Node>> nodeList;
+		};
+		int staticEvaluations;
+		Board& chessBoard;
+		void buildGameTree(unique_ptr<Node>& node, int depth, color side);
+		unique_ptr<Node> Root;
+		int targetDepth;
+	};
+	void testTreeStructure();
+
 private:
 	void testPawnFill();
 	void testCastling();

@@ -595,7 +595,6 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 		 }
 	 }
 	 // Es muss HIER ueberprueft werden, ob die Figuren existieren (logisch)
-	 // TODO: Check if castling rights are updated, when opponent captures rook, for example opponents rook, solve by checking if pieces existent ?
 	 if (castlingRights & castle_K && !(allPos & 0x6ull) && !(blackAtt & 0xEull)) // White King can castle
 		moveList.push_back(Move(castlingRights, WCASTLE));
 	 if (castlingRights & castle_Q && !(allPos & 0x70ull) && !(blackAtt & 0x38ull)) // White King can castle (big)

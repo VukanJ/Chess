@@ -254,20 +254,15 @@ void UnitTest::testCastling()
 
 	ai.chessBoard.setupBoard("8/8/8/8/8/8/7r/R3K2R w KQ 1 0");
 	hashKey = ai.chessBoard.hashKey;
-	printBits(ai.chessBoard.castlingRights);
 	// Metadata should be filled in by MoveGenerator
 	Move captureRook2(h2, h1, MOVE_METADATA(CAPTURE, Board::castle_K), wr);
 	Move captureRook1(a2, a1, MOVE_METADATA(CAPTURE, Board::castle_Q), wr);
 	ai.chessBoard.makeMove(captureRook1,   black);
-	printBits(ai.chessBoard.castlingRights);
 	assert(ai.chessBoard.castlingRights == 0b0100);
 	ai.chessBoard.unMakeMove(captureRook1, black);
-	printBits(ai.chessBoard.castlingRights);
 
 	ai.chessBoard.makeMove(captureRook2,   black);
-	printBits(ai.chessBoard.castlingRights);
 	ai.chessBoard.unMakeMove(captureRook2, black);
-	printBits(ai.chessBoard.castlingRights);
 	assert(hashKey == ai.chessBoard.hashKey);
 }
 
@@ -277,9 +272,9 @@ void UnitTest::testProm()
 	vector<Move> whiteMoves, blackMoves;
 	ai.chessBoard.generateMoveList(whiteMoves, white);
 	ai.chessBoard.generateMoveList(blackMoves, black);
-	assert(count_if(whiteMoves.begin(), whiteMoves.end(), [](Move& move) {return move.flags == PROMOTION; }) == 4);
+	assert(count_if(whiteMoves.begin(), whiteMoves.end(), [](Move& move) {return move.flags == PROMOTION; })   == 4);
 	assert(count_if(whiteMoves.begin(), whiteMoves.end(), [](Move& move) {return move.flags == C_PROMOTION; }) == 2);
-	assert(count_if(blackMoves.begin(), blackMoves.end(), [](Move& move) {return move.flags == PROMOTION; }) == 4);
+	assert(count_if(blackMoves.begin(), blackMoves.end(), [](Move& move) {return move.flags == PROMOTION; })   == 4);
 	assert(count_if(blackMoves.begin(), blackMoves.end(), [](Move& move) {return move.flags == C_PROMOTION; }) == 2);
 	auto hashKey = ai.chessBoard.hashKey;
 	for (auto& m : blackMoves) {
@@ -310,7 +305,7 @@ void Benchmark::performAllbenchmarks()
 void Benchmark::benchmarkMoveGeneration()
 {
 	if (performingAll) {
-		results.push_back(result{MOVEGEN ,"generateMoveList","",0 });
+		results.push_back(result{MOVEGEN, "generateMoveList", "", 0 });
 	}
 	else {
 		clog << "\t::: BENCHMARK :::\n";
@@ -341,8 +336,8 @@ void Benchmark::benchmarkMoveGeneration()
 		results.back().value = averageMoveGenTime;
 	}
 	else {
-		printf("Move generation takes approx. %f microseconds\n", averageMoveGenTime*1e6);
-		printf("Generates %f million boards per second\n", (1.0 / averageMoveGenTime)*1e-6);
+		printf("Move generation takes approx. %f microseconds\n", averageMoveGenTime  * 1e6);
+		printf("Generates %f million boards per second\n", (1.0 / averageMoveGenTime) * 1e-6);
 		clog << "\t::: END OF BENCHMARK :::\n";
 	}
 }
@@ -353,7 +348,7 @@ void Benchmark::benchmarkMovemaking()
 {
 	// Measure move generation time
 	if (performingAll) {
-		results.push_back(result{MAKEMOVE, "makeMove/unMakeMove","",0 });
+		results.push_back(result{MAKEMOVE, "makeMove/unMakeMove", "", 0 });
 	}
 	else {
 		clog << "\t::: BENCHMARK :::\n";
@@ -387,7 +382,7 @@ void Benchmark::benchmarkMovemaking()
 		results.back().value = averageMoveMakeTime;
 	}
 	else {
-		printf("Move making and undoing takes approx. %f microseconds\n", averageMoveMakeTime*1e6);
+		printf("Move making and undoing takes approx. %f microseconds\n", averageMoveMakeTime * 1e6);
 		printf("Makes %f move/unmakemoves per second\n", 1.0 / averageMoveMakeTime);
 		clog << "\t::: END OF BENCHMARK :::\n";
 	}
@@ -401,12 +396,78 @@ void Benchmark::summarize()
 		clog << result.name << '\n';
 		switch(result.type){
 			case MOVEGEN:
-				clog << result.msg << '\t' << (1.0/result.value)*1e-6 << '\n';
+				clog << result.msg << '\t' << (1.0/result.value) * 1e-6 << '\n';
 			break;
 			case MAKEMOVE:
-				clog << result.msg << '\t' << (1.0/result.value)*1e-6 << '\n';
+				clog << result.msg << '\t' << (1.0/result.value) * 1e-6 << '\n';
 			break;
 		}
 	}
 	clog << "\t::: END OF SUMMARY :::\n" << string(80, '~') << '\n';
+}
+
+void UnitTest::testTreeStructure()
+{
+	AI ai("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5 w KkQq 1 0", white);
+	clog << string(8, '~') << "::: Testing gameTree building :::" << string(8, '~') << '\n';
+	auto hashKey = ai.chessBoard.hashKey;
+	TestingTree gameTree(ai.chessBoard, 3);
+	// Measure time
+	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
+	gameTree.buildGameTree(gameTree.Root, gameTree.targetDepth, white);
+	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
+	printf("Execution time: %f\n", (double)chrono::duration_cast<chrono::milliseconds>(t2 - t1).count()/1000.0);
+
+	cout << gameTree.staticEvaluations << " static evaluations\n";
+	assert(hashKey == ai.chessBoard.hashKey);
+}
+
+UnitTest::TestingTree::TestingTree(Board& _chessBoard, int _targetDepth) : Root(nullptr), targetDepth(_targetDepth), chessBoard(_chessBoard) 
+{
+	auto node = new Node(chessBoard.evaluate());
+	Root.reset(node);
+	staticEvaluations = 0;
+}
+
+UnitTest::TestingTree::Node::Node(float _boardValue) : boardValue(_boardValue) {}
+
+void UnitTest::TestingTree::buildGameTree(unique_ptr<Node>& node, int depth, color side)
+{
+	// Depth first search
+	// chessBoard.hashKey;
+	if (depth == 0) return;
+	if(node->moveList.size() == 0)
+		chessBoard.generateMoveList(node->moveList, side);
+	else {
+		int m = 0;
+		for (auto& move : node->moveList) {
+			// If already generated visit all nodes to targetdepth
+			chessBoard.makeMove(move, side);
+			buildGameTree(node->nodeList[m++], depth - 1, side == black ? white : black);
+			chessBoard.unMakeMove(move, side);
+		}
+	}
+	for (auto& move = node->moveList.begin(); move != node->moveList.end();) {
+		// Play moves, check if mate. If not: append to tree, goto new node
+		auto key = chessBoard.hashKey;
+		chessBoard.makeMove(*move, side);
+		if ((chessBoard.pieces[side == black ? bk : wk]) & (side == black ? chessBoard.whiteAtt : chessBoard.blackAtt)) {
+			chessBoard.unMakeMove(*move, side);
+			move = node->moveList.erase(move);
+			continue;
+		}
+		else {
+			node->nodeList.push_back(unique_ptr<Node>(new Node(chessBoard.evaluate())));
+			staticEvaluations++;
+			buildGameTree(node->nodeList.back(), depth - 1, side == black ? white : black);
+			chessBoard.unMakeMove(*move, side);
+			if (key != chessBoard.hashKey) {
+				cout << "Move Error with move" << moveString(*move) << endl;
+				chessBoard.print();
+				cin.ignore();
+				exit(1);
+			}
+			move++;
+		}
+	}
 }

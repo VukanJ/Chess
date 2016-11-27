@@ -26,7 +26,6 @@ void genChessData::genConnections()
     for(int j = 1; j < 8 - i % 8; j++)
       diags[i] |= (0x1ull << i) >> j * 7;
   }
-
   u64 temp = 0x0;
   for(int i = 0; i < 64; i++){
     for(int j = 0; j < 64; j++){
@@ -79,3 +78,16 @@ void genChessData::genConnections()
     }
   }
 }
+
+/*
+void knight(vector<uint64>& nums)
+{
+	for (int i = 0; i < 64; i++) {
+		nums[i] |= i < 20 ? (uint64)0xA1100110A << i >> 18 : (uint64)0xA1100110A << (i - 18);
+		if (i % 8 < 3)
+			nums[i] ^= nums[i] & _left;
+		else if (i % 8 > 5)
+			nums[i] ^= nums[i] & _right;
+	}
+}
+*/
