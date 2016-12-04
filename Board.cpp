@@ -357,12 +357,12 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						if (pieceAttacks)
 							BITLOOP(target, pieceAttacks)                                    // Add moves
 								if (!(CONNECTIONS[pos][target] & allPos))   // ..if no piece is in the way
-									moveList.insert(moveList.begin(), Move(pos, target, MOVE_METADATA(CAPTURE, pos == h8 ? castle_k : castle_q), PIECE_PAIR(br, candidate)));
+									moveList.insert(moveList.begin(), Move(pos, target, MOVE_METADATA(CAPTURE, castlingRights & (pos == h8 ? castle_k : castle_q)), PIECE_PAIR(br, candidate)));
 					}
 					attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[br]; // Non capturing moves
 					BITLOOP(target, attackMask)                                             // Add moves
 						if (!(CONNECTIONS[pos][target] & allPos))   // ..if no piece is in the way
-							moveList.push_back(Move(pos, target, MOVE_METADATA(MOVE, pos == h8 ? castle_k : castle_q), br));
+							moveList.push_back(Move(pos, target, MOVE_METADATA(MOVE, castlingRights & (pos == h8 ? castle_k : castle_q)), br));
 				}
 				break;
 			case bn: //// BLACK KNIGHT
@@ -426,11 +426,11 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
 						if (pieceAttacks)
 							BITLOOP(target, pieceAttacks)                                    // Add moves
-							moveList.insert(moveList.begin(), Move(pos, target, MOVE_METADATA(CAPTURE, castle_k | castle_q), PIECE_PAIR(bk, candidate)));
+							moveList.insert(moveList.begin(), Move(pos, target, MOVE_METADATA(CAPTURE, castlingRights & (castle_k | castle_q)), PIECE_PAIR(bk, candidate)));
 					}
 					attackMask ^= (KING_ATTACKS[pos] & attacks[bk]) & ~whiteAtt; // Non capturing moves
 					BITLOOP(target, attackMask)                        // Add moves
-						moveList.push_back(Move(pos, target, MOVE_METADATA(MOVE, castle_k | castle_q), bk));
+						moveList.push_back(Move(pos, target, MOVE_METADATA(MOVE, castlingRights & (castle_k | castle_q)), bk));
 				}
 				break;
 			}
@@ -516,14 +516,15 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						 pieceAttacks = pieces[candidate] & attackMask;                        // Set specific attacks
 						 if (pieceAttacks)
 							 BITLOOP(target, pieceAttacks)                                        // Add moves..
-								if (!(CONNECTIONS[pos][target] & allPos))   // ..if no piece is in the way
-									moveList.insert(moveList.begin(), Move(pos, target, MOVE_METADATA(CAPTURE, pos == h1 ? castle_K : castle_Q), PIECE_PAIR(wr, candidate)));
+							 if (!(CONNECTIONS[pos][target] & allPos)) {   // ..if no piece is in the way
+								moveList.insert(moveList.begin(), Move(pos, target, MOVE_METADATA(CAPTURE, castlingRights & (pos == h1 ? castle_K : castle_Q)), PIECE_PAIR(wr, candidate)));
+							 }
 					 }
 					 attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[wr]; // Non capturing moves
 					 //printBitboard(tempMask);
 					 BITLOOP(target, attackMask)                        // Add moves..
 						 if(!(CONNECTIONS[pos][target] & allPos))       // ..if no piece is in the way
-							moveList.push_back(Move(pos, target, MOVE_METADATA(MOVE, pos == h1 ? castle_K : castle_Q), wr));
+							moveList.push_back(Move(pos, target, MOVE_METADATA(MOVE, castlingRights & (pos == h1 ? castle_K : castle_Q)), wr));
 				 }
 				 break;
 			 case wn: //// WHITE KNIGHT
@@ -585,16 +586,15 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						 pieceAttacks = pieces[candidate] & attackMask;                            // Set specific attacks
 						 if (pieceAttacks)
 							 BITLOOP(target, pieceAttacks)                                            // Add moves
-							 moveList.insert(moveList.begin(), Move(pos, target, MOVE_METADATA(CAPTURE, castle_K | castle_Q), PIECE_PAIR(wk, candidate)));
+							 moveList.insert(moveList.begin(), Move(pos, target, MOVE_METADATA(CAPTURE, castlingRights & (castle_K | castle_Q)), PIECE_PAIR(wk, candidate)));
 					 }
 					 attackMask ^= (KING_ATTACKS[pos] & attacks[wk]) & ~blackAtt; // Non capturing moves
 					 BITLOOP(target, attackMask)                         // Add moves
-						 moveList.push_back(Move(pos, target, MOVE_METADATA(MOVE, castle_K | castle_Q), wk));
+						 moveList.push_back(Move(pos, target, MOVE_METADATA(MOVE, castlingRights & (castle_K | castle_Q)), wk));
 				 }
 				 break;
 		 }
 	 }
-	 // Es muss HIER ueberprueft werden, ob die Figuren existieren (logisch)
 	 if (castlingRights & castle_K && !(allPos & 0x6ull) && !(blackAtt & 0xEull)) // White King can castle
 		moveList.push_back(Move(castlingRights, WCASTLE));
 	 if (castlingRights & castle_Q && !(allPos & 0x70ull) && !(blackAtt & 0x38ull)) // White King can castle (big)
@@ -602,17 +602,21 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 	}
 	// If opponent rook has been captured, he looses castling rights.
 	// TODO: Needs nicer solution
-	for_each(moveList.begin(), moveList.end(), [](Move& move) {
-		if (TARGET_PIECE(move.flags) == wr) {
-			if (move.flags == CAPTURE || move.flags == C_PROMOTION) {
-				if (move.to == a1) move.flags |= castle_Q << 4; 
-				else if (move.to == h1) move.flags |= castle_K << 4;
+	for_each(moveList.begin(), moveList.end(), [this](Move& move) {
+		if (TARGET_PIECE(move.Pieces) == wr) {
+			if ((move.flags & 0xF) == CAPTURE || (move.flags & 0xF) == C_PROMOTION) {
+				if (move.to == a1) 
+					move.flags |= (castlingRights & castle_Q) << 4; 
+				else if (move.to == h1) 
+					move.flags |= (castlingRights & castle_K) << 4;
 			}
 		}
-		else if (TARGET_PIECE(move.flags) == br) {
-			if (move.flags == CAPTURE || move.flags == C_PROMOTION) {
-				if (move.to == a8) move.flags |= castle_q << 4;
-				else if (move.to == h8)  move.flags |= castle_k << 4;
+		else if (TARGET_PIECE(move.Pieces) == br) {
+			if ((move.flags & 0xF) == CAPTURE || (move.flags & 0xF) == C_PROMOTION) {
+				if (move.to == a8) 
+					move.flags |= (castlingRights & castle_q) << 4;
+				else if (move.to == h8)  
+					move.flags |= (castlingRights & castle_k) << 4;
 			}
 		}
 	});
@@ -725,12 +729,9 @@ bool Board::makeMove(const Move& move, color side)
 			exit(1);
 	}
 	// Check if castling still permitted
-	byte cast = (move.flags & 0xF0ull) >> 4;
+	byte cast = move.flags >> 4;
 	if (cast){
-		if (cast & castle_k)      { castlingRights &= ~castle_k; }
-		else if (cast & castle_q) { castlingRights &= ~castle_q; }
-		if (cast & castle_K)      { castlingRights &= ~castle_K; }
-		else if (cast & castle_Q) { castlingRights &= ~castle_Q; }
+		castlingRights &= ~cast;
 		hashKey ^= randomSet[CASTLE_HASH][castlingRights];
 	}
 	allPos = blackPos | whitePos;
@@ -841,10 +842,7 @@ void Board::unMakeMove(const Move& move, color side)
 	byte cast = (move.flags & 0xF0ull) >> 4;
 	if (cast) {
 		hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-		if (cast & castle_k)      { castlingRights |= castle_k; }
-		else if (cast & castle_q) { castlingRights |= castle_q; }
-		if (cast & castle_K)      { castlingRights |= castle_K; }
-		else if (cast & castle_Q) { castlingRights |= castle_Q; }
+		castlingRights |= cast;
 	}
 	allPos = blackPos | whitePos;
 }

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <algorithm>
 #include <memory>
+#include <stack>
 #include <climits>
 #include <string>
 #include <chrono>
@@ -58,13 +59,17 @@ public:
 			vector<Move> moveList;
 			vector<unique_ptr<Node>> nodeList;
 		};
+		void buildGameTree(unique_ptr<Node>& node, int depth, color side);
+		void traceback();
+
+		stack<Move> debugMoveStack;
 		int staticEvaluations;
 		Board& chessBoard;
-		void buildGameTree(unique_ptr<Node>& node, int depth, color side);
 		unique_ptr<Node> Root;
 		int targetDepth;
 	};
 	void testTreeStructure();
+	void specialTest(); // unspecified custom test
 
 private:
 	void testPawnFill();

@@ -57,6 +57,7 @@ int main()
 
 void testing(){
 	UnitTest test;
+	test.specialTest();
 	test.testDefines();
 	test.testIntrinsics();
 	test.testGenerationAlgorithms();

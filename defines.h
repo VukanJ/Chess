@@ -16,7 +16,7 @@ typedef uint8_t  byte;
 
 // Move formatting macros:
 #define MOV_PIECE(DATA) ((DATA) & 0xF)                     // Piece that moves
-#define TARGET_PIECE(DATA) (((DATA) & 0xF0) >> 4)
+#define TARGET_PIECE(DATA) ((DATA) >> 4)                   // Targeted piece
 #define MOVE_METADATA(TYPE,DATA) ((TYPE) | ((DATA) << 4))
 
 #ifdef _WIN32
