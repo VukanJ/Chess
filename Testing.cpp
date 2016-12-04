@@ -447,7 +447,7 @@ void UnitTest::TestingTree::buildGameTree(unique_ptr<Node>& node, int depth, col
 			chessBoard.unMakeMove(move, side);
 		}
 	}
-	for (auto& move = node->moveList.begin(); move != node->moveList.end();) {
+	for (auto move = node->moveList.begin(); move != node->moveList.end();) {
 		// Play moves, check if mate. If not: append to tree, goto new node
 		auto key = chessBoard.hashKey;
 		chessBoard.makeMove(*move, side);

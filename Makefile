@@ -2,7 +2,7 @@ CC = g++
 CFLAGS = -std=c++17 -Wpedantic -Ofast -O3
 LFLAGS = -lsfml-window -lsfml-graphics -lsfml-system
 NAME = chess2
-OBJ = Main.o ZobristHash.o Testing.o gui.o AI.o Board.o Data.o
+OBJ = Main.o ZobristHash.o Testing.o gui.o AI.o Board.o Data.o Move.o
 
 compile: ${OBJ} EXE
 
@@ -31,6 +31,10 @@ ZobristHash.o: ZobristHash.cpp ZobristHash.h
 	@${CC} -c $< ${CFLAGS}
 
 Data.o: Data.cpp Data.h
+	@echo Compiling $< ...
+	@${CC} -c $< ${CFLAGS}
+
+Move.o: Move.cpp Move.h
 	@echo Compiling $< ...
 	@${CC} -c $< ${CFLAGS}
 
