@@ -51,21 +51,21 @@ void AI::negaMax_Search(nodePtr& node, int depth, color side)
 	// Evaluate board(s)
 	// Use negamax
 	// Toggle side to move
-	chessBoard.generateMoveList(node->moves, sideToMove);
-	for (auto move = node->moves.begin(); move != node->moves.end();){
-		// Do all moves
-		if (chessBoard.makeMove(*move, side)) {
-			// Move invalid => discard
-			chessBoard.unMakeMove(*move, side);
-			move = node->moves.erase(move);
-		}
-		else {
-			// If BoardPosition already known, use hashed value
-			if (!chessBoard.hash.hasEntry(chessBoard.hashKey))
-				node->boardValue = chessBoard.evaluate();
-			else chessBoard.hash.getEntry(chessBoard.hashKey, node->boardValue);
-		}
-	}
+	///chessBoard.generateMoveList(node->moves, sideToMove);
+	///for (auto move = node->moves.begin(); move != node->moves.end();){
+	///	// Do all moves
+	///	if (chessBoard.makeMove(*move, side)) {
+	///		// Move invalid => discard
+	///		chessBoard.unMakeMove(*move, side);
+	///		move = node->moves.erase(move);
+	///	}
+	///	else {
+	///		// If BoardPosition already known, use hashed value
+	///		if (!chessBoard.hash.hasEntry(chessBoard.hashKey))
+	///			node->boardValue = chessBoard.evaluate();
+	///		else chessBoard.hash.getEntry(chessBoard.hashKey, node->boardValue);
+	///	}
+	///}
 }
 
 const Board& AI::getBoardRef()

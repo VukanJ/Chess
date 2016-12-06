@@ -35,7 +35,7 @@ public:
 	bool isCheckMate(color) const;
 
 	// Evaluation
-	float evaluate();
+	int evaluate(color side);
 	inline unsigned blockedPawn(color);
 
 	// Flooding algorithm

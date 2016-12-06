@@ -90,7 +90,7 @@ void Board::debug()
 	//printf("blocked white pawns: %d\n", blockedPawn(white));
 	auto startingHash = hashKey;
 	vector<Move> movelist;
-	cout << "Board value: " << evaluate() << endl;
+	cout << "Board value (w): " << evaluate(white) << endl;
 	movelist.clear();
 	print();
 
@@ -903,23 +903,51 @@ void Board::print() const
 	#endif
 }
 
-float Board::evaluate()
+int Board::evaluate(color side)
 {
-	// Computer is always maximizing player
+	// Returns the relative heuristic value of the board for the white player
+	// Score of black is the negative of white's score
+	int total_boardValue = 0;
+	/* Material values in units of centipawns (cp):
+	 * Queen  -> 900 cp 
+	 * Rook   -> 500 cp
+	 * Knight -> 300 cp
+	 * Bishop -> 300 cp
+	 * Pawn   -> 100 cp
+	 * King   -> 0 cp
+	 */
+	// ~~~ Material ~~~
+	total_boardValue += 900 * ((int)POPCOUNT(pieces[wq]) - (int)POPCOUNT(pieces[bq]))
+		              + 500 * ((int)POPCOUNT(pieces[wr]) - (int)POPCOUNT(pieces[br]))
+		              + 300 * ((int)POPCOUNT(pieces[wb]) - (int)POPCOUNT(pieces[bb]))
+		              + 300 * ((int)POPCOUNT(pieces[wn]) - (int)POPCOUNT(pieces[bn]))
+		              + 100 * ((int)POPCOUNT(pieces[wp]) - (int)POPCOUNT(pieces[bp]));
+	// ~~~ Position ~~~
+	// Rewards points, if positions are similar to piece-square-heuristics (WIP)
 
-	// Material
-	float material = 9.0f * ((float)POPCOUNT(pieces[bq]) - (float)POPCOUNT(pieces[wq]))
-		+ 5.0f * ((float)POPCOUNT(pieces[br]) - (float)POPCOUNT(pieces[wr]))
-		+ 3.0f * ((float)POPCOUNT(pieces[bb]) - (float)POPCOUNT(pieces[wb]))
-		+ 3.0f * ((float)POPCOUNT(pieces[bn]) - (float)POPCOUNT(pieces[wn]))
-		+ 2.0f * ((float)POPCOUNT(pieces[bp]) - (float)POPCOUNT(pieces[wp]));
-	// Mobility
-	float mobility = 0.0f;
-	BLACKLOOP(i) mobility += POPCOUNT(attacks[i]);
-	WHITELOOP(i) mobility -= POPCOUNT(attacks[i]);
-	mobility *= 0.1f;
+	// ~~~ Mobility ~~~
+	// Determines how many squares are under attack, worth 10 cp each
+	int mobility = 0;
+	WHITELOOP(i) mobility += (int)POPCOUNT(attacks[i]);
+	BLACKLOOP(i) mobility -= (int)POPCOUNT(attacks[i]);
+	total_boardValue += mobility * 10;
+	
+	// ~~~ Blocked Pawns ~~~
+	// Determines how many pawns are blocked per player color, penalty of 2 cp for each
+	total_boardValue += 2 * ((int)POPCOUNT((pieces[bp] >> 8) & allPos)
+						   - (int)POPCOUNT((pieces[wp] << 8) & allPos));
+
+	// ~~~ King safety ~~~
+	// Penalty of 150 cp if king is in check
+	if (pieces[wk] & blackAtt)      total_boardValue -= 150;
+	else if (pieces[bk] & whiteAtt) total_boardValue += 150;
+	// Does king have a pawn shield? 
+
+	// Are nearby squares of king attacked? 
+
+
 	// WIP: King safety, pawn structure, special penalties ?
-	return (sideToMove == black ? 1 : -1) * (material + mobility);
+	return (side == white ? 1 : -1) * total_boardValue;
 }
 
 unsigned inline Board::blockedPawn(color col)
@@ -927,6 +955,6 @@ unsigned inline Board::blockedPawn(color col)
 	// Returns number of blocked pawns.
 	// Pawns can be blocked by pieces of any color
 	if (col == black)
-		 return (unsigned) POPCOUNT((pieces[bp] << 8) & allPos);
-	else return (unsigned) POPCOUNT((pieces[wp] >> 8) & allPos);
+		 return (unsigned) POPCOUNT((pieces[bp] >> 8) & allPos);
+	else return (unsigned) POPCOUNT((pieces[wp] << 8) & allPos);
 }

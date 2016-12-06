@@ -68,8 +68,27 @@ public:
 		unique_ptr<Node> Root;
 		int targetDepth;
 	};
+
+	class MinimalTree { // Low memory Tree, only stores current path
+	public:
+		MinimalTree(Board& _chessboard, color comp, int _targetDepth);
+		struct Node {
+			Node(float _boardValue);
+			float boardValue, value_alphabeta;
+		};
+		color computerColor;
+		float buildGameTreeMinimax(int depth, color side);
+		int staticEvaluations;
+		Board& chessBoard;
+		unique_ptr<Node> Root;
+		int targetDepth;
+	};
+
+
+	void testMinimalTree();
 	void testTreeStructure();
 	void specialTest(); // unspecified custom test
+	void testEvaluation();
 
 private:
 	void testPawnFill();

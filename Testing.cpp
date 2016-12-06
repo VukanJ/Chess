@@ -409,8 +409,6 @@ void Benchmark::summarize()
 void UnitTest::testTreeStructure()
 {
 	AI ai("r4rk1/p2nbp1p/1qp1bpp1/3p4/3P4/2NBPN2/PPQ2PPP/R4RK1 w - 1 0", white);
-	ai.chessBoard.print();
-	cout << "Castling rights "; printBits(ai.chessBoard.castlingRights); cout << endl;
 	vector<Move> testList;
 	ai.chessBoard.generateMoveList(testList, black);
 	//for (auto& m : testList) {
@@ -423,7 +421,7 @@ void UnitTest::testTreeStructure()
 	cin.ignore();
 	clog << string(8, '~') << "::: Testing gameTree building :::" << string(8, '~') << '\n';
 	auto hashKey = ai.chessBoard.hashKey;
-	TestingTree gameTree(ai.chessBoard, 4);
+	TestingTree gameTree(ai.chessBoard, 3);
 	// Measure time
 	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
 	gameTree.buildGameTree(gameTree.Root, gameTree.targetDepth, white);
@@ -436,7 +434,7 @@ void UnitTest::testTreeStructure()
 
 UnitTest::TestingTree::TestingTree(Board& _chessBoard, int _targetDepth) : Root(nullptr), targetDepth(_targetDepth), chessBoard(_chessBoard) 
 {
-	auto node = new Node(chessBoard.evaluate());
+	auto node = new Node(chessBoard.evaluate(white));
 	Root.reset(node);
 	staticEvaluations = 0;
 }
@@ -497,7 +495,7 @@ void UnitTest::TestingTree::buildGameTree(unique_ptr<Node>& node, int depth, col
 			continue;
 		}
 		else {
-			node->nodeList.push_back(unique_ptr<Node>(new Node(chessBoard.evaluate())));
+			node->nodeList.push_back(unique_ptr<Node>(new Node(chessBoard.evaluate(side))));
 			staticEvaluations++;
 			buildGameTree(node->nodeList.back(), depth - 1, side == black ? white : black);
 			chessBoard.unMakeMove(*move, side);
@@ -544,3 +542,71 @@ void UnitTest::specialTest()
 	assert(key == ai.chessBoard.hashKey);
 	exit(0);
 }
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ MINIMAL TREE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+
+UnitTest::MinimalTree::MinimalTree(Board& _chessBoard, color comp, int _targetDepth) 
+	: Root(nullptr), targetDepth(_targetDepth), chessBoard(_chessBoard), computerColor(comp)
+{
+	//Root.reset(new Node(chessBoard.evaluate(true)));
+	staticEvaluations = 0;
+}
+
+void UnitTest::testMinimalTree()
+{
+	//AI ai("2r3k1/1p2Bpp1/p3p1p1/bq1pP3/1n1P2PQ/1R3N2/1P3PKP/8 w - 1 0", white);
+	AI ai("rnb2b1r/ppk2ppp/2p5/4q1B1/88/PPP2PPP/2KR1BNR w - 1 0", white);
+	ai.chessBoard.print();
+	MinimalTree tree(ai.chessBoard, white, 4);
+	cout << tree.buildGameTreeMinimax(4, white) << endl;
+}
+
+UnitTest::MinimalTree::Node::Node(float _boardValue) : boardValue(_boardValue) {}
+
+float UnitTest::MinimalTree::buildGameTreeMinimax(int depth, color side)
+{
+	// Even depths correspond to maximizing player (computer)
+	bool isMax = side == computerColor;
+
+	if (depth == 0) return chessBoard.evaluate(side);
+	vector<Move> moveList;
+	float bestValue = isMax ? -INFINITY: +INFINITY, testValue;
+	
+	chessBoard.generateMoveList(moveList, side);
+	static auto bestMove = moveList.front();
+
+	for (auto& move = moveList.begin(); move != moveList.end(); move++) {
+		chessBoard.makeMove(*move, side);
+		if (isMax) {
+			testValue = buildGameTreeMinimax(depth - 1, side == black ? white : black);
+			if (testValue > bestValue && depth == targetDepth) {
+				bestMove = *move;
+				cout << "New best move -> " << moveString(*move) << endl;
+			}
+			bestValue = max(bestValue, testValue);
+		}
+		else {
+			testValue = buildGameTreeMinimax(depth - 1, side == black ? white : black);
+			if (testValue < bestValue && depth == targetDepth) {
+				bestMove = *move;
+				cout << "New best move -> " << moveString(*move) << endl;
+			}
+			bestValue = min(bestValue, testValue);
+		}
+		chessBoard.unMakeMove(*move, side);
+	}
+	if (depth == targetDepth) cout << "Best Move ==> " << moveString(bestMove) << endl;
+	return bestValue;
+}
+
+void UnitTest::testEvaluation()
+{
+	{
+		AI ai("*", white);
+		assert(ai.chessBoard.evaluate(black) == ai.chessBoard.evaluate(white)); // Symmetric position
+	}
+	AI ai("3q1rk1/pp4bp/3p1p2/3N1pB1/2r5/1N6/PPPQ3P/1K5R w - 1 0", white);
+	//cout << "Score (w)" << ai.chessBoard.evaluate(white) << endl;
+	ai.chessBoard.print();
+}
+

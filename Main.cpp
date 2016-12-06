@@ -62,7 +62,9 @@ void testing(){
 	test.testIntrinsics();
 	test.testGenerationAlgorithms();
 	test.testTreeStructure();
-		
+	test.testEvaluation();
+	//test.testMinimalTree();
+
 	cout << "EOP\n";
 	cin.ignore();
 	exit(0);
