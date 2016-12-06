@@ -3,12 +3,15 @@
 
 #include <cassert>
 #include <cstdint>
+#include <climits>
 
 typedef unsigned uint;
 typedef uint64_t u64;
 typedef uint32_t u32;
 typedef uint16_t u16;
 typedef uint8_t  byte;
+
+#define oo INT_MAX
 
 #define BIT_AT(x) (0x1ull << (x))                         // Sets nth bit in number counting from least significant bit
 #define BIT_AT_R(x) (0x1ull << (63 - (x)))                // Sets nth bit in number counting from most significant bit

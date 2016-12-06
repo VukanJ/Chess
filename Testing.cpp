@@ -429,6 +429,7 @@ void UnitTest::testTreeStructure()
 	printf("Execution time: %f\n", (double)chrono::duration_cast<chrono::milliseconds>(t2 - t1).count()/1000.0);
 
 	cout << gameTree.staticEvaluations << " static evaluations\n";
+
 	assert(hashKey == ai.chessBoard.hashKey);
 }
 
@@ -610,3 +611,84 @@ void UnitTest::testEvaluation()
 	ai.chessBoard.print();
 }
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ NEGAMAX TREE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+
+void UnitTest::testFullTree()
+{
+	AI ai("r4rk1/p2nbp1p/1qp1bpp1/3p4/3P4/2NBPN2/PPQ2PPP/R4RK1 w - 1 0", white);
+	ai.chessBoard.print();
+	auto hash = ai.chessBoard.hashKey;
+	fullTree tree(ai.chessBoard, white, 8);
+	cout << "Start with Enter\n";
+	cin.ignore();
+	tree.test_NegaMax(tree.Root, -oo, oo, 8, white);
+	assert(hash == ai.chessBoard.hashKey);
+}
+
+UnitTest::fullTree::fullTree(Board& _chessBoard, color comp, int _targetDepth)
+	: Root(nullptr), targetDepth(_targetDepth), chessBoard(_chessBoard), computerColor(comp)
+{
+	Root.reset(new Node()); // White plays at Root
+	staticEvaluations = 0;
+}
+
+UnitTest::fullTree::Node::Node() {}
+
+int UnitTest::fullTree::test_NegaMax(unique_ptr<Node>& node, int alpha, int beta, int depth, color side)
+{
+	int bestValue = 0;
+	if (depth == 0) {
+		if (chessBoard.hash.hasEntry(chessBoard.hashKey)) {
+			int hashdepth;
+			chessBoard.hash.getEntry(chessBoard.hashKey, bestValue, hashdepth);
+			if (hashdepth > depth) {
+				cout << '.' << endl;
+				return bestValue;
+			}
+			else {
+				bestValue = chessBoard.evaluate(side);
+				// TODO: invert depth
+				chessBoard.hash.addEntry(chessBoard.hashKey, bestValue, depth);
+				return bestValue;
+			}
+		}
+		else {
+			bestValue = chessBoard.evaluate(side);
+			chessBoard.hash.addEntry(chessBoard.hashKey, bestValue, depth);
+			return bestValue;
+		}
+	}
+	bestValue = -oo;
+	chessBoard.generateMoveList(node->moveList, side);
+	for (auto& move = node->moveList.begin(); move != node->moveList.end();) {
+		chessBoard.makeMove(*move, side);
+		//cout << moveString(*move) << endl;
+		//chessBoard.print();
+			// If king is left in check discard move
+		if (chessBoard.pieces[side * 6+4] & (side == black ? chessBoard.whiteAtt : chessBoard.blackAtt)) {
+			chessBoard.unMakeMove(*move, side);
+			move = node->moveList.erase(move);
+		}
+		else {
+			int value;
+			node->nodeList.push_back(unique_ptr<Node>(new Node()));
+			value = -test_NegaMax(node->nodeList.back(), -beta, -alpha, depth - 1, side == white ? black : white);
+			bestValue = max(bestValue, value);
+			alpha = max(alpha, value);
+			if (alpha >= beta) {
+				//cout << "GEILO\n";
+				chessBoard.unMakeMove(*move, side);
+				move++;
+				break; // Alpha-Beta Cutoff
+			}
+			chessBoard.unMakeMove(*move, side);
+			move++;
+		}
+		//cout << moveString(*move) << endl;
+		//chessBoard.print();
+	}
+	if (node->moveList.empty()) {
+		return oo; // Checkmate
+	}
+	return bestValue;
+}

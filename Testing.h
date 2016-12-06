@@ -9,6 +9,7 @@
 #include <chrono>
 
 #include "misc.h"
+#include "ZobristHash.h"
 #include "Data.h"
 #include "defines.h"
 #include "AI.h"
@@ -84,8 +85,25 @@ public:
 		int targetDepth;
 	};
 
+	class fullTree // Tree containing NegaMax an Implementation
+	{ 
+	public:
+		fullTree(Board& _chessboard, color comp, int _targetDepth);
+		struct Node {
+			Node();
+			vector<Move> moveList;
+			vector<unique_ptr<Node>> nodeList;
+		};
+		color computerColor;
+		int test_NegaMax(unique_ptr<Node>& node, int alpha, int beta, int depth, color side);
+		int staticEvaluations; // debug
+		Board& chessBoard;
+		unique_ptr<Node> Root;
+		int targetDepth;
+	};
 
 	void testMinimalTree();
+	void testFullTree();
 	void testTreeStructure();
 	void specialTest(); // unspecified custom test
 	void testEvaluation();

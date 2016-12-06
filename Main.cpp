@@ -61,8 +61,9 @@ void testing(){
 	test.testDefines();
 	test.testIntrinsics();
 	test.testGenerationAlgorithms();
-	test.testTreeStructure();
+	//test.testTreeStructure();
 	test.testEvaluation();
+	test.testFullTree();
 	//test.testMinimalTree();
 
 	cout << "EOP\n";

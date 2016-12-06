@@ -2,10 +2,11 @@
 
 Zob_Hash::Zob_Hash()
 {
-	entries.reserve(static_cast<u64>(1e2));
+	entries.reserve(static_cast<u64>(1e5));
+	entries.push_back(entry()); // so it doesnt crash the first time
 }
 
-void Zob_Hash::addEntry(const u64 key, float value, int depth)
+void Zob_Hash::addEntry(const u64 key, int value, int depth)
 {
 	int index = static_cast<int>(key % (u64)entries.size());
 	if (entries[index].search_depth < depth){
@@ -20,7 +21,7 @@ bool Zob_Hash::hasEntry(const u64 key) const
 	return (entries[index].search_depth != -1) ? true : false;
 }
 
-bool Zob_Hash::getEntry(const u64 key, float& value) const
+bool Zob_Hash::getEntry(const u64 key, int& value) const
 {
 	auto index = (unsigned)(key % (u64)entries.size());
 	if (entries[index].search_depth != -1){
@@ -30,7 +31,7 @@ bool Zob_Hash::getEntry(const u64 key, float& value) const
 	return false;
 }
 
-bool Zob_Hash::getEntry(const u64 key, float& value, int& depth) const
+bool Zob_Hash::getEntry(const u64 key, int& value, int& depth) const
 {
 	int index = (unsigned)(key % (u64)entries.size());
 	if (entries[index].search_depth != -1){
