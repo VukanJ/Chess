@@ -433,7 +433,7 @@ void UnitTest::testTreeStructure()
 	assert(hashKey == ai.chessBoard.hashKey);
 }
 
-UnitTest::TestingTree::TestingTree(Board& _chessBoard, int _targetDepth) : Root(nullptr), targetDepth(_targetDepth), chessBoard(_chessBoard) 
+UnitTest::TestingTree::TestingTree(Board& _chessBoard, int _targetDepth) : Root(nullptr), targetDepth(_targetDepth), chessBoard(_chessBoard)
 {
 	auto node = new Node(chessBoard.evaluate(white));
 	Root.reset(node);
@@ -534,7 +534,7 @@ void UnitTest::specialTest()
 	for (auto& m : moveList) {
 		ai.chessBoard.makeMove(m, black);
 		ai.chessBoard.print();
-		printBits(ai.chessBoard.castlingRights); 
+		printBits(ai.chessBoard.castlingRights);
 		ai.chessBoard.unMakeMove(m, black);
 		ai.chessBoard.print();
 		printBits(ai.chessBoard.castlingRights);
@@ -546,7 +546,7 @@ void UnitTest::specialTest()
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ MINIMAL TREE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-UnitTest::MinimalTree::MinimalTree(Board& _chessBoard, color comp, int _targetDepth) 
+UnitTest::MinimalTree::MinimalTree(Board& _chessBoard, color comp, int _targetDepth)
 	: Root(nullptr), targetDepth(_targetDepth), chessBoard(_chessBoard), computerColor(comp)
 {
 	//Root.reset(new Node(chessBoard.evaluate(true)));
@@ -572,11 +572,11 @@ float UnitTest::MinimalTree::buildGameTreeMinimax(int depth, color side)
 	if (depth == 0) return chessBoard.evaluate(side);
 	vector<Move> moveList;
 	float bestValue = isMax ? -INFINITY: +INFINITY, testValue;
-	
+
 	chessBoard.generateMoveList(moveList, side);
 	static auto bestMove = moveList.front();
 
-	for (auto& move = moveList.begin(); move != moveList.end(); move++) {
+	for (auto move = moveList.begin(); move != moveList.end(); move++) {
 		chessBoard.makeMove(*move, side);
 		if (isMax) {
 			testValue = buildGameTreeMinimax(depth - 1, side == black ? white : black);
@@ -660,7 +660,7 @@ int UnitTest::fullTree::test_NegaMax(unique_ptr<Node>& node, int alpha, int beta
 	}
 	bestValue = -oo;
 	chessBoard.generateMoveList(node->moveList, side);
-	for (auto& move = node->moveList.begin(); move != node->moveList.end();) {
+	for (auto move = node->moveList.begin(); move != node->moveList.end();) {
 		chessBoard.makeMove(*move, side);
 		//cout << moveString(*move) << endl;
 		//chessBoard.print();
