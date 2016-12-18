@@ -1,7 +1,7 @@
 #ifndef GUI_H
 #define GUI_H
 
-#include <SFML/Graphics.hpp>
+//#include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -11,8 +11,6 @@
 using namespace std;
 
 extern const unsigned int WIDTH, HEIGHT;
-
-// class "owned" by class AI
 /*
 class Gui
 {

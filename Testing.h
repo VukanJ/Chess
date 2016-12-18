@@ -2,6 +2,7 @@
 #define TESTING_H
 #include <iostream>
 #include <algorithm>
+#include <random>
 #include <memory>
 #include <stack>
 #include <climits>
@@ -107,6 +108,7 @@ public:
 	void testTreeStructure();
 	void specialTest(); // unspecified custom test
 	void testEvaluation();
+	void testHashing();
 
 private:
 	void testPawnFill();

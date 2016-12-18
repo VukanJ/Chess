@@ -1,21 +1,30 @@
 #include <iostream>
+#include <SFML/Graphics.hpp>
 
-#include "AI.h"
+//#include "AI.h"
 //#include "gui.h"
-#include "ZobristHash.h"
-#include "Testing.h"
+//#include "ZobristHash.h"
+//#include "Testing.h"
+
+using namespace std;
 
 //#define GUI_MODE
 
 const unsigned int WIDTH = 800, HEIGHT = 600; // GUI SIZE
 
-void testing();
-void benchmark();
+//void testing();
+//void benchmark();
 
 int main()
 {
-	testing();
+	auto s = sf::Color::Black;
+	return 0;
+}
 
+/*
+int main()
+{
+	//testing();
 	//AI computer("*");
 	//AI computer("K788888R7R4k1R"); // checkmate check is not correct
 	AI computer("* b - 1 0", white);
@@ -25,8 +34,7 @@ int main()
 	//AI computer("84P3888888");
 	//AI computer("R1BKQBNR/P1PPPPPP/1PP5/84q3/6p1/ppppppbp/rnbkq1nr");
 	computer.printDebug();
-
-
+	auto col = sf::Color::Black;
 #ifdef GUI_MODE
 	sf::RenderWindow window(sf::VideoMode(800, 600), "Chess GUI", sf::Style::Close);
 	window.setFramerateLimit(60);
@@ -64,6 +72,7 @@ void testing(){
 	//test.testTreeStructure();
 	test.testEvaluation();
 	test.testFullTree();
+	test.testHashing();
 	//test.testMinimalTree();
 
 	cout << "EOP\n";
@@ -77,3 +86,5 @@ void benchmark()
 	bench.performAllbenchmarks();
 	bench.summarize();
 }
+
+*/

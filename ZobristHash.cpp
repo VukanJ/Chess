@@ -2,8 +2,14 @@
 
 Zob_Hash::Zob_Hash()
 {
-	entries.reserve(static_cast<u64>(1e5));
-	entries.push_back(entry()); // so it doesnt crash the first time
+	entries.reserve(static_cast<u64>(1e6));
+	entries.resize(1e6);
+}
+
+Zob_Hash::Zob_Hash(size_t hashSize)
+{
+	entries.reserve(static_cast<u64>(hashSize));
+	entries.resize(hashSize);
 }
 
 void Zob_Hash::addEntry(const u64 key, int value, int depth)

@@ -13,6 +13,7 @@ class Zob_Hash
 {
 public:
 	Zob_Hash();
+	Zob_Hash(size_t hashSize);
 	void addEntry(const u64 Key, int  value, int depth);
 	bool getEntry(const u64 Key, int& value, int& depth) const;
 	bool getEntry(const u64 key, int& value) const;

@@ -618,10 +618,10 @@ void UnitTest::testFullTree()
 	AI ai("r4rk1/p2nbp1p/1qp1bpp1/3p4/3P4/2NBPN2/PPQ2PPP/R4RK1 w - 1 0", white);
 	ai.chessBoard.print();
 	auto hash = ai.chessBoard.hashKey;
-	fullTree tree(ai.chessBoard, white, 8);
+	fullTree tree(ai.chessBoard, white, 6);
 	cout << "Start with Enter\n";
 	cin.ignore();
-	tree.test_NegaMax(tree.Root, -oo, oo, 8, white);
+	tree.test_NegaMax(tree.Root, -oo, oo, 6, white);
 	assert(hash == ai.chessBoard.hashKey);
 }
 
@@ -641,20 +641,19 @@ int UnitTest::fullTree::test_NegaMax(unique_ptr<Node>& node, int alpha, int beta
 		if (chessBoard.hash.hasEntry(chessBoard.hashKey)) {
 			int hashdepth;
 			chessBoard.hash.getEntry(chessBoard.hashKey, bestValue, hashdepth);
-			if (hashdepth > depth) {
+			if (hashdepth > targetDepth - depth) {
 				cout << '.' << endl;
 				return bestValue;
 			}
 			else {
 				bestValue = chessBoard.evaluate(side);
-				// TODO: invert depth
-				chessBoard.hash.addEntry(chessBoard.hashKey, bestValue, depth);
+				chessBoard.hash.addEntry(chessBoard.hashKey, bestValue, targetDepth - depth);
 				return bestValue;
 			}
 		}
 		else {
 			bestValue = chessBoard.evaluate(side);
-			chessBoard.hash.addEntry(chessBoard.hashKey, bestValue, depth);
+			chessBoard.hash.addEntry(chessBoard.hashKey, bestValue, targetDepth - depth);
 			return bestValue;
 		}
 	}
@@ -691,4 +690,20 @@ int UnitTest::fullTree::test_NegaMax(unique_ptr<Node>& node, int alpha, int beta
 		return oo; // Checkmate
 	}
 	return bestValue;
+}
+
+void UnitTest::testHashing()
+{
+	Zob_Hash Hash(1e3);
+	random_device r_device;
+	mt19937_64 generator(r_device());
+	uniform_int_distribution<u64> distr;
+
+	auto boards = vector<u64>(100);
+	for (auto& b : boards) {
+		b = distr(generator);
+		Hash.addEntry(b, (rand() % 1000) - 500, rand() % 6);
+		assert(Hash.hasEntry(b));
+	}
+	assert(Hash.hasEntry(boards[55]));
 }
