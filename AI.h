@@ -57,6 +57,7 @@ public:
 	
 	void debug();
 	const Board& getBoardRef();
+	const Board* getBoardPtr();
 
 	// Piece color of computer
 	const color aiColor;

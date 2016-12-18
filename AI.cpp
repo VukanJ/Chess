@@ -73,6 +73,11 @@ const Board& AI::getBoardRef()
 	return chessBoard;
 }
 
+const Board* AI::getBoardPtr()
+{
+	return static_cast<const Board*>(&chessBoard);
+}
+
 AI::Node::Node() : ordering(0), boardValue(0), alpha(-INFINITY), beta(INFINITY){
 	moves.reserve(10);
 	nodes.reserve(10);
