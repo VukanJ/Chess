@@ -83,6 +83,7 @@ void Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 		break;
 	case sf::Event::MouseButtonPressed:
 		mouse = sf::Mouse::getPosition(window);
+
 		if (mouse.x > HEIGHT || mouse.y > HEIGHT) break;
 
 		auto selectedSquare = -1;

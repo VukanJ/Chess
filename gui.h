@@ -17,6 +17,7 @@ class Gui
 {
 public:
 	Gui(const Board* _board, color aiColor);
+
 	void render(sf::RenderWindow& window);
 	void handleEvent(sf::Event& ev, sf::RenderWindow& window);
 private:
@@ -45,6 +46,7 @@ private:
 	enum{debugText, positionText, clickText};
 	sf::Font textFont;
 	vector<sf::Text> textDisplays;
+
 	color humanColor;
 };
 
