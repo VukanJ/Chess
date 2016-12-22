@@ -48,6 +48,7 @@ private:
 	Board chessBoard;
 	color sideToMove;
 	int targetDepth; // Needed for iterative deepening
+
 public:
 	AI(string FEN, color computerColor);
 	void printDebug(string show = "prnbkqPRNBKQ");

@@ -1,7 +1,9 @@
 #include "gui.h"
 
-Gui::Gui(const Board* _board) : chessBoard(_board)
+Gui::Gui(const Board* _board, color aiColor) : chessBoard(_board)
 {
+	humanColor = aiColor == black ? white : black;
+
 	// Draw board image (8 x 8) pixel
 	srand(time(0));
 	boardImage.create(8, 8, sf::Color::Black);
@@ -81,34 +83,109 @@ void Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 		break;
 	case sf::Event::MouseButtonPressed:
 		mouse = sf::Mouse::getPosition(window);
-		if (mouse.x > HEIGHT) break;
-		assemble = "Klick at (" + to_string(mouse.x) + ',' + to_string(mouse.y) + ") = ";
-		assemble += 'a' + (mouse.x / (HEIGHT / 8));
-		assemble += '8' - (mouse.y / (HEIGHT / 8));
+		if (mouse.x > HEIGHT || mouse.y > HEIGHT) break;
 
 		auto selectedSquare = -1;
-		selectedSquare = (mouse.x / (HEIGHT / 8));
-		selectedSquare += 8 * (mouse.y / (HEIGHT / 8));
-		selectedSquare = 63 - selectedSquare;
+		selectedSquare = 63 - ((mouse.x / (HEIGHT / 8)) + 8 * (mouse.y / (HEIGHT / 8)));
 
-		if (userInput.pieceSelected) userInput.to = selectedSquare;
-		else userInput.from = selectedSquare;
+		assemble = "Klick at (" + to_string(mouse.x) + ',' + to_string(mouse.y) + ") = ";
+		assemble += 'h' - selectedSquare % 8;
+		assemble += '1' + selectedSquare / 8;
 
-		if (chessBoard->allPos & BIT_AT(selectedSquare)) {
+		piece pieceClicked = nullPiece;
+
+		if (chessBoard->allPos & BIT_AT(selectedSquare)) { // User clicked on piece ? 
 			for (int p = 0; p < 12; p++) {
 				if (chessBoard->pieces[p] & BIT_AT(selectedSquare)) {
-					if (userInput.pieceSelected) {
-						userInput.targetPiece = (piece)p;
-					}
-					else {
-						userInput.movePiece = (piece)p;
-					}
+					pieceClicked = (piece)p;
 					break;
 				}
 			}
 		}
-	
-		textDisplays[clickText].setString(assemble);
+
+		// 
+		Move user_GUI_Move; // Probably incorrect, since user makes mistakes
+		// Only contains raw data, without castling rights or specific attack types
+
+		if (pieceClicked == nullPiece) { // No piece selected
+			if (userInput.pieceSelected) { // May be a quiet move
+				user_GUI_Move.from   = userInput.from;
+				user_GUI_Move.to     = selectedSquare;
+				user_GUI_Move.flags  = MOVE;
+				user_GUI_Move.Pieces = userInput.movePiece;
+				if (!isUserMoveValid_completeMoveInfo(user_GUI_Move)) {
+					cerr << "Invalid move!\n";
+				}
+				else {
+					cerr << "OK!\n";
+				}
+				userInput.reset();
+			}
+		}
+		else { // Clicked on piece
+			if (userInput.pieceSelected) { // May be a capture
+
+				userInput.reset();
+			}
+			else { // Nothing, but new piece was selected
+				userInput.pieceSelected = true;
+				userInput.movePiece = pieceClicked;
+				userInput.from = selectedSquare;
+			}
+		}
 		break;
 	}
+	textDisplays[clickText].setString(assemble);
+}
+
+bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
+{
+	// Checks if selected move can be played. If it can, 
+	// the needed move metadata is filled in correctly.
+	// -> Generates all possible moves and tries to find a match.
+	
+	vector<Move> possibleMoves;
+	chessBoard->generateMoveList(possibleMoves, humanColor);
+
+	vector<Move>::iterator matchingMove = find_if(possibleMoves.begin(), possibleMoves.end(), [&](Move& pmove) {
+		if (inputMove.flags == WCASTLE   || 
+			inputMove.flags == WCASTLE_2 || 
+			inputMove.flags == BCASTLE   || 
+			inputMove.flags == BCASTLE_2) {
+			// Some type of castling
+			if (pmove.flags == inputMove.flags) { // Is castling side (and color) matching ?
+				// Player can castle
+				return true;
+			}
+		}
+		else if (pmove.from == inputMove.from && pmove.to == inputMove.to) {
+			// Strong indicator for correct move
+			if (pmove.flags == MOVE && inputMove.flags == MOVE) {
+				// quiet move is allowed
+				return true;
+			}
+			else {
+				if (inputMove.Pieces == pmove.Pieces) {
+					// Move allowed. WIP for Enpassent
+					return true;
+				}
+			}
+		}
+		return false; // Illegal move detected
+	});
+	// Copy move metadata if match was found
+	if (matchingMove == possibleMoves.end()) {
+		return false;
+	}
+	else {
+		inputMove = *matchingMove;
+		return true;
+	}
+}
+
+void Gui::UserInput::reset()
+{
+	from = nullSquare;
+	pieceSelected = false;
+	movePiece = nullPiece;
 }

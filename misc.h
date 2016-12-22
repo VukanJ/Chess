@@ -55,7 +55,7 @@ enum piece {
 	// Do not change ordering!
 	bp, br, bn, bb, bk, bq,
 	wp, wr, wn, wb, wk, wq,
-	nulPiece = -1
+	nullPiece = -1
 };
 
 enum color { black, white };
@@ -90,7 +90,7 @@ enum {
 	h6, g6, f6, e6, d6, c6, b6, a6,
 	h7, g7, f7, e7, d7, c7, b7, a7,
 	h8, g8, f8, e8, d8, c8, b8, a8,
-	nulSq = -1
+	nullSquare = -1
 };
 
 #endif 

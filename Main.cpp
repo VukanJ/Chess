@@ -31,7 +31,7 @@ int main()
 #ifdef GUI_MODE
 	sf::RenderWindow window(sf::VideoMode(800, 600), "Chess GUI", sf::Style::Close);
 	window.setFramerateLimit(60);
-	Gui gui(computer.getBoardPtr());
+	Gui gui(computer.getBoardPtr(), computer.aiColor);
 
 	while (window.isOpen()){
 		sf::Event ev;

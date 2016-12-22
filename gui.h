@@ -16,21 +16,19 @@ extern const unsigned int WIDTH, HEIGHT;
 class Gui
 {
 public:
-	Gui(const Board* _board);
+	Gui(const Board* _board, color aiColor);
 	void render(sf::RenderWindow& window);
 	void handleEvent(sf::Event& ev, sf::RenderWindow& window);
 private:
 	struct UserInput {
-		int from, to;
+		int from;
 		bool pieceSelected;
-		piece movePiece, targetPiece;
+		piece movePiece;
+		void reset();
 	};
 	UserInput userInput;
-	bool isInputMoveValid();
-	enum {
-		K=5, Q=4, B=1, N=2, R=3, P=0,
-		k=11, q=10, b=7, n=8, r=9, p=6
-	};
+	bool isUserMoveValid_completeMoveInfo(Move& userMove);
+
 	const Board* chessBoard;
 
 	sf::Image boardImage;
@@ -47,6 +45,7 @@ private:
 	enum{debugText, positionText, clickText};
 	sf::Font textFont;
 	vector<sf::Text> textDisplays;
+	color humanColor;
 };
 
 #endif

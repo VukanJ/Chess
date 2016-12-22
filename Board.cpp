@@ -280,7 +280,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 	Aggressive and special moves are generated first and preferably stored
 	at the front of the movelist
 	*/
-	unsigned long pos = nulSq;
+	unsigned long pos = nullSquare;
 	u64 attackMask = 0x0;
 	u64 pieceAttacks = 0x0, attackingPieces = 0x0;
 	// Generate all capturing and normal moves
