@@ -20,6 +20,7 @@ class AI
 {
 friend class Benchmark;
 friend class UnitTest;
+friend class Gui;
 class Node;
 typedef unique_ptr<AI::Node> nodePtr;
 private:
@@ -58,7 +59,7 @@ public:
 	
 	void debug();
 	const Board& getBoardRef();
-	const Board* getBoardPtr();
+	Board* getBoardPtr();
 
 	// Piece color of computer
 	const color aiColor;

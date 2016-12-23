@@ -7,6 +7,7 @@
 #include <string>
 
 #include "defines.h"
+#include "AI.h"
 #include "Board.h"
 
 using namespace std;
@@ -16,7 +17,7 @@ extern const unsigned int WIDTH, HEIGHT;
 class Gui
 {
 public:
-	Gui(const Board* _board, color aiColor);
+	Gui(AI& _ai, color aiColor);
 
 	void render(sf::RenderWindow& window);
 	void handleEvent(sf::Event& ev, sf::RenderWindow& window);
@@ -34,7 +35,7 @@ private:
 	enum {drawAttB=0x1, drawAttW=0x2};
 	u32 drawOptions;
 
-	const Board* chessBoard;
+	Board& chessBoard;
 
 	sf::Image boardImage;
 	sf::Texture boardTex;

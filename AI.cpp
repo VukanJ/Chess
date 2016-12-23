@@ -5,6 +5,7 @@ AI::AI(string FEN, color computerColor) : aiColor(computerColor)
 	genChessData data;
 	data.gen(); // Generates bitboards needed for move generation
 	chessBoard = Board(FEN);
+	cout << "AI Board address 0x" << hex << &chessBoard << endl;
 	debug();
 }
 
@@ -73,9 +74,10 @@ const Board& AI::getBoardRef()
 	return chessBoard;
 }
 
-const Board* AI::getBoardPtr()
+Board* AI::getBoardPtr()
 {
-	return static_cast<const Board*>(&chessBoard);
+	return &chessBoard;
+	//return static_cast<const Board*>(&chessBoard);
 }
 
 AI::Node::Node() : ordering(0), boardValue(0), alpha(-INFINITY), beta(INFINITY){
