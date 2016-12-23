@@ -1,5 +1,7 @@
 #include "Board.h"
 
+// TODO: King cannot walk in front of pawn, (solved, needs testing)
+
 Board::Board()
 	: whitePos(0x0), blackPos(0x0), whiteAtt(0x0), blackAtt(0x0), hashKey(0x0),
 	castlingRights(0x0), b_enpassent(0x0), w_enpassent(0x0)
@@ -19,9 +21,10 @@ Board::Board(string fen) : Board()
 
 void Board::setupBoard(string FEN)
 {
-	for (auto& p : pieces) p = 0x0;
+	for (auto& p : pieces)  p = 0x0;
 	for (auto& a : attacks) a = 0x0;
-	blackPos = whitePos = castlingRights = b_enpassent = w_enpassent = 0x0;
+	blackPos = whitePos = castlingRights 
+		= b_enpassent = w_enpassent = bpMove = wpMove = 0x0;
 
 	// Sets up Board according to FEN
 	// FEN = [position(white's perspective) sideToMove castlingrights enpassentSquares NofHalfMoves MoveNumber]
@@ -239,21 +242,21 @@ void Board::pawnFill(color side)
 {
 	// Does not compute enPassent
 	if (side == black){
-		attacks[bp] = 0x0;
+		attacks[bp] = bpMove = 0x0;
 		// Normal step
-		attacks[bp] |= (pieces[bp] >> 8) & ~allPos;
+		bpMove |= (pieces[bp] >> 8) & ~allPos;
 		// Double step
-		attacks[bp] |= ((((pieces[bp] & 0xFF000000000000ull) >> 8) & ~allPos) >> 8) & ~allPos;
+		bpMove |= ((((pieces[bp] & 0xFF000000000000ull) >> 8) & ~allPos) >> 8) & ~allPos;
 		// Side Attacks
 		attacks[bp] |= whitePos & ((pieces[bp] & ~_right) >> 9);
 		attacks[bp] |= whitePos & ((pieces[bp] & ~_left)  >> 7);
 	}
 	else{
-		attacks[wp] = 0x0;
+		attacks[wp] = wpMove = 0x0;
 		// Normal step
-		attacks[wp] |= (pieces[wp] << 8) & ~allPos;
+		wpMove |= (pieces[wp] << 8) & ~allPos;
 		// Double step
-		attacks[wp] |= ((((pieces[wp] & 0xFF00ull) << 8) & ~allPos) << 8) & ~allPos;
+		wpMove |= ((((pieces[wp] & 0xFF00ull) << 8) & ~allPos) << 8) & ~allPos;
 		// Side Attacks
 		attacks[wp] |= blackPos & ((pieces[wp] & ~_left)  << 9);
 		attacks[wp] |= blackPos & ((pieces[wp] & ~_right) << 7);
@@ -310,9 +313,9 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 					}
 				}
 				// Find normal upwards moves and double pawn steps:
-				attackingPieces = (pieces[bp] >> 8) & ~allPos;
+				attackingPieces = (pieces[bp] >> 8) & bpMove;
 				BITLOOP(pos, attackingPieces){
-					if (pos > 15){
+					if (pos > 7){
 						moveList.push_back(Move(pos + 8, pos, MOVE, bp));
 					}
 					else{
@@ -321,7 +324,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 					}
 				}
 				// Double pawn move
-				attackingPieces = (pieces[bp] >> 16) & attacks[bp];
+				attackingPieces = (pieces[bp] >> 16) & bpMove;
 				BITLOOP(pos, attackingPieces)
 					moveList.push_back(Move(pos + 16, pos, PAWN2, bp));
 				// Enpassent
@@ -420,7 +423,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 
 				// Calculate attacked pieces
 				BITLOOP(pos, attackingPieces){                             // Loop through all positions of pieces of kind bk
-					attackMask = (KING_ATTACKS[pos] & attacks[bk] & whitePos) & ~whiteAtt; // Intersections with opponent pieces that would not place king in check
+					attackMask = ((KING_ATTACKS[pos] & attacks[bk] & whitePos) & ~whiteAtt); // Intersections with opponent pieces that would not place king in check
 					if (attackMask)                                                // If pieces are targeted
 						WHITELOOP(candidate){                                    // Find targeted piece
 						pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
@@ -472,9 +475,9 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 					 }
 				 }
 				 // Find normal upwards moves and double pawn steps:
-				 attackingPieces = (pieces[wp] << 8) & ~allPos;
+				 attackingPieces = (pieces[wp] << 8) & wpMove;
 				 BITLOOP(pos, attackingPieces){
-					 if (pos < 48){
+					 if (pos < 56){
 						 moveList.push_back(Move(pos - 8, pos, MOVE, wp));
 					 }
 					 else{
@@ -482,7 +485,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						 moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, PIECE_PAIR(wp, wn)));
 					 }
 				 }
-				 attackingPieces = (pieces[wp] << 16) & attacks[wp];
+				 attackingPieces = (pieces[wp] << 16) & wpMove;
 				 BITLOOP(pos, attackingPieces)
 						 moveList.push_back(Move(pos - 16, pos, PAWN2, wp));
 				 if (w_enpassent) { // if enpassent is available possible
@@ -579,13 +582,13 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 				 break;
 			 case wk: // WHITE KING
 				 // Calculate attacked pieces
-				 BITLOOP(pos, attackingPieces){                                           // Loop through all positions of pieces of kind wk
-					 attackMask = (KING_ATTACKS[pos] & attacks[wk] & blackPos) & ~blackAtt; // Intersections with opponent pieces that would not place king in check
-					 if (attackMask)                                                        // If pieces are targeted
-						 BLACKLOOP(candidate){                                            // Find targeted piece
-						 pieceAttacks = pieces[candidate] & attackMask;                            // Set specific attacks
+				 BITLOOP(pos, attackingPieces){                                               // Loop through all positions of pieces of kind wk
+					 attackMask = ((KING_ATTACKS[pos] & attacks[wk] & blackPos) & ~blackAtt); // Captures of opponent pieces that would not place king in check
+					 if (attackMask)                                                          // If pieces are targeted
+						 BLACKLOOP(candidate){                                                // Find targeted piece
+						 pieceAttacks = pieces[candidate] & attackMask;                       // Set specific attacks
 						 if (pieceAttacks)
-							 BITLOOP(target, pieceAttacks)                                            // Add moves
+							 BITLOOP(target, pieceAttacks)                                    // Add moves
 							 moveList.insert(moveList.begin(), Move(pos, target, MOVE_METADATA(CAPTURE, castlingRights & (castle_K | castle_Q)), PIECE_PAIR(wk, candidate)));
 					 }
 					 attackMask ^= (KING_ATTACKS[pos] & attacks[wk]) & ~blackAtt; // Non capturing moves

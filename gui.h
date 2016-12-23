@@ -29,6 +29,10 @@ private:
 	};
 	UserInput userInput;
 	bool isUserMoveValid_completeMoveInfo(Move& userMove);
+	void colorSquares(u64 pattern, sf::Color color, sf::RenderWindow& window);
+
+	enum {drawAttB=0x1, drawAttW=0x2};
+	u32 drawOptions;
 
 	const Board* chessBoard;
 
@@ -43,7 +47,8 @@ private:
 	sf::Vector2f orig_size; // original size of pieces
 	sf::Vector2f scale;     // scaling factor
 
-	enum{debugText, positionText, clickText};
+	enum{debugText, positionText, clickText, moveListText};
+	void debugDrawSquareNumering(sf::RenderWindow& window);
 	sf::Font textFont;
 	vector<sf::Text> textDisplays;
 

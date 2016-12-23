@@ -23,7 +23,7 @@ int main()
 	//AI computer("K788888R7R4k1R"); // checkmate check is not correct
 	//AI computer("* b - 1 0", white);
 	//AI computer("2rq1rk1/pb1n1ppN/4p3/1pb5/3P1Pn1/P1N5/1PQ1B1PP/R1B2RK1 w KkQq 1 0", black);
-	AI computer("2Q5/p3b1k1/2p2rPp/2q5/4B3/3P4/P6P/6RK w KkQq 1 0", black);
+	AI computer("2Q5/4b1k1/1Pp2rPp/2q5/4B3/pppp4/P6P/6RK w - 1 0", black); // TODO: Pawn cannot walk on 7th rank
 	//AI computer("r3k2rpppppppp8888PPPPPPPPR3K2R w KkQq 1 0", black); // Test Castling
 	//AI computer("RNBQ1RK1/PPPN1PPP/4P3/3Pp3/1B1p4/2nb1n2/ppp2ppp/r1bqk2r");
 	//AI computer("84P3888888");

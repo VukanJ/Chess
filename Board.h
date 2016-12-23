@@ -50,7 +50,7 @@ public:
 	vector<u64> pieces, attacks;
 	enum{ castle_k = 0x1, castle_q = 0x2, castle_K = 0x4, castle_Q = 0x8 };
 	byte castlingRights, b_enpassent, w_enpassent;
-	u64 whitePos, blackPos, allPos, whiteAtt, blackAtt, hashKey;
+	u64 wpMove, bpMove, whitePos, blackPos, allPos, whiteAtt, blackAtt, hashKey;
 	Zob_Hash hash;
 	vector<vector<u64>> randomSet;
 	color sideToMove; // To be implemented
