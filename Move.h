@@ -40,10 +40,10 @@ static string moveString(Move m)
 		return "w-o-o";
 	}
 	else if (m.flags == PROMOTION) {
-		return TARGET_PIECE(m.Pieces) == bq || TARGET_PIECE(m.Pieces) == wq ? "Queen prom" : "Knight prom";
+		return target_piece(m.Pieces) == bq || target_piece(m.Pieces) == wq ? "Queen prom" : "Knight prom";
 	}
 	else if (m.flags == C_PROMOTION) {
-		return TARGET_PIECE(m.Pieces) == bq || TARGET_PIECE(m.Pieces) == wq ? "Queen c_prom" : "Knight c_prom";
+		return target_piece(m.Pieces) == bq || target_piece(m.Pieces) == wq ? "Queen c_prom" : "Knight c_prom";
 	}
 	else if (m.flags == BCASTLE_2) {
 		return "b-O--O";
@@ -51,7 +51,7 @@ static string moveString(Move m)
 	else if (m.flags == WCASTLE_2) {
 		return "w-O--O";
 	}
-	string s(1, names[MOV_PIECE(m.Pieces)]);
+	string s(1, names[move_piece(m.Pieces)]);
 	if (m.flags == CAPTURE) {
 		if (s[0] == 'P' || s[0] == 'p') {
 			s.clear();

@@ -29,49 +29,49 @@ void genChessData::genConnections()
   u64 temp = 0x0;
   for(int i = 0; i < 64; i++){
     for(int j = 0; j < 64; j++){
-      if(rects[j] & BIT_AT(i)){
+      if(rects[j] & bit_at(i)){
         if(abs(i-j) < 8 && abs(i-j) > 1) // Pieces on same rank
-          CONNECTIONS[i][j] = i < j ? (BIT_AT(j) - BIT_AT(i))^BIT_AT(i) : (BIT_AT(i) - BIT_AT(j))^BIT_AT(j);
+          CONNECTIONS[i][j] = i < j ? (bit_at(j) - bit_at(i))^bit_at(i) : (bit_at(i) - bit_at(j))^bit_at(j);
         else if (j > i && j - i > 8){
-          temp = BIT_AT(j) >> 8;
-          while(!(temp & BIT_AT(i)))
+          temp = bit_at(j) >> 8;
+          while(!(temp & bit_at(i)))
             temp |= temp >> 8;
-          CONNECTIONS[i][j] = temp ^ (BIT_AT(i));
+          CONNECTIONS[i][j] = temp ^ (bit_at(i));
         }
         else if (j < i && i - j > 8){
-          temp = BIT_AT(j) << 8;
-          while(!(temp & BIT_AT(i)))
+          temp = bit_at(j) << 8;
+          while(!(temp & bit_at(i)))
             temp |= temp << 8;
-          CONNECTIONS[i][j] = temp ^ (BIT_AT(i));
+          CONNECTIONS[i][j] = temp ^ (bit_at(i));
         }
       }
-      else if(diags[j] & BIT_AT(i)){
+      else if(diags[j] & bit_at(i)){
         if(j / 8 > i / 8){
           if(j % 8 > i % 8 && j - i > 9){ // j above left of i
-            temp = BIT_AT(j) >> 9;
-            while(!(temp & BIT_AT(i)))
+            temp = bit_at(j) >> 9;
+            while(!(temp & bit_at(i)))
               temp |= temp >> 9;
-            CONNECTIONS[i][j] = temp ^ (BIT_AT(i));
+            CONNECTIONS[i][j] = temp ^ (bit_at(i));
           }
           else if(j % 8 < i % 8 && j - i > 9){ // j above right of i
-            temp = BIT_AT(j) >> 7;
-            while(!(temp & BIT_AT(i)))
+            temp = bit_at(j) >> 7;
+            while(!(temp & bit_at(i)))
               temp |= temp >> 7;
-            CONNECTIONS[i][j] = temp ^ (BIT_AT(i));
+            CONNECTIONS[i][j] = temp ^ (bit_at(i));
           }
         }
         else{
           if(j % 8 > i % 8 && i - j > 9){ // j below left of i
-            temp = BIT_AT(j) << 7;
-            while(!(temp & BIT_AT(i)))
+            temp = bit_at(j) << 7;
+            while(!(temp & bit_at(i)))
               temp |= temp << 7;
-            CONNECTIONS[i][j] = temp ^ (BIT_AT(i));
+            CONNECTIONS[i][j] = temp ^ (bit_at(i));
           }
           else if(j % 8 < i % 8 && i - j > 9){ // j below right of i
-            temp = BIT_AT(j) << 9;
-            while(!(temp & BIT_AT(i)))
+            temp = bit_at(j) << 9;
+            while(!(temp & bit_at(i)))
               temp |= temp << 9;
-            CONNECTIONS[i][j] = temp ^ (BIT_AT(i));
+            CONNECTIONS[i][j] = temp ^ (bit_at(i));
           }
         }
       }

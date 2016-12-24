@@ -2,8 +2,8 @@
 
 Zob_Hash::Zob_Hash()
 {
-	entries.reserve(static_cast<u64>(1e6));
-	entries.resize(1e6);
+	entries.reserve(static_cast<size_t>(1e6));
+	entries.resize(static_cast<size_t>(1e6));
 }
 
 Zob_Hash::Zob_Hash(size_t hashSize)

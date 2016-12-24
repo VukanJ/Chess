@@ -79,7 +79,7 @@ public:
 			float boardValue, value_alphabeta;
 		};
 		color computerColor;
-		float buildGameTreeMinimax(int depth, color side);
+		int buildGameTreeMinimax(int depth, color side);
 		int staticEvaluations;
 		Board& chessBoard;
 		unique_ptr<Node> Root;

@@ -19,10 +19,10 @@ UnitTest::UnitTest() {}
 
 void UnitTest::testDefines() const
 {
-  byte b = PIECE_PAIR(0xA, 0x5);
-  if (MOV_PIECE(b) != 0xA)
+  byte b = piece_pair(0xA, 0x5);
+  if (move_piece(b) != 0xA)
     cerr << "TARGET_PIECE() Failed\n";
-  if (TARGET_PIECE(b) != 0x5)
+  if (target_piece(b) != 0x5)
     cerr << "MOV_PIECE() Failed()\n";
 }
 
@@ -73,66 +73,66 @@ void UnitTest::testIntrinsics() const
 	unsigned long index;
 	clog << string(8, '~') << "::: Testing intrinsics :::" << string(8, '~') << '\n';
 	int i = 0;
-	assert(POPCOUNT(static_cast<u64>(0x0)) == 0);
+	assert(popcount(static_cast<u64>(0x0)) == 0);
 	for (u64 p = 0x1; i < 64; p |= p << 1, ++i)
-		assert(POPCOUNT(p) == i + 1);
-	assert(POPCOUNT(0xFFull << 56) == 8); // Check if popcnt is really 64 bit
+		assert(popcount(p) == i + 1);
+	assert(popcount(0xFFull << 56) == 8); // Check if popcnt is really 64 bit
 	clog << "bitscan...\n";
-	BITSCANR64(index, 0x1ull << 10); // counts from least significant bit
+	bitScan_rev64(index, 0x1ull << 10); // counts from least significant bit
 	assert(index == 10);
-	BITSCANR64(index, 0x0ull); // 0 if 0 (!)
+	bitScan_rev64(index, 0x0ull); // 0 if 0 (!)
 	assert(index == 0);
-	BITSCANR64(index, 0x1ull); // 0 if 1 (!)
+	bitScan_rev64(index, 0x1ull); // 0 if 1 (!)
 	assert(index == 0);
-	BITSCANR64(index, 0x1ull << 63); // 63 at msb
+	bitScan_rev64(index, 0x1ull << 63); // 63 at msb
 	assert(index == 63);
 	clog << "rotr...\n";
 
 	u64 testNum = randomCheckNum;
 	for (int i = 0; i < 64; ++i) {
-		testNum = ROTR64(testNum, 1);
+		testNum = rotate_r64(testNum, 1);
 		//cout << hex << rotatedR[i+1] << ' ' << testNum << endl;
 		assert(testNum == rotatedR[i+1]);
 	}
 	assert(testNum == randomCheckNum);
 	for (int i = 0; i < 16; ++i) {
-		testNum = ROTR64(testNum, 4);
+		testNum = rotate_r64(testNum, 4);
 		assert(testNum == rotatedR[(i + 1) * 4]);
 		//cout << hex << testNum << ' ' << randomCheckNum << endl;
 	}
 	assert(testNum == randomCheckNum);
 	for (int i = 0; i < 8; ++i) {
-		testNum = ROTR64(testNum, 8);
+		testNum = rotate_r64(testNum, 8);
 		assert(testNum == rotatedR[(i + 1) * 8]);
 		//cout << hex << testNum << ' ' << randomCheckNum << endl;
 	}
 	assert(testNum == randomCheckNum);
-	testNum = ROTR64(testNum, 70);
-	testNum = ROTR64(testNum, 58);
+	testNum = rotate_r64(testNum, 70);
+	testNum = rotate_r64(testNum, 58);
 	assert(testNum == randomCheckNum);
 
 	clog << "rotl...\n";
 
 	for (int i = 0; i < 64; ++i) {
-		testNum = ROTL64(testNum, 1);
+		testNum = rotate_l64(testNum, 1);
 		//cout << hex << rotatedR[i+1] << ' ' << testNum << endl;
 		assert(testNum == rotatedR[64 - i - 1]);
 	}
 	assert(testNum == randomCheckNum);
 	for (int i = 0; i < 16; ++i) {
-		testNum = ROTL64(testNum, 4);
+		testNum = rotate_l64(testNum, 4);
 		//cout << hex << rotatedR[60 - (i * 4)] << ' ' << testNum << endl;
 		assert(testNum == rotatedR[60 - (i * 4)]);
 	}
 	assert(testNum == randomCheckNum);
 	for (int i = 0; i < 8; ++i) {
-		testNum = ROTL64(testNum, 8);
+		testNum = rotate_l64(testNum, 8);
 		assert(testNum == rotatedR[56 - (i * 8)]);
 		//cout << hex << testNum << ' ' << randomCheckNum << endl;
 	}
 	assert(testNum == randomCheckNum);
-	testNum = ROTL64(testNum, 70);
-	testNum = ROTL64(testNum, 58);
+	testNum = rotate_l64(testNum, 70);
+	testNum = rotate_l64(testNum, 58);
 	assert(testNum == randomCheckNum);
 	clog << "bitloop...\n";
 	int j = 0;
@@ -140,7 +140,7 @@ void UnitTest::testIntrinsics() const
 		assert(index == indices[j++]);
 		//printBitboard(testNum);
 		//printBitboard((randomCheckNum & ~(ULLONG_MAX << index) | BIT_AT(index)));
-		assert(testNum == (randomCheckNum & ~(ULLONG_MAX << index) | BIT_AT(index)));
+		assert(testNum == (randomCheckNum & ~(ULLONG_MAX << index) | bit_at(index)));
 		//printBitboard(testNum);
 	}
 
@@ -233,10 +233,10 @@ void UnitTest::testCastling()
 	assert(ai.chessBoard.hashKey == hashKey);
 	// Check partial lost of castling rights
 
-	Move Rook1(a1, a2, MOVE_METADATA(MOVE, Board::castle_Q), wr);
-	Move Rook2(h1, h2, MOVE_METADATA(MOVE, Board::castle_K), wr);
-	Move rook1(a8, a7, MOVE_METADATA(MOVE, Board::castle_q), br);
-	Move rook2(h8, h7, MOVE_METADATA(MOVE, Board::castle_k), br);
+	Move Rook1(a1, a2, move_metadata(MOVE, Board::castle_Q), wr);
+	Move Rook2(h1, h2, move_metadata(MOVE, Board::castle_K), wr);
+	Move rook1(a8, a7, move_metadata(MOVE, Board::castle_q), br);
+	Move rook2(h8, h7, move_metadata(MOVE, Board::castle_k), br);
 
 	hashKey = ai.chessBoard.hashKey;
 
@@ -255,8 +255,8 @@ void UnitTest::testCastling()
 	ai.chessBoard.setupBoard("8/8/8/8/8/8/7r/R3K2R w KQ 1 0");
 	hashKey = ai.chessBoard.hashKey;
 	// Metadata should be filled in by MoveGenerator
-	Move captureRook2(h2, h1, MOVE_METADATA(CAPTURE, Board::castle_K), wr);
-	Move captureRook1(a2, a1, MOVE_METADATA(CAPTURE, Board::castle_Q), wr);
+	Move captureRook2(h2, h1, move_metadata(CAPTURE, Board::castle_K), wr);
+	Move captureRook1(a2, a1, move_metadata(CAPTURE, Board::castle_Q), wr);
 	ai.chessBoard.makeMove(captureRook1,   black);
 	assert(ai.chessBoard.castlingRights == 0b0100);
 	ai.chessBoard.unMakeMove(captureRook1, black);
@@ -449,7 +449,7 @@ void UnitTest::TestingTree::buildGameTree(unique_ptr<Node>& node, int depth, col
 		cout << "Castling rights violated!!" << endl;
 		while (!debugMoveStack.empty()) {
 			cerr << moveString(debugMoveStack.top()) << " F: " << (int)debugMoveStack.top().from << ",T: " << (int)debugMoveStack.top().to
-				<< ",FF: " << (int)debugMoveStack.top().flags << ",P: " << names[MOV_PIECE(debugMoveStack.top().Pieces)] << ",Target: " << names[TARGET_PIECE(debugMoveStack.top().Pieces)] << endl;
+				<< ",FF: " << (int)debugMoveStack.top().flags << ",P: " << names[move_piece(debugMoveStack.top().Pieces)] << ",Target: " << names[target_piece(debugMoveStack.top().Pieces)] << endl;
 			debugMoveStack.pop();
 		}
 		cin.ignore();
@@ -564,14 +564,15 @@ void UnitTest::testMinimalTree()
 
 UnitTest::MinimalTree::Node::Node(float _boardValue) : boardValue(_boardValue) {}
 
-float UnitTest::MinimalTree::buildGameTreeMinimax(int depth, color side)
+int UnitTest::MinimalTree::buildGameTreeMinimax(int depth, color side)
 {
 	// Even depths correspond to maximizing player (computer)
 	bool isMax = side == computerColor;
 
 	if (depth == 0) return chessBoard.evaluate(side);
 	vector<Move> moveList;
-	float bestValue = isMax ? -INFINITY: +INFINITY, testValue;
+	int bestValue = isMax ? -oo: +oo;
+	int testValue;
 
 	chessBoard.generateMoveList(moveList, side);
 	static auto bestMove = moveList.front();
@@ -694,7 +695,7 @@ int UnitTest::fullTree::test_NegaMax(unique_ptr<Node>& node, int alpha, int beta
 
 void UnitTest::testHashing()
 {
-	Zob_Hash Hash(1e3);
+	Zob_Hash Hash(size_t(1e3));
 	random_device r_device;
 	mt19937_64 generator(r_device());
 	uniform_int_distribution<u64> distr;

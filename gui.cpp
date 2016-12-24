@@ -7,7 +7,7 @@ Gui::Gui(AI& _ai, color aiColor) : chessBoard(_ai.chessBoard)
 	drawOptions = 0x0;
 
 	// Draw board image (8 x 8) pixel
-	srand(time(0));
+	srand((unsigned int)time((time_t)(0)));
 	boardImage.create(8, 8, sf::Color::Black);
 	auto c = 1;
 	for (int i = 0; i < 8; i++){
@@ -109,9 +109,9 @@ void Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 		assemble += '1' + selectedSquare / 8;
 
 
-		if (chessBoard.allPos & BIT_AT(selectedSquare)) { // User clicked on piece ? 
+		if (chessBoard.allPos & bit_at(selectedSquare)) { // User clicked on piece ? 
 			for (int p = 0; p < 12; p++) {
-				if (chessBoard.pieces[p] & BIT_AT(selectedSquare)) {
+				if (chessBoard.pieces[p] & bit_at(selectedSquare)) {
 					pieceClicked = (piece)p;
 					break;
 				}
@@ -142,7 +142,7 @@ void Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				user_GUI_Move.from   = userInput.from;
 				user_GUI_Move.to     = selectedSquare;
 				user_GUI_Move.flags  = CAPTURE; // some kind of capture
-				user_GUI_Move.Pieces = PIECE_PAIR(userInput.movePiece, pieceClicked);
+				user_GUI_Move.Pieces = piece_pair(userInput.movePiece, pieceClicked);
 				if (!isUserMoveValid_completeMoveInfo(user_GUI_Move)) {
 					cerr << "Invalid move!\n";
 				}

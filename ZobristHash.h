@@ -23,7 +23,7 @@ private:
 	struct entry
 	{
 		entry() : value(0), search_depth(-1){}
-		float value;
+		int value;
 		int search_depth;
 	};
 	vector<entry> entries;

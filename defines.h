@@ -11,28 +11,29 @@ typedef uint32_t u32;
 typedef uint16_t u16;
 typedef uint8_t  byte;
 
-#define oo INT_MAX
+constexpr int oo = INT_MAX;
 
-#define BIT_AT(x) (0x1ull << (x))                         // Sets nth bit in number counting from least significant bit
-#define BIT_AT_R(x) (0x1ull << (63 - (x)))                // Sets nth bit in number counting from most significant bit
-#define PIECE_PAIR(X,Y) ((X) | ((Y) << 4))                  // Pairs up 4-bit piece information
+u64  inline bit_at(uint x)   { return 0x1ull << x; }        // Sets nth bit in number counting from least significant bit
+u64  inline bit_at_rev(uint x) { return 0x1ull << (63 - x); } // Sets nth bit in number counting from most significant bit
+byte inline piece_pair(byte X, byte Y) { return X | (Y << 4); } // Pairs up 4-bit piece information
 
 // Move formatting macros:
-#define MOV_PIECE(DATA) ((DATA) & 0xF)                     // Piece that moves
-#define TARGET_PIECE(DATA) ((DATA) >> 4)                   // Targeted piece
-#define MOVE_METADATA(TYPE,DATA) ((TYPE) | ((DATA) << 4))
+byte inline move_piece(byte DATA)    { return DATA & 0xF; } // Piece that moves
+byte inline target_piece(byte DATA) { return DATA >> 4; }   // Targeted piece
+byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 
 #ifdef _WIN32
 	#ifndef __MACHINEX64
 		#pragma message ("X64 ARCHITECTURE RECOMMENDED!\n COMPILATION MAY FAIL")
 	#endif
 	// Compiler intrinsics compatible with WIN32
-	#define POPCOUNT(x) __popcnt64(x)                               // Population count
-	#define BITSCANR64(index, mask) _BitScanReverse64(&index, mask) // Reverse Bitscan
-	#define ROTL64(mask, amount) _rotl64(mask,amount)               // Rotate left (64Bit)
-	#define ROTR64(mask, amount) _rotr64(mask,amount)               // Rotate right (64Bit)
-	#define BITLOOP(pos, mask) for (unsigned long pos = BITSCANR64(pos, (mask)); \
-																	BITSCANR64(pos, (mask)); \
+	u64  inline popcount(u64 x) { return __popcnt64(x); } // Population count
+	byte inline bitScan_rev64(unsigned long& index, u64 mask) { return _BitScanReverse64(&index, mask); } // Reverse Bitscan
+	u64  inline rotate_l64(u64 mask, int amount) { return _rotl64(mask, amount); } // Rotate left  (64Bit)
+	u64  inline rotate_r64(u64 mask, int amount) { return _rotr64(mask, amount); } // Rotate right (64Bit)
+
+	#define BITLOOP(pos, mask) for (unsigned long pos = bitScan_rev64(pos, (mask)); \
+																	bitScan_rev64(pos, (mask)); \
 																	(mask) ^= 0x1ull << pos)
 #elif __linux__
 	// Compiler intrinsics compatible with gcc
@@ -55,6 +56,8 @@ typedef uint8_t  byte;
 																	BITSCANR64(pos, (mask)); \
 																	(mask) ^= 0x1ull << pos)
 #endif
+
+// For increasing readability:
 
 #define BLACKLOOP(x) for (int x = 0; x < 6;  ++x)
 #define WHITELOOP(x) for (int x = 6; x < 12; ++x)

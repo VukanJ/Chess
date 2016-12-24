@@ -64,14 +64,14 @@ int main()
 
 void testing(){
 	UnitTest test;
-	test.specialTest();
+	//test.specialTest();
 	test.testDefines();
 	test.testIntrinsics();
-	test.testGenerationAlgorithms();
+	//test.testGenerationAlgorithms();
 	//test.testTreeStructure();
-	test.testEvaluation();
-	test.testFullTree();
-	test.testHashing();
+	//test.testEvaluation();
+	//test.testFullTree();
+	//test.testHashing();
 	//test.testMinimalTree();
 
 	cout << "EOP\n";
