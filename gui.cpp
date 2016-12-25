@@ -2,7 +2,6 @@
 
 Gui::Gui(AI& _ai, color aiColor) : chessBoard(_ai.chessBoard)
 {
-	cout << "GUIBoard address 0x" << hex << &chessBoard << endl;
 	humanColor = aiColor == black ? white : black;
 	drawOptions = 0x0;
 

@@ -32,7 +32,7 @@ private:
 	bool isUserMoveValid_completeMoveInfo(Move& userMove);
 	void colorSquares(u64 pattern, sf::Color color, sf::RenderWindow& window);
 
-	enum {drawAttB=0x1, drawAttW=0x2};
+	enum options {drawAttB = 0x1, drawAttW = 0x2};
 	u32 drawOptions;
 
 	Board& chessBoard;

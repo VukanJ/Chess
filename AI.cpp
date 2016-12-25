@@ -5,7 +5,6 @@ AI::AI(string FEN, color computerColor) : aiColor(computerColor)
 	genChessData data;
 	data.gen(); // Generates bitboards needed for move generation
 	chessBoard = Board(FEN);
-	cout << "AI Board address 0x" << hex << &chessBoard << endl;
 	debug();
 }
 

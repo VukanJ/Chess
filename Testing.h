@@ -92,12 +92,14 @@ public:
 		fullTree(Board& _chessboard, color comp, int _targetDepth);
 		struct Node {
 			Node();
+			Move thisMove;
+			int thisValue;
 			vector<Move> moveList;
 			vector<unique_ptr<Node>> nodeList;
 		};
 		color computerColor;
 		int test_NegaMax(unique_ptr<Node>& node, int alpha, int beta, int depth, color side);
-		int staticEvaluations; // debug
+		int staticEvaluations, nalphaBeta; // debug
 		Board& chessBoard;
 		unique_ptr<Node> Root;
 		int targetDepth;

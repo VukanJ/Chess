@@ -17,7 +17,7 @@ void benchmark();
 
 int main()
 {
-	//testing();
+	testing();
 	//AI computer("*");
 	//AI computer("K788888R7R4k1R"); // checkmate check is not correct
 	AI computer("* b KkQq 1 0", black);
@@ -65,12 +65,12 @@ int main()
 void testing(){
 	UnitTest test;
 	//test.specialTest();
-	test.testDefines();
-	test.testIntrinsics();
+	//test.testDefines();
+	//test.testIntrinsics();
 	//test.testGenerationAlgorithms();
 	//test.testTreeStructure();
 	//test.testEvaluation();
-	//test.testFullTree();
+	test.testFullTree();
 	//test.testHashing();
 	//test.testMinimalTree();
 

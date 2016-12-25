@@ -627,7 +627,6 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 
 bool Board::makeMove(const Move& move, color side)
 {
-	cout << hex << this << endl;
 	// Returns true if move is invalid (King is in check)
 
 	switch (move.flags & 0xFull){

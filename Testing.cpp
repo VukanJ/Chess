@@ -1,4 +1,4 @@
-#include "Testing.h"
+﻿#include "Testing.h"
 
 ChessError::ChessError(string msg) : errMsg(msg){}
 
@@ -616,79 +616,77 @@ void UnitTest::testEvaluation()
 
 void UnitTest::testFullTree()
 {
-	AI ai("r4rk1/p2nbp1p/1qp1bpp1/3p4/3P4/2NBPN2/PPQ2PPP/R4RK1 w - 1 0", white);
+    // http://www.chesspuzzles.com/
+	AI ai("rk5r/pp1Q1p1p/1q1p1N2/88/6P1/PP3PBP/2R3K1 w - 1 0", white); // Mate in 2 puzzle
+	// Solution: Re8 Bf8 Bh6 d6 Rxf8#
 	ai.chessBoard.print();
 	auto hash = ai.chessBoard.hashKey;
 	fullTree tree(ai.chessBoard, white, 6);
 	cout << "Start with Enter\n";
 	cin.ignore();
 	tree.test_NegaMax(tree.Root, -oo, oo, 6, white);
+	cout << "Evaluations:        " << tree.staticEvaluations << endl;
+	cout << "Alpha Beta Cutoffs: " << tree.nalphaBeta << endl;
+
+	for (int n = 0; n < tree.Root->nodeList.size(); n++) {
+		cout << moveString(tree.Root->nodeList[n]->thisMove) << "; V = " << tree.Root->nodeList[n]->thisValue << '\n';
+	}
+
 	assert(hash == ai.chessBoard.hashKey);
 }
 
 UnitTest::fullTree::fullTree(Board& _chessBoard, color comp, int _targetDepth)
 	: Root(nullptr), targetDepth(_targetDepth), chessBoard(_chessBoard), computerColor(comp)
 {
-	Root.reset(new Node()); // White plays at Root
-	staticEvaluations = 0;
+	Root.reset(new Node()); // Computer plays at Root
+	staticEvaluations = nalphaBeta = 0;
 }
 
 UnitTest::fullTree::Node::Node() {}
 
 int UnitTest::fullTree::test_NegaMax(unique_ptr<Node>& node, int alpha, int beta, int depth, color side)
-{
-	int bestValue = 0;
+{	
 	if (depth == 0) {
-		if (chessBoard.hash.hasEntry(chessBoard.hashKey)) {
-			int hashdepth;
-			chessBoard.hash.getEntry(chessBoard.hashKey, bestValue, hashdepth);
-			if (hashdepth > targetDepth - depth) {
-				cout << '.' << endl;
-				return bestValue;
-			}
-			else {
-				bestValue = chessBoard.evaluate(side);
-				chessBoard.hash.addEntry(chessBoard.hashKey, bestValue, targetDepth - depth);
-				return bestValue;
-			}
-		}
-		else {
-			bestValue = chessBoard.evaluate(side);
-			chessBoard.hash.addEntry(chessBoard.hashKey, bestValue, targetDepth - depth);
-			return bestValue;
-		}
+		staticEvaluations++;
+		return chessBoard.evaluate(side);
 	}
-	bestValue = -oo;
+	int bestValue = -oo, boardValue;
+
 	chessBoard.generateMoveList(node->moveList, side);
 	for (auto move = node->moveList.begin(); move != node->moveList.end();) {
+		// Play move
+		//cout << moveString(*move) << endl;
 		chessBoard.makeMove(*move, side);
-		//cout << moveString(*move) << endl;
-		//chessBoard.print();
-			// If king is left in check discard move
-		if (chessBoard.pieces[side * 6+4] & (side == black ? chessBoard.whiteAtt : chessBoard.blackAtt)) {
+		chessBoard.updateAllAttacks();
+		// Is king in check? 
+		if (chessBoard.pieces[side == black ? bk : wk] & (side == black ? chessBoard.whiteAtt : chessBoard.blackAtt)) {
 			chessBoard.unMakeMove(*move, side);
+			chessBoard.updateAllAttacks();
 			move = node->moveList.erase(move);
-		}
-		else {
-			int value;
-			node->nodeList.push_back(unique_ptr<Node>(new Node()));
-			value = -test_NegaMax(node->nodeList.back(), -beta, -alpha, depth - 1, side == white ? black : white);
-			bestValue = max(bestValue, value);
-			alpha = max(alpha, value);
-			if (alpha >= beta) {
-				//cout << "GEILO\n";
-				chessBoard.unMakeMove(*move, side);
-				move++;
-				break; // Alpha-Beta Cutoff
+			if (node->moveList.empty()) {
+				cout << "Mate in " << ceil((float)(targetDepth - depth) / 2.0) << " for " << (side==black ? "white" : "black") << endl;
+				boardValue = oo; // Checkmate
 			}
-			chessBoard.unMakeMove(*move, side);
-			move++;
+			continue;
 		}
-		//cout << moveString(*move) << endl;
-		//chessBoard.print();
+		node->nodeList.push_back(unique_ptr<Node>(new Node()));
+		node->nodeList.back()->thisMove = *move;
+		boardValue = -test_NegaMax(node->nodeList.back(), -beta, -alpha, depth - 1, side == black ? white : black);
+		node->nodeList.back()->thisValue = boardValue;
+		bestValue = max(bestValue, boardValue);
+		alpha = max(alpha, boardValue);
+		if (alpha >= beta) {
+			nalphaBeta++;
+			chessBoard.unMakeMove(*move, side);
+			chessBoard.updateAllAttacks();
+			break;
+		}
+		chessBoard.unMakeMove(*move, side);
+		chessBoard.updateAllAttacks();
+		move++;
 	}
-	if (node->moveList.empty()) {
-		return oo; // Checkmate
+	if (depth == targetDepth) {
+		cout << "bestValue: " << bestValue << endl;
 	}
 	return bestValue;
 }
