@@ -38,22 +38,22 @@ byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 #elif __linux__
 	// Compiler intrinsics compatible with gcc
 
-	auto rotl64 = [&](u64& x, uint n) {return (x << n) | (x >> (64 - n));};
+	u64 inline popcount(u64 x){ return __builtin_popcountll(x); }
+	u64 inline bitScan_rev64(unsigned long& index, u64 mask){
+		index = mask == 0x0ull ? 0 : 63 - __builtin_clzll(mask);
+		 return index;
+	}
 
-	auto rotr64 = [&](u64& x, uint n) {return (x >> n) | (x << (64 - n));};
+	u64 inline rotate_l64(u64& x, uint n){
+		return (x << n) | (x >> (64 - n));
+	}
 
-	auto bitscanreverse64 = [&](unsigned long& index, u64 mask) \
-										{index = mask == 0x0ull ? 0 : 63 - __builtin_clzll(mask); \
-										 return index;};
+	u64 inline rotate_r64(u64& x, uint n){
+		return (x >> n) | (x << (64 - n));
+	}
 
-	#define POPCOUNT(x) __builtin_popcountll(x)
-	#define BITSCANR64(index, mask) bitscanreverse64(index, mask)
-	//index = 63 - __builtin_clzll(mask)
-
-	#define ROTL64(mask, amount) rotl64(mask, amount)
-	#define ROTR64(mask, amount) rotr64(mask, amount)
-	#define BITLOOP(pos, mask) for (unsigned long pos = BITSCANR64(pos, (mask)); \
-																	BITSCANR64(pos, (mask)); \
+	#define BITLOOP(pos, mask) for (unsigned long pos = bitScan_rev64(pos, (mask)); \
+																	bitScan_rev64(pos, (mask)); \
 																	(mask) ^= 0x1ull << pos)
 #endif
 
