@@ -27,6 +27,13 @@ bool Zob_Hash::hasEntry(const u64 key) const
 	return (entries[index].search_depth != -1) ? true : false;
 }
 
+bool Zob_Hash::hasBetterEntry(const u64 key, int depth) const
+{
+	// Return true if hash contains entry with greater or equal depth
+	auto index = (unsigned)(key % (u64)entries.size());
+	return ((entries[index].search_depth != -1) ? true : false) && entries[index].search_depth >= depth;
+}
+
 bool Zob_Hash::getEntry(const u64 key, int& value) const
 {
 	auto index = (unsigned)(key % (u64)entries.size());

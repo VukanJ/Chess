@@ -18,6 +18,7 @@ public:
 	bool getEntry(const u64 Key, int& value, int& depth) const;
 	bool getEntry(const u64 key, int& value) const;
 	bool hasEntry(const u64) const;
+	bool hasBetterEntry(const u64 key, int depth) const;
 	vector<vector<u64>> getRandomSet(); // Used once for init
 private:
 	struct entry
