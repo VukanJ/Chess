@@ -17,16 +17,16 @@ void benchmark();
 
 int main()
 {
-	testing();
+	//testing();
 	//AI computer("*");
-	//AI computer("K788888R7R4k1R"); // checkmate check is not correct
-	AI computer("* b KkQq 1 0", black);
+	//AI computer("* b KkQq 1 0", black);
 	//AI computer("2rq1rk1/pb1n1ppN/4p3/1pb5/3P1Pn1/P1N5/1PQ1B1PP/R1B2RK1 w KkQq 1 0", black);
-	//AI computer("2Q5/4b1k1/1Pp2rPp/2q5/4Bn2/pppp4/P6P/6RK w - 1 0", black); 
-	//AI computer("r3k2rpppppppp8888PPPPPPPPR3K2R w KkQq 1 0", black); // Test Castling
+	AI computer("2Q5/4b1k1/1Pp2rPp/2q5/4Bn2/pppp4/P6P/6RK w - 1 0", black); 
+	//AI computer("rk5r/pp1Q1p1p/1q1p1N2/88/6P1/PP3PBP/2R3K1 w - 1 0", black); // Mate in 2 puzzle
+	computer.Play();
 	//AI computer("RNBQ1RK1/PPPN1PPP/4P3/3Pp3/1B1p4/2nb1n2/ppp2ppp/r1bqk2r");
-	//AI computer("84P3888888");
 	//AI computer("R1BKQBNR/P1PPPPPP/1PP5/84q3/6p1/ppppppbp/rnbkq1nr");
+
 #ifdef GUI_MODE
 	sf::RenderWindow window(sf::VideoMode(800, 600), "Chess GUI", sf::Style::Close);
 	window.setFramerateLimit(60);
@@ -48,7 +48,10 @@ int main()
 					}
 					break;
 				default:
-					gui.handleEvent(ev, window);
+					if (gui.handleEvent(ev, window)) {
+						// Human player played a move
+						computer.Play();
+					}
 					break;
 			}
 		}

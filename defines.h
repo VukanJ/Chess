@@ -27,7 +27,7 @@ byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 		#pragma message ("X64 ARCHITECTURE RECOMMENDED!\n COMPILATION MAY FAIL")
 	#endif
 	// Compiler intrinsics compatible with WIN32
-	u64  inline popcount(u64 x) { return __popcnt64(x); } // Population count
+	int  inline popcount(u64 x) { return __popcnt64(x); } // Population count, implicit conversion to int
 	byte inline bitScan_rev64(unsigned long& index, u64 mask) { return _BitScanReverse64(&index, mask); } // Reverse Bitscan
 	u64  inline rotate_l64(u64 mask, int amount) { return _rotl64(mask, amount); } // Rotate left  (64Bit)
 	u64  inline rotate_r64(u64 mask, int amount) { return _rotr64(mask, amount); } // Rotate right (64Bit)

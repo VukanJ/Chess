@@ -35,15 +35,13 @@ private:
 	{
 	public:
 		Node();
-		float boardValue, alpha, beta;
-		byte ordering;
-		vector<Move> moves;
-		vector<nodePtr> nodes;
+		vector<Move> moveList;
+		vector<nodePtr> nodeList;
 	};
-
-	/*~~~~~~~~~~~~~~~~~~~ Master function ~~~~~~~~~~~~~~~~~~~*/
-	void negaMax_Search(nodePtr& node, int depth, color side);
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Master function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+	int negaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side);
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+	// TODO: Implement NegaScout instead of negaMax
 
 	nodePtr Root;
 	Board chessBoard;

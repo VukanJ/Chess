@@ -9,8 +9,6 @@ Board::Board()
 	pieces    = vector<u64>(12, 0x0);
 	attacks   = vector<u64>(12, 0x0);
 	randomSet = hash.getRandomSet();
-	// White always makes the first move
-	sideToMove = white;
 }
 
 Board::Board(string fen) : Board()
@@ -35,7 +33,6 @@ void Board::setupBoard(string FEN)
 		whitePos = 0xFFFFull;
 		allPos = blackPos | whitePos;
 		castlingRights = 0xFull;
-		sideToMove = white;
 	}
 	else {
 		boost::trim(FEN);
@@ -68,7 +65,6 @@ void Board::setupBoard(string FEN)
 		for (int p = 0; p < 6; p++) blackPos |= pieces[p];
 		for (int p = 6; p < 12; p++) whitePos |= pieces[p];
 		// Set castling rights
-		sideToMove = fenArgs[1][0] == 'w' ? white : black;
 		for (auto c : fenArgs[2]) {
 			switch (c) {
 			case 'k': castlingRights |= castle_k; break;
@@ -93,32 +89,28 @@ void Board::debug()
 	//printf("blocked white pawns: %d\n", blockedPawn(white));
 	auto startingHash = hashKey;
 	vector<Move> movelist;
-	cout << "Board value (w): " << evaluate(white) << endl;
+	cout << "Board value (w): " << evaluate(white, 0) << endl;
 	movelist.clear();
 	print();
 
 	color debugPlayerColor = black;
 
-	generateMoveList(movelist, sideToMove);
+	generateMoveList(movelist, debugPlayerColor);
 
 	cout << "Start hash " << hex << hashKey << endl;
 	int count = 0;
-	for (auto& m : movelist) {
-		cout << moveString(m) << (count % 10 == 0 ? "\n" : "  ");
-		count++;
-		makeMove(m, sideToMove);
-		//print();
-		//printBitboard(whitePos);
-		unMakeMove(m, sideToMove);
-		//print();
-		//printBitboard(whitePos);
-	}
+	//for (auto& m : movelist) {
+	//	cout << moveString(m) << (count % 10 == 0 ? "\n" : "  ");
+	//	count++;
+	//	makeMove(m, sideToMove);
+	//	//print();
+	//	//printBitboard(whitePos);
+	//	unMakeMove(m, sideToMove);
+	//	//print();
+	//	//printBitboard(whitePos);
+	//}
 
 	cout << "\nEnd hash   " << hex << hashKey << endl;
-	if (isCheckMate(black))
-		cout << "CHECKMATE FOR BLACK!\n";
-	else if (isCheckMate(white))
-		cout << "CHECKMATE FOR WHITE!\n";
 
 	if (startingHash != hashKey) {
 		cerr << "\t\t\t::: HASHING ERROR :::\n";
@@ -625,10 +617,8 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 	});
 }
 
-bool Board::makeMove(const Move& move, color side)
+void Board::makeMove(const Move& move, color side)
 {
-	// Returns true if move is invalid (King is in check)
-
 	switch (move.flags & 0xFull){
 		case MOVE:
 			pieces[move.Pieces] ^= bit_at(move.from);     // Piece disappears from departure
@@ -728,7 +718,7 @@ bool Board::makeMove(const Move& move, color side)
 			}
 			break;
 		default:
-			cerr << "Invalid move encountered!\n";
+			cerr << "Invalid move info encountered!\n";
 			exit(1);
 	}
 	// Check if castling still permitted
@@ -738,11 +728,7 @@ bool Board::makeMove(const Move& move, color side)
 		hashKey ^= randomSet[CASTLE_HASH][castlingRights];
 	}
 	allPos = blackPos | whitePos;
-	if (((side == black) && (pieces[bk] & whiteAtt))
-		|| ((side == white) && (pieces[wk] & blackAtt))) {
-		return true; // Move is invalid, king left in check
-	}
-	else return false;
+	updateAllAttacks();
 }
 
 void Board::unMakeMove(const Move& move, color side)
@@ -848,30 +834,7 @@ void Board::unMakeMove(const Move& move, color side)
 		castlingRights |= cast;
 	}
 	allPos = blackPos | whitePos;
-}
-
-bool Board::isCheckMate(color side) const
-{
-	// Not yet tested
-	unsigned long pos;
-	u64 mask;
-	if (side == black){
-		if (whiteAtt & pieces[bk]){
-			mask = pieces[bk];
-			bitScan_rev64(pos, mask);
-			return ((KING_ATTACKS[pos] & whiteAtt) == KING_ATTACKS[pos]) && (pieces[bk] & whiteAtt);
-		}
-		else return false;
-	}
-	else{
-		if (blackAtt & pieces[bk]){
-			mask = pieces[wk];
-			bitScan_rev64(pos, mask);
-			return ((KING_ATTACKS[pos] & blackAtt) == KING_ATTACKS[pos]) && (pieces[wk] & blackAtt);
-		}
-		else return false;
-	}
-	return true;
+	updateAllAttacks();
 }
 
 void Board::print() const
@@ -906,7 +869,7 @@ void Board::print() const
 	#endif
 }
 
-int Board::evaluate(color side)
+int Board::evaluate(color side, int depth)
 {
 	// Returns the relative heuristic value of the board for the white player
 	// Score of black is the negative of white's score
@@ -917,40 +880,44 @@ int Board::evaluate(color side)
 	 * Knight -> 300 cp
 	 * Bishop -> 300 cp
 	 * Pawn   -> 100 cp
-	 * King   -> 0 cp
+	 * King   ->   0 cp
 	 */
 	// ~~~ Material ~~~
-	total_boardValue += 900 * ((int)popcount(pieces[wq]) - (int)popcount(pieces[bq]))
-		              + 500 * ((int)popcount(pieces[wr]) - (int)popcount(pieces[br]))
-		              + 300 * ((int)popcount(pieces[wb]) - (int)popcount(pieces[bb]))
-		              + 300 * ((int)popcount(pieces[wn]) - (int)popcount(pieces[bn]))
-		              + 100 * ((int)popcount(pieces[wp]) - (int)popcount(pieces[bp]));
+	total_boardValue += 900 * (popcount(pieces[wq]) - popcount(pieces[bq]))
+		              + 500 * (popcount(pieces[wr]) - popcount(pieces[br]))
+		              + 300 * (popcount(pieces[wb]) - popcount(pieces[bb]))
+		              + 300 * (popcount(pieces[wn]) - popcount(pieces[bn]))
+		              + 100 * (popcount(pieces[wp]) - popcount(pieces[bp]));
 	// ~~~ Position ~~~
 	// Rewards points, if positions are similar to piece-square-heuristics (WIP)
 
 	// ~~~ Mobility ~~~
 	// Determines how many squares are under attack, worth 10 cp each
 	int mobility = 0;
-	WHITELOOP(i) mobility += (int)popcount(attacks[i]);
-	BLACKLOOP(i) mobility -= (int)popcount(attacks[i]);
+	WHITELOOP(i) mobility += popcount(attacks[i] ^ blackPos);
+	BLACKLOOP(i) mobility -= popcount(attacks[i] ^ whitePos);
 	total_boardValue += mobility * 10;
-	
+	mobility = 0;
+	// Measure "hostiliy":
+	WHITELOOP(i) mobility += popcount(attacks[i] & blackPos);
+	BLACKLOOP(i) mobility += popcount(attacks[i] & whitePos);
+	total_boardValue += mobility * 15;
 	// ~~~ Blocked Pawns ~~~
 	// Determines how many pawns are blocked per player color, penalty of 2 cp for each
-	total_boardValue += 2 * ((int)popcount((pieces[bp] >> 8) & allPos)
-						   - (int)popcount((pieces[wp] << 8) & allPos));
+	total_boardValue += 2 * (popcount((pieces[bp] >> 8) & allPos)
+						   - popcount((pieces[wp] << 8) & allPos));
 
 	// ~~~ King safety ~~~
-	// Penalty of 150 cp if king is in check
-	if (pieces[wk] & blackAtt)      total_boardValue -= 150;
-	else if (pieces[bk] & whiteAtt) total_boardValue += 150;
+	// Penalty of 250 cp if king is in check, since it generally 
+	// reduces number of possible moves
+	if (pieces[bk] & whiteAtt)      total_boardValue += 250;
+	else if (pieces[wk] & blackAtt) total_boardValue -= 250;
 	// Does king have a pawn shield? 
 
 	// Are nearby squares of king attacked? 
 
-
 	// WIP: King safety, pawn structure, special penalties ?
-	return (side == white ? 1 : -1) * total_boardValue;
+	return (side == white ? 1 : -1) * (total_boardValue + depth * 5);
 }
 
 unsigned inline Board::blockedPawn(color col)

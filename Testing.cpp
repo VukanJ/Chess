@@ -435,7 +435,7 @@ void UnitTest::testTreeStructure()
 
 UnitTest::TestingTree::TestingTree(Board& _chessBoard, int _targetDepth) : Root(nullptr), targetDepth(_targetDepth), chessBoard(_chessBoard)
 {
-	auto node = new Node(chessBoard.evaluate(white));
+	auto node = new Node(chessBoard.evaluate(white, 0));
 	Root.reset(node);
 	staticEvaluations = 0;
 }
@@ -496,7 +496,7 @@ void UnitTest::TestingTree::buildGameTree(unique_ptr<Node>& node, int depth, col
 			continue;
 		}
 		else {
-			node->nodeList.push_back(unique_ptr<Node>(new Node(chessBoard.evaluate(side))));
+			node->nodeList.push_back(unique_ptr<Node>(new Node(chessBoard.evaluate(side, targetDepth - depth))));
 			staticEvaluations++;
 			buildGameTree(node->nodeList.back(), depth - 1, side == black ? white : black);
 			chessBoard.unMakeMove(*move, side);
@@ -569,7 +569,7 @@ int UnitTest::MinimalTree::buildGameTreeMinimax(int depth, color side)
 	// Even depths correspond to maximizing player (computer)
 	bool isMax = side == computerColor;
 
-	if (depth == 0) return chessBoard.evaluate(side);
+	if (depth == 0) return chessBoard.evaluate(side, targetDepth - depth);
 	vector<Move> moveList;
 	int bestValue = isMax ? -oo: +oo;
 	int testValue;
@@ -605,7 +605,7 @@ void UnitTest::testEvaluation()
 {
 	{
 		AI ai("*", white);
-		assert(ai.chessBoard.evaluate(black) == ai.chessBoard.evaluate(white)); // Symmetric position
+		assert(ai.chessBoard.evaluate(black, 0) == ai.chessBoard.evaluate(white, 0)); // Symmetric position
 	}
 	AI ai("3q1rk1/pp4bp/3p1p2/3N1pB1/2r5/1N6/PPPQ3P/1K5R w - 1 0", white);
 	//cout << "Score (w)" << ai.chessBoard.evaluate(white) << endl;
@@ -625,13 +625,15 @@ void UnitTest::testFullTree()
 	cout << "Start with Enter\n";
 	cin.ignore();
 	tree.test_NegaMax(tree.Root, -oo, oo, 6, white);
-	cout << "Evaluations:        " << tree.staticEvaluations << endl;
-	cout << "Alpha Beta Cutoffs: " << tree.nalphaBeta << endl;
+	cout << "# Full Evaluations:   " << tree.staticEvaluations << endl;
+	cout << "# Alpha Beta Cutoffs: " << tree.nalphaBeta << endl;
+	cout << "# Hash Lookups:       " << tree.nHashLookups << endl;
 
 	for (int n = 0; n < tree.Root->nodeList.size(); n++) {
 		cout << moveString(tree.Root->nodeList[n]->thisMove) << "; V = " << tree.Root->nodeList[n]->thisValue << '\n';
 	}
 
+	// Check if hashKey is still consistent
 	assert(hash == ai.chessBoard.hashKey);
 }
 
@@ -639,32 +641,39 @@ UnitTest::fullTree::fullTree(Board& _chessBoard, color comp, int _targetDepth)
 	: Root(nullptr), targetDepth(_targetDepth), chessBoard(_chessBoard), computerColor(comp)
 {
 	Root.reset(new Node()); // Computer plays at Root
-	staticEvaluations = nalphaBeta = 0;
+	staticEvaluations = nalphaBeta = nHashLookups = 0;
 }
 
 UnitTest::fullTree::Node::Node() {}
 
 int UnitTest::fullTree::test_NegaMax(unique_ptr<Node>& node, int alpha, int beta, int depth, color side)
 {	
-	if (depth == 0) {
-		staticEvaluations++;
-		return chessBoard.evaluate(side);
-	}
 	int bestValue = -oo, boardValue;
-
+	if (depth == 0) {
+		if (chessBoard.hash.hasBetterEntry(chessBoard.hashKey, targetDepth - depth)) {
+			// Use pre-calculated value if it exists
+			chessBoard.hash.getEntry(chessBoard.hashKey, boardValue);
+			nHashLookups++;
+		}
+		else {
+			// Else make new hash-entry and evaluate board
+			boardValue = chessBoard.evaluate(side, targetDepth - depth);
+			chessBoard.hash.addEntry(chessBoard.hashKey, boardValue, targetDepth - depth);
+			staticEvaluations++;
+		}
+		return boardValue;
+	}
 	chessBoard.generateMoveList(node->moveList, side);
 	for (auto move = node->moveList.begin(); move != node->moveList.end();) {
 		// Play move
 		//cout << moveString(*move) << endl;
 		chessBoard.makeMove(*move, side);
-		chessBoard.updateAllAttacks();
 		// Is king in check? 
 		if (chessBoard.pieces[side == black ? bk : wk] & (side == black ? chessBoard.whiteAtt : chessBoard.blackAtt)) {
 			chessBoard.unMakeMove(*move, side);
-			chessBoard.updateAllAttacks();
 			move = node->moveList.erase(move);
 			if (node->moveList.empty()) {
-				cout << "Mate in " << ceil((float)(targetDepth - depth) / 2.0) << " for " << (side==black ? "white" : "black") << endl;
+				//cout << "Mate in " << ceil((float)(targetDepth - depth) / 2.0) << " for " << (side==black ? "white" : "black") << endl;
 				boardValue = oo; // Checkmate
 			}
 			continue;
@@ -678,11 +687,9 @@ int UnitTest::fullTree::test_NegaMax(unique_ptr<Node>& node, int alpha, int beta
 		if (alpha >= beta) {
 			nalphaBeta++;
 			chessBoard.unMakeMove(*move, side);
-			chessBoard.updateAllAttacks();
 			break;
 		}
 		chessBoard.unMakeMove(*move, side);
-		chessBoard.updateAllAttacks();
 		move++;
 	}
 	if (depth == targetDepth) {

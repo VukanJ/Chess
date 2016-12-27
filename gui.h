@@ -20,7 +20,7 @@ public:
 	Gui(AI& _ai, color aiColor);
 
 	void render(sf::RenderWindow& window);
-	void handleEvent(sf::Event& ev, sf::RenderWindow& window);
+	bool handleEvent(sf::Event& ev, sf::RenderWindow& window);
 private:
 	struct UserInput {
 		int from;

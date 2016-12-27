@@ -99,7 +99,7 @@ public:
 		};
 		color computerColor;
 		int test_NegaMax(unique_ptr<Node>& node, int alpha, int beta, int depth, color side);
-		int staticEvaluations, nalphaBeta; // debug
+		int staticEvaluations, nalphaBeta, nHashLookups; // debug
 		Board& chessBoard;
 		unique_ptr<Node> Root;
 		int targetDepth;

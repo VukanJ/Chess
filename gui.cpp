@@ -82,12 +82,14 @@ void Gui::render(sf::RenderWindow& window)
 	}
 }
 
-void Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
+bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 {
+	// returns true if human has played a move
 	Move user_GUI_Move; // Probably incorrect, since user makes mistakes
 						// Only contains raw data, without castling rights or specific attack types
 	piece pieceClicked = nullPiece;
-	auto selectedSquare = -1;
+	int selectedSquare = nullSquare;
+	bool movePlayed = false;
 	sf::Vector2i mouse;
 	string assemble;
 	switch (ev.type) {
@@ -106,7 +108,6 @@ void Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 		assemble = "Klick at (" + to_string(mouse.x) + ',' + to_string(mouse.y) + ") = ";
 		assemble += 'h' - selectedSquare % 8;
 		assemble += '1' + selectedSquare / 8;
-
 
 		if (chessBoard.allPos & bit_at(selectedSquare)) { // User clicked on piece ? 
 			for (int p = 0; p < 12; p++) {
@@ -127,11 +128,8 @@ void Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 					cerr << "Invalid move!\n";
 				}
 				else {
-					cerr << "OK!\n";
 					chessBoard.makeMove(user_GUI_Move, humanColor);
-					chessBoard.updateAllAttacks();
-					chessBoard.print();
-					printBitboard(chessBoard.blackAtt);
+					movePlayed = true;
 				}
 				userInput.reset();
 			}
@@ -146,15 +144,12 @@ void Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 					cerr << "Invalid move!\n";
 				}
 				else {
-					cerr << "OK!\n";
 					chessBoard.makeMove(user_GUI_Move, humanColor);
-					chessBoard.updateAllAttacks();
-					chessBoard.print();
-					printBitboard(chessBoard.blackAtt);
+					movePlayed = true;
 				}
 				userInput.reset();
 			}
-			else { // Nothing, but new piece was selected
+			else { // Nothing. New piece was selected
 				userInput.pieceSelected = true;
 				userInput.movePiece = pieceClicked;
 				userInput.from = selectedSquare;
@@ -173,6 +168,7 @@ void Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 		}
 		break;
 	}
+	return movePlayed;
 }
 
 bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
@@ -242,23 +238,24 @@ void Gui::UserInput::reset()
 
 void Gui::colorSquares(u64 pattern, sf::Color color, sf::RenderWindow& window)
 {
+	// Colors specific squares
 	sf::RectangleShape colorRect(sf::Vector2f(HEIGHT / 8, HEIGHT / 8));
 	colorRect.setFillColor(color);
 	BITLOOP(pos, pattern) {
 		colorRect.setPosition(((-(int)pos + 63) % 8)*HEIGHT / 8, ((-(int)pos + 63) / 8)*HEIGHT / 8);
-		//colorRect.setPosition(((-1+63) % 8)*HEIGHT / 8, ((-1+63) / 8)*HEIGHT / 8);
 		window.draw(colorRect);
 	}
 }
 
 void Gui::debugDrawSquareNumering(sf::RenderWindow& window)
 {
+	// Draws bit-numbers on squares
 	sf::Text Sq_Number("?", textFont);
 	Sq_Number.setFillColor(sf::Color(0, 0, 0, 20));
 	Sq_Number.setCharacterSize(60);
 	for (int i = 0; i < 64; i++) {
 		Sq_Number.setString(to_string(i));
-		Sq_Number.setPosition(sf::Vector2f(((63 - i) % 8)*HEIGHT / 8, ((63 - i) / 8)*HEIGHT / 8));
+		Sq_Number.setPosition(sf::Vector2f(((63 - i) % 8) * size, ((63 - i) / 8) * size));
 		window.draw(Sq_Number);
 	}
 }
