@@ -68,7 +68,7 @@ void Gui::render(sf::RenderWindow& window)
 		colorSquares(chessBoard.whiteAtt, sf::Color(255, 0, 0, 200), window);
 	}
 	int pieceIndex = 0;
-	unsigned long pos = 0;
+	ulong pos = 0;
 	for (const auto& type : chessBoard.pieces){
 		auto mask = type;
 		BITLOOP(pos, mask) {
@@ -129,6 +129,7 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				}
 				else {
 					chessBoard.makeMove(user_GUI_Move, humanColor);
+					chessBoard.print();
 					movePlayed = true;
 				}
 				userInput.reset();
@@ -145,6 +146,7 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				}
 				else {
 					chessBoard.makeMove(user_GUI_Move, humanColor);
+					chessBoard.print();
 					movePlayed = true;
 				}
 				userInput.reset();

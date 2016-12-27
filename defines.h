@@ -6,6 +6,7 @@
 #include <climits>
 
 typedef unsigned uint;
+typedef unsigned long ulong;
 typedef uint64_t u64;
 typedef uint32_t u32;
 typedef uint16_t u16;
@@ -28,18 +29,24 @@ byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 	#endif
 	// Compiler intrinsics compatible with WIN32
 	int  inline popcount(u64 x) { return __popcnt64(x); } // Population count, implicit conversion to int
-	byte inline bitScan_rev64(unsigned long& index, u64 mask) { return _BitScanReverse64(&index, mask); } // Reverse Bitscan
+	byte inline bitScan_rev64(ulong& index, u64 const mask) {
+		if (!_BitScanReverse64(&index, mask)){
+			index = 0;
+		}
+		return index;
+	} // Reverse Bitscan
+	byte inline msb(u64 x) { ulong index; index = !_BitScanReverse64(&index, x) ? -1 : index; return index; }
 	u64  inline rotate_l64(u64 mask, int amount) { return _rotl64(mask, amount); } // Rotate left  (64Bit)
 	u64  inline rotate_r64(u64 mask, int amount) { return _rotr64(mask, amount); } // Rotate right (64Bit)
 
-	#define BITLOOP(pos, mask) for (unsigned long pos = bitScan_rev64(pos, (mask)); \
-																	bitScan_rev64(pos, (mask)); \
-																	(mask) ^= 0x1ull << pos)
+	#define BITLOOP(__pos, mask) for (ulong __pos = msb(mask); \
+															mask; \
+															(mask) ^= bit_at(bitScan_rev64(__pos, mask)), __pos = msb(mask))
 #elif __linux__
 	// Compiler intrinsics compatible with gcc
 
 	u64 inline popcount(u64 x){ return __builtin_popcountll(x); }
-	u64 inline bitScan_rev64(unsigned long& index, u64 mask){
+	u64 inline bitScan_rev64(ulong& index, u64 mask){
 		index = mask == 0x0ull ? 0 : 63 - __builtin_clzll(mask);
 		 return index;
 	}
@@ -52,7 +59,7 @@ byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 		return (x >> n) | (x << (64 - n));
 	}
 
-	#define BITLOOP(pos, mask) for (unsigned long pos = bitScan_rev64(pos, (mask)); \
+	#define BITLOOP(pos, mask) for (ulong pos = bitScan_rev64(pos, (mask)); \
 																	bitScan_rev64(pos, (mask)); \
 																	(mask) ^= 0x1ull << pos)
 #endif

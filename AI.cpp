@@ -32,7 +32,7 @@ void AI::printDebug(string showPieces)
 
 void AI::Play()
 {
-	targetDepth = 6;
+	targetDepth = 4;
 	Root = nullptr;
 	Root.reset(new Node());
 	// Builds gametree and determines best move and plays it
@@ -43,10 +43,15 @@ void AI::Play()
 	///	/// Call Negamax here
 	///	targetDepth++;
 	///}
+	chessBoard.print();
+	auto bHash = chessBoard.hashKey;
 	auto bestValue = negaMax_Search(Root, -oo, oo, targetDepth, aiColor == black ? white : black);
+	assert(bHash == chessBoard.hashKey);
 	if(bestValue == oo) cout << "Best Value = Infinity" << endl;
 	else if(bestValue == -oo) cout << "Best Value = -Infinity" << endl;
 	else cout << "Best Value = " << bestValue << endl;
+	chessBoard.print();
+	printBitboard(chessBoard.pieces[wr]);
 }
 
 // TODO: Maybe include "void Board::updateAllAttacks()" in "bool Board::Make/UnmakeMove()"
@@ -64,7 +69,7 @@ int AI::negaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side
 		}
 		else {
 			// Else make new hash-entry and evaluate board
-			boardValue = chessBoard.evaluate(side, 0);
+			boardValue = chessBoard.evaluate(side, targetDepth - depth);
 			chessBoard.hash.addEntry(chessBoard.hashKey, boardValue, targetDepth - depth);
 		}
 		return boardValue;
@@ -72,11 +77,13 @@ int AI::negaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side
 	// Generate all semi-legal moves and iterate over them
 	chessBoard.generateMoveList(node->moveList, side);
 	for (auto move = node->moveList.begin(); move != node->moveList.end();) {
+		auto saveHash = chessBoard.hashKey;
 		chessBoard.makeMove(*move, side);
 		// Check if move is legal:
 		if (chessBoard.pieces[side == black ? bk : wk] 
 			& (side == black ? chessBoard.whiteAtt : chessBoard.blackAtt)) {
 			chessBoard.unMakeMove(*move, side);
+			if (chessBoard.hashKey != saveHash) cerr << moveString(*move) << endl;
 			move = node->moveList.erase(move);
 			if (node->moveList.empty()) {
 				// Checkmate
@@ -84,10 +91,10 @@ int AI::negaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side
 			}
 			continue;
 		}
-		if (node->moveList.empty()) {
-			// Stalemate, prefer mate over stalemate
-			boardValue = oo - 300000; 
-		}
+		//if (node->moveList.empty()) {
+		//	// Stalemate, prefer mate over stalemate
+		//	boardValue = oo - 300000; 
+		//}
 		node->nodeList.push_back(nodePtr(new Node()));
 		boardValue = -negaMax_Search(node->nodeList.back(), -beta, -alpha, depth - 1, side == black ? white : black);
 		bestValue = max(bestValue, boardValue);
@@ -96,9 +103,11 @@ int AI::negaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side
 		if (alpha >= beta) {
 			// Skip examination of this subtree
 			chessBoard.unMakeMove(*move, side);
+			if (chessBoard.hashKey != saveHash) cerr << moveString(*move) << endl;
 			break;
 		}
 		chessBoard.unMakeMove(*move, side);
+		if (chessBoard.hashKey != saveHash) cerr << moveString(*move) << endl;
 		move++;
 	}
 	return bestValue;

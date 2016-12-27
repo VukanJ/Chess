@@ -150,7 +150,7 @@ void Board::updateAttack(piece p)
 	// for non empty pieces
 	// Patterns:
 
-	unsigned long pos = -1;
+	ulong pos = -1;
 	u64 mask = 0;
 	switch (p){
 		case bp:
@@ -275,7 +275,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 	Aggressive and special moves are generated first and preferably stored
 	at the front of the movelist
 	*/
-	unsigned long pos = nullSquare;
+	ulong pos = nullSquare;
 	u64 attackMask = 0x0;
 	u64 pieceAttacks = 0x0, attackingPieces = 0x0;
 	// Generate all capturing and normal moves

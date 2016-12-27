@@ -18,10 +18,10 @@ void benchmark();
 int main()
 {
 	//testing();
-	//AI computer("*");
-	//AI computer("* b KkQq 1 0", black);
+	//AI computer("4k3pppppppp8888PPPPPPPP4N4 w - 1 0", black);
+	AI computer("1rr4r/2r2rrr/r1r2rr1/8/rR3R2/6R1/RRR2RRR/1R1RR111 w - 1 0", black);
 	//AI computer("2rq1rk1/pb1n1ppN/4p3/1pb5/3P1Pn1/P1N5/1PQ1B1PP/R1B2RK1 w KkQq 1 0", black);
-	AI computer("2Q5/4b1k1/1Pp2rPp/2q5/4Bn2/pppp4/P6P/6RK w - 1 0", black); 
+	//AI computer("2Q5/4b1k1/1Pp2rPp/2q5/4Bn2/pppp4/P6P/6RK w - 1 0", black); 
 	//AI computer("rk5r/pp1Q1p1p/1q1p1N2/88/6P1/PP3PBP/2R3K1 w - 1 0", black); // Mate in 2 puzzle
 	computer.Play();
 	//AI computer("RNBQ1RK1/PPPN1PPP/4P3/3Pp3/1B1p4/2nb1n2/ppp2ppp/r1bqk2r");
@@ -32,7 +32,7 @@ int main()
 	window.setFramerateLimit(60);
 
 	Gui gui(computer, computer.aiColor);
-
+	computer.printBoard();
 	while (window.isOpen()){
 		sf::Event ev;
 		while (window.pollEvent(ev)){
@@ -67,14 +67,14 @@ int main()
 
 void testing(){
 	UnitTest test;
-	//test.specialTest();
-	//test.testDefines();
-	//test.testIntrinsics();
-	//test.testGenerationAlgorithms();
-	//test.testTreeStructure();
-	//test.testEvaluation();
-	test.testFullTree();
-	//test.testHashing();
+	test.specialTest();
+	test.testDefines();
+	test.testIntrinsics();
+	test.testGenerationAlgorithms();
+	test.testTreeStructure();
+	test.testEvaluation();
+	//test.testFullTree();
+	test.testHashing();
 	//test.testMinimalTree();
 
 	cout << "EOP\n";

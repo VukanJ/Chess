@@ -24,7 +24,7 @@ struct Move
 	Move();
 	Move(byte OldCastlingRights, byte _flags);
 	Move(byte _from, byte _to, byte _flags, byte _pieces);
-	Move(unsigned long _from, unsigned long _to, byte _flags, byte _pieces);
+	Move(ulong _from, ulong _to, byte _flags, byte _pieces);
 	Move(int _from, int _to, byte _flags, byte _pieces);
 	byte from, to, flags, Pieces;
 	// Flagbits: 1-4: castlingRuleReset?[k,K,w,W]; 5-8: Movetype

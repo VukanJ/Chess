@@ -70,7 +70,7 @@ void UnitTest::testIntrinsics() const
 		9, 4, 1, 0
 	};
 
-	unsigned long index;
+	ulong index;
 	clog << string(8, '~') << "::: Testing intrinsics :::" << string(8, '~') << '\n';
 	int i = 0;
 	assert(popcount(static_cast<u64>(0x0)) == 0);
@@ -143,7 +143,13 @@ void UnitTest::testIntrinsics() const
 		assert(testNum == (randomCheckNum & ~(ULLONG_MAX << index) | bit_at(index)));
 		//printBitboard(testNum);
 	}
-
+	cout << "Testing Bitloops" << endl;
+	auto mask = 0xFFFFFFFFFFFFFFFF;
+	j = 63;
+	BITLOOP(pos, mask) {
+		assert(pos == j--);
+	}
+	assert(j == -1);
 	cout << "Intrinsics passed all tests!\n";
 }
 
@@ -151,7 +157,7 @@ void UnitTest::testGenerationAlgorithms()
 {
 	clog << string(8,'~') << "::: Testing moveGenerator :::" << string(8, '~') << '\n';
 	cout << "Testing Board::pawnfill()...\n";
-	testPawnFill();
+	//testPawnFill();
 	cout << "Testing castling...\n";
 	testCastling();
 	cout << "Testing pawn promotion...\n";
