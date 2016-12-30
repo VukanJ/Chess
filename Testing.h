@@ -10,6 +10,7 @@
 #include <chrono>
 
 #include "misc.h"
+#include "Move.h"
 #include "ZobristHash.h"
 #include "Data.h"
 #include "defines.h"

@@ -19,7 +19,7 @@ u64  inline bit_at_rev(uint x) { return 0x1ull << (63 - x); } // Sets nth bit in
 byte inline piece_pair(byte X, byte Y) { return X | (Y << 4); } // Pairs up 4-bit piece information
 
 // Move formatting macros:
-byte inline move_piece(byte DATA)    { return DATA & 0xF; } // Piece that moves
+byte inline move_piece(byte DATA)   { return DATA & 0xF; } // Piece that moves
 byte inline target_piece(byte DATA) { return DATA >> 4; }   // Targeted piece
 byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 

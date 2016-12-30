@@ -531,22 +531,21 @@ void UnitTest::TestingTree::traceback()
 
 void UnitTest::specialTest()
 {
-	return;
-	AI ai("r3k2r/888888/R3K2R w KkQq 1 0", white);
+	AI ai("8/b1b5/1P2n1b1/1P3P11/8 w - 1 0", black);
+	ai.chessBoard.print();
 	vector<Move> moveList;
+	ai.chessBoard.generateMoveList(moveList, white);
+
+	Move move(34, 42, MOVE, wp);
+	ai.chessBoard.makeMove(move, black);
+	printBitboard(ai.chessBoard.pieces[bp]);
+	printBitboard(ai.chessBoard.pieces[wp]);
+
+	moveList.clear();
+	ai.chessBoard.generateMoveList(moveList, white);
+
 	ai.chessBoard.print();
-	ai.chessBoard.generateMoveList(moveList, black);
-	auto key = ai.chessBoard.hashKey;
-	for (auto& m : moveList) {
-		ai.chessBoard.makeMove(m, black);
-		ai.chessBoard.print();
-		printBits(ai.chessBoard.castlingRights);
-		ai.chessBoard.unMakeMove(m, black);
-		ai.chessBoard.print();
-		printBits(ai.chessBoard.castlingRights);
-	}
-	ai.chessBoard.print();
-	assert(key == ai.chessBoard.hashKey);
+
 	exit(0);
 }
 

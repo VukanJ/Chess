@@ -62,17 +62,24 @@ void Gui::render(sf::RenderWindow& window)
 	window.draw(boardspr);
 	debugDrawSquareNumering(window);
 	if (drawOptions & drawAttB) {
-		colorSquares(chessBoard.blackAtt, sf::Color(0,0,255,100), window);
+		colorSquares(chessBoard.attacks[bp], sf::Color(0,0,255,100), window);
 	}
 	if (drawOptions & drawAttW) {
-		colorSquares(chessBoard.whiteAtt, sf::Color(255, 0, 0, 200), window);
+		colorSquares(chessBoard.attacks[wp], sf::Color(255, 0, 0, 200), window);
 	}
 	int pieceIndex = 0;
 	ulong pos = 0;
 	for (const auto& type : chessBoard.pieces){
 		auto mask = type;
 		BITLOOP(pos, mask) {
-			pieces[pieceIndex].setPosition(((63 - pos) % 8)*orig_size.y*scale.y, ((63 - pos) / 8)*orig_size.x*scale.x);
+			if (pieceIndex > 5) {
+				pieces[pieceIndex].setColor(sf::Color(0, 255, 0, 250));
+			    pieces[pieceIndex].setPosition(((63 - pos) % 8)*orig_size.y*scale.y-10, ((63 - pos) / 8)*orig_size.x*scale.x);
+			}
+			else {
+				pieces[pieceIndex].setColor(sf::Color(255, 0, 0, 250));
+				pieces[pieceIndex].setPosition(((63 - pos) % 8)*orig_size.y*scale.y+10, ((63 - pos) / 8)*orig_size.x*scale.x);
+			}
 			window.draw(pieces[pieceIndex]);
 		}
 		pieceIndex++;

@@ -51,7 +51,8 @@ void AI::Play()
 	else if(bestValue == -oo) cout << "Best Value = -Infinity" << endl;
 	else cout << "Best Value = " << bestValue << endl;
 	chessBoard.print();
-	printBitboard(chessBoard.pieces[wr]);
+	printBitboard(chessBoard.pieces[bp]);
+	printBitboard(chessBoard.pieces[wp]);
 }
 
 // TODO: Maybe include "void Board::updateAllAttacks()" in "bool Board::Make/UnmakeMove()"
