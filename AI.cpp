@@ -5,6 +5,7 @@ AI::AI(string FEN, color computerColor) : aiColor(computerColor)
 	genChessData data;
 	data.gen(); // Generates bitboards needed for move generation
 	chessBoard = Board(FEN);
+	transposition_hash = ZobristHash();
 	debug();
 }
 
@@ -61,14 +62,14 @@ int AI::negaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side
 	int bestValue = -oo, boardValue; // Initialize worst case scenario
 
 	if (depth == 0) { // Get value of leaf
-		if (chessBoard.hash.hasBetterEntry(chessBoard.hashKey, targetDepth - depth)) {
+		if (transposition_hash.hasBetterEntry(chessBoard.hashKey, targetDepth - depth)) {
 			// Use pre-calculated value if it exists
-			chessBoard.hash.getEntry(chessBoard.hashKey, boardValue);
+			transposition_hash.getEntry(chessBoard.hashKey, boardValue);
 		}
 		else {
 			// Else make new hash-entry and evaluate board
 			boardValue = chessBoard.evaluate(side, targetDepth - depth);
-			chessBoard.hash.addEntry(chessBoard.hashKey, boardValue, targetDepth - depth);
+			transposition_hash.addEntry(chessBoard.hashKey, boardValue, targetDepth - depth);
 		}
 		return boardValue;
 	}
@@ -100,11 +101,14 @@ int AI::negaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side
 		boardValue = -negaMax_Search(node->nodeList.back(), -beta, -alpha, depth - 1, side == black ? white : black);
 		bestValue = max(bestValue, boardValue);
 		alpha = max(alpha, boardValue);
+		if (alpha == boardValue) {
+			// Alpha has increased 
+		}
+
 		// Irrelevant subtree found ? 
 		if (alpha >= beta) {
 			// Skip examination of this subtree
 			chessBoard.unMakeMove(*move, side);
-			if (chessBoard.hashKey != saveHash) cerr << moveString(*move) << endl;
 			break;
 		}
 		chessBoard.unMakeMove(*move, side);

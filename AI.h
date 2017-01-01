@@ -48,6 +48,7 @@ private:
 	color sideToMove;
 	int targetDepth; // Needed for iterative deepening
 
+	ZobristHash transposition_hash;
 public:
 	AI(string FEN, color computerColor);
 	void printDebug(string show = "prnbkqPRNBKQ");

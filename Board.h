@@ -6,7 +6,6 @@
 #include <vector>
 #include <typeinfo>
 #include <string>
-//#include <stack>
 #include <chrono>
 #include <boost/algorithm/string.hpp>
 
@@ -23,7 +22,7 @@ private:
 	void updateAttack(piece p);
 	
 	// Init
-	void initHash(); // Used only for Init!, this key is updated for each move
+	void initHash(); // Used only for Init!, the hashkey is updated for each move
 	
 	// Evaluation
 	inline unsigned blockedPawn(color);
@@ -56,7 +55,7 @@ public:
 	enum castlingRight{ castle_k = 0x1, castle_q = 0x2, castle_K = 0x4, castle_Q = 0x8 };
 	byte castlingRights, b_enpassent, w_enpassent;
 	u64 wpMove, bpMove, whitePos, blackPos, allPos, whiteAtt, blackAtt, hashKey;
-	Zob_Hash hash;
+	ZobristHash hash;
 	vector<vector<u64>> randomSet;
 };
 

@@ -705,7 +705,7 @@ int UnitTest::fullTree::test_NegaMax(unique_ptr<Node>& node, int alpha, int beta
 
 void UnitTest::testHashing()
 {
-	Zob_Hash Hash(size_t(1e3));
+	ZobristHash Hash(size_t(1e3));
 	random_device r_device;
 	mt19937_64 generator(r_device());
 	uniform_int_distribution<u64> distr;

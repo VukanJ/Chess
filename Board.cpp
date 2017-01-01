@@ -8,7 +8,6 @@ Board::Board()
 {
 	pieces    = vector<u64>(12, 0x0);
 	attacks   = vector<u64>(12, 0x0);
-	randomSet = hash.getRandomSet();
 }
 
 Board::Board(string fen) : Board()
@@ -77,6 +76,30 @@ void Board::setupBoard(string FEN)
 	}
 	updateAllAttacks();
 	initHash();
+}
+
+void Board::initHash()
+{
+	// Generates initial hashkey. 
+	// Generates constant table of random 64Bit numbers
+	random_device r_device;
+	mt19937_64 generator(r_device());
+	//generator.seed(42);
+	uniform_int_distribution<u64> distr;
+	randomSet = vector<vector<u64>>(14, vector<u64>(64, 0));
+	// Index 0-11: Piece type
+	for (auto& r1 : randomSet)
+		for (auto& r2 : r1)
+			r2 = distr(generator);
+
+	auto pos = 0, i = 0;
+	for (auto p : pieces) {
+		BITLOOP(pos, p) {
+			hashKey ^= randomSet[i][pos];
+		}
+		i++;
+	}
+	hashKey ^= randomSet[CASTLE_HASH][castlingRights];
 }
 
 void Board::debug()
@@ -252,19 +275,6 @@ void Board::pawnFill(color side)
 		attacks[wp] |= blackPos & ((pieces[wp] & ~_left)  << 9);
 		attacks[wp] |= blackPos & ((pieces[wp] & ~_right) << 7);
 	}
-}
-
-void Board::initHash()
-{
-	auto pos = 0, i = 0;
-	for (auto p : pieces){
-		BITLOOP(pos, p){
-			hashKey ^= randomSet[i][pos];
-		}
-		i++;
-	}
-	hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-	//cout << "Initial hash --> " << hex << hashKey << endl;
 }
 
 void Board::generateMoveList(vector<Move>& moveList, color side) const

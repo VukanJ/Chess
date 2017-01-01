@@ -1,69 +1,72 @@
 #include "ZobristHash.h"
 
-Zob_Hash::Zob_Hash()
+ZobristHash::ZobristHash()
 {
 	entries.reserve(static_cast<size_t>(1e6));
 	entries.resize(static_cast<size_t>(1e6));
+	hashSize = (u64)1e6;
 }
 
-Zob_Hash::Zob_Hash(size_t hashSize)
+ZobristHash::ZobristHash(size_t _hashSize)
 {
-	entries.reserve(static_cast<u64>(hashSize));
-	entries.resize(hashSize);
+	entries.reserve(static_cast<u64>(_hashSize));
+	entries.resize(_hashSize);
+	hashSize = _hashSize;
 }
 
-void Zob_Hash::addEntry(const u64 key, int value, int depth)
+ZobristHash::entry* const ZobristHash::addEntry(const u64 key, int value, int depth)
 {
-	int index = static_cast<int>(key % (u64)entries.size());
+	auto index = key % hashSize;
 	if (entries[index].search_depth < depth){
 		entries[index].search_depth = depth;
 		entries[index].value = value;
 	}
+	return &entries[index];
 }
 
-bool Zob_Hash::hasEntry(const u64 key) const
+bool ZobristHash::hasEntry(const u64 key) const
 {
-	auto index = (unsigned)(key % (u64)entries.size());
+	auto index = key % hashSize;
 	return (entries[index].search_depth != -1) ? true : false;
 }
 
-bool Zob_Hash::hasBetterEntry(const u64 key, int depth) const
+ZobristHash::entry* const ZobristHash::hasBetterEntry(const u64 key, int depth)
 {
 	// Return true if hash contains entry with greater or equal depth
-	auto index = (unsigned)(key % (u64)entries.size());
-	return ((entries[index].search_depth != -1) ? true : false) && entries[index].search_depth >= depth;
+	auto index = key % hashSize;
+	if(entries[index].search_depth > -1 && entries[index].search_depth >= depth){
+		return &entries[index];
+	}
+	else return nullptr;
 }
 
-bool Zob_Hash::getEntry(const u64 key, int& value) const
+ZobristHash::entry* const ZobristHash::getEntry(const u64 key, int& value)
 {
-	auto index = (unsigned)(key % (u64)entries.size());
+	auto index = key % hashSize;
 	if (entries[index].search_depth != -1){
 		value = entries[index].value;
-		return true;
+		return &entries[index];
 	}
-	return false;
+	return nullptr;
 }
 
-bool Zob_Hash::getEntry(const u64 key, int& value, int& depth) const
+ZobristHash::entry* const ZobristHash::getEntry(const u64 key, int& value, int& depth)
 {
-	int index = (unsigned)(key % (u64)entries.size());
+	auto index = key % hashSize;
 	if (entries[index].search_depth != -1){
 		value = entries[index].value;
 		depth = entries[index].search_depth;
-		return true;
+		return &entries[index];
 	}
-	return false;
+	return nullptr;
 }
 
-vector<vector<u64>> Zob_Hash::getRandomSet()
+void inline ZobristHash::setBoundFlags(const u64 key, valueType vt) 
 {
-	random_device r_device;
-	mt19937_64 generator(r_device());
-	uniform_int_distribution<u64> distr;
-	vector<vector<u64>> randSet = vector<vector<u64>>(14, vector<u64>(64, 0));
-	// Index 0-11: Piece type
-	for (auto& r1 : randSet)
-		for (auto& r2 : r1)
-			r2 = distr(generator);
-	return randSet;
+	auto index = key % hashSize;
+	entries[index].flags = (entries[index].flags & 0x00FF) | vt;
 }
+
+// struct entry
+
+ZobristHash::entry::entry() : value(0), search_depth(-1), flags(0x0) {}

@@ -4,30 +4,45 @@
 #include <random>
 #include "misc.h"
 
-// Zob_Hash stores already evaluated Boards
-// by Zobrist-key
+// Zob_Hash stores already evaluated Boards and their value, 
+// search_depth and move quality
 
-enum hashPosition { CASTLE_HASH = 12, ENPASSENT_HASH = 13 };
+enum hashPosition { CASTLE_HASH = 12, ENPASSENT_HASH = 13};
 
-class Zob_Hash
+enum MoveKind { 
+	PV_MOVE = 0x1, // Principal variation (the move that should be played)
+};
+
+enum valueType {
+	EXACT_VALUE = 0x100, // Board value lies between alpha and beta
+	LOWER_BOUND = 0x200, // Board value was < alpha
+	UPPER_BOUND = 0x400  // Board value was > beta
+};
+
+// Flag = [8 Bits: value type, 8 Bits: MoveKind]
+
+class ZobristHash
 {
-public:
-	Zob_Hash();
-	Zob_Hash(size_t hashSize);
-	void addEntry(const u64 Key, int  value, int depth);
-	bool getEntry(const u64 Key, int& value, int& depth) const;
-	bool getEntry(const u64 key, int& value) const;
-	bool hasEntry(const u64) const;
-	bool hasBetterEntry(const u64 key, int depth) const;
-	vector<vector<u64>> getRandomSet(); // Used once for init
 private:
 	struct entry
 	{
-		entry() : value(0), search_depth(-1){}
+		entry();
 		int value;
 		int search_depth;
+		u16 flags;
 	};
-	vector<entry> entries;
+	vector<entry> entries; // Hash table
+	u64 hashSize;
+public:
+	ZobristHash();
+	ZobristHash(size_t hashSize);
+	entry* const addEntry(const u64 Key, int  value, int depth);
+	entry* const getEntry(const u64 Key, int& value, int& depth);
+	entry* const getEntry(const u64 key, int& value);
+	bool   hasEntry(const u64) const;
+	entry* const hasBetterEntry(const u64 key, int depth);
+
+	void inline setBoundFlags(const u64 key, valueType);
 };
 
 #endif
