@@ -2,6 +2,7 @@
 #define AI_H
 #include <iostream>
 #include <string>
+#include <algorithm>
 #include <memory>
 #include <stack>
 

@@ -4,7 +4,7 @@ ZobristHash::ZobristHash()
 {
 	entries.reserve(static_cast<size_t>(1e6));
 	entries.resize(static_cast<size_t>(1e6));
-	hashSize = (u64)1e6;
+	hashSize = static_cast<size_t>(1e6);
 }
 
 ZobristHash::ZobristHash(size_t _hashSize)
@@ -24,41 +24,10 @@ ZobristHash::entry* const ZobristHash::addEntry(const u64 key, int value, int de
 	return &entries[index];
 }
 
-bool ZobristHash::hasEntry(const u64 key) const
+ZobristHash::entry& ZobristHash::getEntry(const u64 key)
 {
 	auto index = key % hashSize;
-	return (entries[index].search_depth != -1) ? true : false;
-}
-
-ZobristHash::entry* const ZobristHash::hasBetterEntry(const u64 key, int depth)
-{
-	// Return true if hash contains entry with greater or equal depth
-	auto index = key % hashSize;
-	if(entries[index].search_depth > -1 && entries[index].search_depth >= depth){
-		return &entries[index];
-	}
-	else return nullptr;
-}
-
-ZobristHash::entry* const ZobristHash::getEntry(const u64 key, int& value)
-{
-	auto index = key % hashSize;
-	if (entries[index].search_depth != -1){
-		value = entries[index].value;
-		return &entries[index];
-	}
-	return nullptr;
-}
-
-ZobristHash::entry* const ZobristHash::getEntry(const u64 key, int& value, int& depth)
-{
-	auto index = key % hashSize;
-	if (entries[index].search_depth != -1){
-		value = entries[index].value;
-		depth = entries[index].search_depth;
-		return &entries[index];
-	}
-	return nullptr;
+	return entries[index];
 }
 
 void inline ZobristHash::setBoundFlags(const u64 key, valueType vt) 

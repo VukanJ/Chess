@@ -32,15 +32,12 @@ private:
 		u16 flags;
 	};
 	vector<entry> entries; // Hash table
-	u64 hashSize;
+	size_t hashSize;
 public:
 	ZobristHash();
 	ZobristHash(size_t hashSize);
 	entry* const addEntry(const u64 Key, int  value, int depth);
-	entry* const getEntry(const u64 Key, int& value, int& depth);
-	entry* const getEntry(const u64 key, int& value);
-	bool   hasEntry(const u64) const;
-	entry* const hasBetterEntry(const u64 key, int depth);
+	entry& getEntry(const u64 Key);
 
 	void inline setBoundFlags(const u64 key, valueType);
 };

@@ -28,7 +28,7 @@ byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 		#pragma message ("X64 ARCHITECTURE RECOMMENDED!\n COMPILATION MAY FAIL")
 	#endif
 	// Compiler intrinsics compatible with WIN32
-	int  inline popcount(u64 x) { return __popcnt64(x); } // Population count, implicit conversion to int
+	int  inline popcount(u64 x) { return (int)__popcnt64(x); } // Population count, implicit conversion to int
 	byte inline bitScan_rev64(ulong& index, u64 const mask) {
 		if (!_BitScanReverse64(&index, mask)){
 			index = 0;
