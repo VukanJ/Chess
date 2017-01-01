@@ -58,27 +58,25 @@ enum piece {
 	nullPiece = -1
 };
 
-enum color { black, white };
+enum color {black, white};
 
 static piece getPieceIndex(char p)
 {
-	piece res;
 	switch (p){
-		case 'p':res = bp; break;
-		case 'r':res = br; break;
-		case 'n':res = bn; break;
-		case 'b':res = bb; break;
-		case 'k':res = bk; break;
-		case 'q':res = bq; break;
-		case 'P':res = wp; break;
-		case 'R':res = wr; break;
-		case 'N':res = wn; break;
-		case 'B':res = wb; break;
-		case 'K':res = wk; break;
-		case 'Q':res = wq; break;
+		case 'p': return bp;
+		case 'r': return br;
+		case 'n': return bn;
+		case 'b': return bb;
+		case 'k': return bk;
+		case 'q': return bq;
+		case 'P': return wp;
+		case 'R': return wr;
+		case 'N': return wn;
+		case 'B': return wb;
+		case 'K': return wk;
+		case 'Q': return wq;
 		default: throw;
 	}
-	return res;
 }
 
 enum {

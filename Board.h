@@ -6,7 +6,7 @@
 #include <vector>
 #include <typeinfo>
 #include <string>
-#include <stack>
+//#include <stack>
 #include <chrono>
 #include <boost/algorithm/string.hpp>
 
@@ -21,7 +21,6 @@ class Board
 private:
 	// Move making
 	void updateAttack(piece p);
-	void updateAllAttacks();
 	
 	// Init
 	void initHash(); // Used only for Init!, this key is updated for each move
@@ -44,6 +43,7 @@ public:
 	void generateMoveList(vector<Move>&, color) const;
 	void makeMove(const Move&, color side);
 	void unMakeMove(const Move&, color side);
+	void updateAllAttacks();
 
 	// Evaluation
 	int evaluate(color side, int depth);

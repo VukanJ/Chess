@@ -148,7 +148,6 @@ void Board::updateAttack(piece p)
 	// Fill all the bits that are attacked by individual pieces
 	// including attacked enemy pieces. This method is only invoked
 	// for non empty pieces
-	// Patterns:
 
 	ulong pos = -1;
 	u64 mask = 0;
@@ -158,8 +157,8 @@ void Board::updateAttack(piece p)
 			break;
 		case br:
 			attacks[br] = 0x0;
-			for (int i = 0; i < 4;)
-				attacks[br] |= floodFill(pieces[br], ~allPos, (dir)i++);
+			for (int i = 0; i < 4; ++i)
+				attacks[br] |= floodFill(pieces[br], ~allPos, (dir)i);
 			break;
 		case bn:
 			mask = pieces[bn];
@@ -168,8 +167,8 @@ void Board::updateAttack(piece p)
 			break;
 		case bb:
 			attacks[bb] = 0x0;
-			for (int i = 4; i < 8;)
-				attacks[bb] |= floodFill(pieces[bb], ~allPos, (dir)i++);
+			for (int i = 4; i < 8; ++i)
+				attacks[bb] |= floodFill(pieces[bb], ~allPos, (dir)i);
 			break;
 		case bk:
 			mask = pieces[bk];
@@ -179,16 +178,16 @@ void Board::updateAttack(piece p)
 			break;
 		case bq:
 			attacks[bq] = 0x0;
-			for (int i = 0; i < 8;)
-				attacks[bq] |= floodFill(pieces[bq], ~allPos, (dir)i++);
+			for (int i = 0; i < 8; ++i)
+				attacks[bq] |= floodFill(pieces[bq], ~allPos, (dir)i);
 			break;
 		case wp:
 			pawnFill(white);
 			break;
 		case wr:
 			attacks[wr] = 0x0;
-			for (int i = 0; i < 4;)
-				attacks[wr] |= floodFill(pieces[wr], ~allPos, (dir)i++);
+			for (int i = 0; i < 4; ++i)
+				attacks[wr] |= floodFill(pieces[wr], ~allPos, (dir)i);
 			break;
 		case wn:
 			mask = pieces[wn];
@@ -197,8 +196,8 @@ void Board::updateAttack(piece p)
 			break;
 		case wb:
 			attacks[wb] = 0x0;
-			for (int i = 4; i < 8;)
-				attacks[wb] |= floodFill(pieces[wb], ~allPos, (dir)i++);
+			for (int i = 4; i < 8; ++i)
+				attacks[wb] |= floodFill(pieces[wb], ~allPos, (dir)i);
 			break;
 		case wk:
 			mask = pieces[wk];
@@ -208,8 +207,8 @@ void Board::updateAttack(piece p)
 			break;
 		case wq:
 			attacks[wq] = 0x0;
-			for (int i = 0; i < 8;)
-				attacks[wq] |= floodFill(pieces[wq], ~allPos, (dir)i++);
+			for (int i = 0; i < 8; ++i)
+				attacks[wq] |= floodFill(pieces[wq], ~allPos, (dir)i);
 			break;
 	}
 }
@@ -740,7 +739,6 @@ void Board::makeMove(const Move& move, color side)
 		hashKey ^= randomSet[CASTLE_HASH][castlingRights];
 	}
 	allPos = blackPos | whitePos;
-	updateAllAttacks();
 }
 
 void Board::unMakeMove(const Move& move, color side)
@@ -853,7 +851,6 @@ void Board::unMakeMove(const Move& move, color side)
 		castlingRights |= cast;
 	}
 	allPos = blackPos | whitePos;
-	updateAllAttacks();
 }
 
 void Board::print() const

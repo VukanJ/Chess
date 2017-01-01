@@ -11,7 +11,7 @@ Gui::Gui(AI& _ai, color aiColor) : chessBoard(_ai.chessBoard)
 	auto c = 1;
 	for (int i = 0; i < 8; i++){
 		for (int j = 0; j < 8; j++){
-			boardImage.setPixel(j, i, c++ % 2 == 0 ? sf::Color(120, 120, 120) : sf::Color(23, 230, 230));
+			boardImage.setPixel(j, i, c++ % 2 == 0 ? sf::Color(173, 135, 94) : sf::Color(234, 215, 179));
 		}
 		c++;
 	}
@@ -26,7 +26,7 @@ Gui::Gui(AI& _ai, color aiColor) : chessBoard(_ai.chessBoard)
 	orig_size = sf::Vector2f((float)pieceTex.getSize().x / 6.0f, (float)pieceTex.getSize().y / 2.0f);
 	scale = sf::Vector2f(size / orig_size.x, size / orig_size.y);
 
-	string pngOrdering = "PBNRQKpbnrqk";
+	string pngOrdering = "KQBNRPkqbnrp";
 
 	for (int i = 0; i < 6; i++)
 		pieces[getPieceIndex(pngOrdering[i])].setTextureRect(sf::IntRect(orig_size.x*i, 0, orig_size.x, orig_size.y));
@@ -62,10 +62,10 @@ void Gui::render(sf::RenderWindow& window)
 	window.draw(boardspr);
 	debugDrawSquareNumering(window);
 	if (drawOptions & drawAttB) {
-		colorSquares(chessBoard.attacks[bp], sf::Color(0,0,255,100), window);
+		colorSquares(chessBoard.blackAtt, sf::Color(0,0,255,100), window);
 	}
 	if (drawOptions & drawAttW) {
-		colorSquares(chessBoard.attacks[wp], sf::Color(255, 0, 0, 200), window);
+		colorSquares(chessBoard.whiteAtt, sf::Color(255, 0, 0, 200), window);
 	}
 	int pieceIndex = 0;
 	ulong pos = 0;
@@ -73,12 +73,10 @@ void Gui::render(sf::RenderWindow& window)
 		auto mask = type;
 		BITLOOP(pos, mask) {
 			if (pieceIndex > 5) {
-				pieces[pieceIndex].setColor(sf::Color(0, 255, 0, 250));
-			    pieces[pieceIndex].setPosition(((63 - pos) % 8)*orig_size.y*scale.y-10, ((63 - pos) / 8)*orig_size.x*scale.x);
+			    pieces[pieceIndex].setPosition(((63 - pos) % 8)*orig_size.y*scale.y, ((63 - pos) / 8)*orig_size.x*scale.x);
 			}
 			else {
-				pieces[pieceIndex].setColor(sf::Color(255, 0, 0, 250));
-				pieces[pieceIndex].setPosition(((63 - pos) % 8)*orig_size.y*scale.y+10, ((63 - pos) / 8)*orig_size.x*scale.x);
+				pieces[pieceIndex].setPosition(((63 - pos) % 8)*orig_size.y*scale.y, ((63 - pos) / 8)*orig_size.x*scale.x);
 			}
 			window.draw(pieces[pieceIndex]);
 		}
@@ -136,7 +134,9 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				}
 				else {
 					chessBoard.makeMove(user_GUI_Move, humanColor);
-					chessBoard.print();
+					chessBoard.updateAllAttacks();
+					printBitboard(chessBoard.attacks[wn]);
+					//chessBoard.print();
 					movePlayed = true;
 				}
 				userInput.reset();
@@ -153,7 +153,9 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				}
 				else {
 					chessBoard.makeMove(user_GUI_Move, humanColor);
-					chessBoard.print();
+					chessBoard.updateAllAttacks();
+					printBitboard(chessBoard.attacks[wn]);
+					//chessBoard.print();
 					movePlayed = true;
 				}
 				userInput.reset();

@@ -32,7 +32,7 @@ void AI::printDebug(string showPieces)
 
 void AI::Play()
 {
-	targetDepth = 4;
+	targetDepth = 6;
 	Root = nullptr;
 	Root.reset(new Node());
 	// Builds gametree and determines best move and plays it
@@ -43,19 +43,16 @@ void AI::Play()
 	///	/// Call Negamax here
 	///	targetDepth++;
 	///}
-	chessBoard.print();
 	auto bHash = chessBoard.hashKey;
 	auto bestValue = negaMax_Search(Root, -oo, oo, targetDepth, aiColor == black ? white : black);
+	chessBoard.updateAllAttacks();
+
 	assert(bHash == chessBoard.hashKey);
-	if(bestValue == oo) cout << "Best Value = Infinity" << endl;
+	if(bestValue == oo)       cout << "Best Value =  Infinity" << endl;
 	else if(bestValue == -oo) cout << "Best Value = -Infinity" << endl;
 	else cout << "Best Value = " << bestValue << endl;
 	chessBoard.print();
-	printBitboard(chessBoard.pieces[bp]);
-	printBitboard(chessBoard.pieces[wp]);
 }
-
-// TODO: Maybe include "void Board::updateAllAttacks()" in "bool Board::Make/UnmakeMove()"
 
 int AI::negaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side)
 {
@@ -80,7 +77,9 @@ int AI::negaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side
 	for (auto move = node->moveList.begin(); move != node->moveList.end();) {
 		auto saveHash = chessBoard.hashKey;
 		chessBoard.makeMove(*move, side);
-		// Check if move is legal:
+		chessBoard.updateAllAttacks();
+
+		// Check if king is left in check
 		if (chessBoard.pieces[side == black ? bk : wk] 
 			& (side == black ? chessBoard.whiteAtt : chessBoard.blackAtt)) {
 			chessBoard.unMakeMove(*move, side);
@@ -95,6 +94,7 @@ int AI::negaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side
 		//if (node->moveList.empty()) {
 		//	// Stalemate, prefer mate over stalemate
 		//	boardValue = oo - 300000; 
+		//  continue;
 		//}
 		node->nodeList.push_back(nodePtr(new Node()));
 		boardValue = -negaMax_Search(node->nodeList.back(), -beta, -alpha, depth - 1, side == black ? white : black);
