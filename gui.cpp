@@ -60,9 +60,8 @@ Gui::Gui(AI& _ai, color aiColor) : chessBoard(_ai.chessBoard)
 void Gui::render(sf::RenderWindow& window)
 {
 	window.draw(boardspr);
-	debugDrawSquareNumering(window);
 	if (drawOptions & drawAttB) {
-		colorSquares(chessBoard.blackAtt, sf::Color(0,0,255,100), window);
+		colorSquares(chessBoard.attacks[bk], sf::Color(0,0,255,100), window);
 	}
 	if (drawOptions & drawAttW) {
 		colorSquares(chessBoard.whiteAtt, sf::Color(255, 0, 0, 200), window);
@@ -85,6 +84,7 @@ void Gui::render(sf::RenderWindow& window)
 	for (auto& text : textDisplays) {
 		window.draw(text);
 	}
+	debugDrawSquareNumering(window);
 }
 
 bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
@@ -135,7 +135,6 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				else {
 					chessBoard.makeMove(user_GUI_Move, humanColor);
 					chessBoard.updateAllAttacks();
-					printBitboard(chessBoard.attacks[wn]);
 					//chessBoard.print();
 					movePlayed = true;
 				}
@@ -154,7 +153,6 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				else {
 					chessBoard.makeMove(user_GUI_Move, humanColor);
 					chessBoard.updateAllAttacks();
-					printBitboard(chessBoard.attacks[wn]);
 					//chessBoard.print();
 					movePlayed = true;
 				}
@@ -221,6 +219,18 @@ bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
 			else if (pmove.flags == CAPTURE && inputMove.flags == CAPTURE) {
 				return true;
 			}
+			else if (inputMove.flags == MOVE && (target_piece(pmove.Pieces) == bq || target_piece(pmove.Pieces) == wq)) {
+				// Promotion ? 
+				if (pmove.flags & PROMOTION) {
+					return true;
+				}
+			}
+			else if (inputMove.flags == CAPTURE && (target_piece(pmove.Pieces) == bq || target_piece(pmove.Pieces) == wq)) {
+				// Promotion ? 
+				if (pmove.flags & C_PROMOTION) {
+					return true;
+				}
+			}
 			else {
 				if (inputMove.Pieces == pmove.Pieces) {
 					// Move allowed. WIP for Enpassent
@@ -234,8 +244,18 @@ bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
 	if (matchingMove == possibleMoves.end()) {
 		return false;
 	}
-	else {
+	else { // Check if move is legal
 		inputMove = *matchingMove;
+		chessBoard.makeMove(inputMove, humanColor);
+		chessBoard.updateAllAttacks();
+		if ((humanColor == black && chessBoard.isKingInCheck(black)) ||
+			(humanColor == white && chessBoard.isKingInCheck(white))) {
+			chessBoard.unMakeMove(inputMove, humanColor);
+			chessBoard.updateAllAttacks();
+			return false;
+		}
+		chessBoard.unMakeMove(inputMove, humanColor);
+		chessBoard.updateAllAttacks();
 		return true;
 	}
 }

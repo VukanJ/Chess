@@ -1,7 +1,7 @@
 #include "Move.h"
 
 Move::Move() 
-	: from(nullSquare), to(nullSquare), flags(0), Pieces(nullPiece) {}
+	: from(nullSquare), to(nullSquare), flags(0x0), Pieces(nullPiece) {}
 
 Move::Move(byte OldCastlingRights, byte _flags) 
 	: from(OldCastlingRights), to(nullSquare), flags(_flags), Pieces(nullPiece) {}

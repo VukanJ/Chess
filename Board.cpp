@@ -112,7 +112,7 @@ void Board::debug()
 	//printf("blocked white pawns: %d\n", blockedPawn(white));
 	auto startingHash = hashKey;
 	vector<Move> movelist;
-	cout << "Board value (w): " << evaluate(white, 0) << endl;
+	cout << "Board value (w): " << evaluate(white) << endl;
 	movelist.clear();
 	print();
 
@@ -254,7 +254,6 @@ u64 Board::floodFill(u64 propagator, u64 empty, dir direction)
 
 void Board::pawnFill(color side)
 {
-	// Does not compute enPassent
 	if (side == black){
 		attacks[bp] = bpMove = 0x0;
 		// Normal step
@@ -276,7 +275,7 @@ void Board::pawnFill(color side)
 		attacks[wp] |= blackPos & ((pieces[wp] & ~_right) << 7);
 	}
 }
-
+// TODO: Corrected Pawn attacks. Needs testing
 void Board::generateMoveList(vector<Move>& moveList, color side) const
 {
 	/*
@@ -296,7 +295,9 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 			case bp:
 				// Find normal captures:
 				BITLOOP(pos, attackingPieces){
-					attackMask = (0x5ull << (pos - 1 - 8)) & whitePos;
+					//attackMask = (0x5ull << (pos - 1 - 8)) & whitePos; // Error: Targets opponent on same rank
+					attackMask  = ((bit_at(pos) >> 9) & ~_left)  & whitePos;
+					attackMask |= ((bit_at(pos) >> 7) & ~_right) & whitePos;
 					if (attackMask)                                              // If pieces are targeted
 						WHITELOOP(candidate){                                    // Find targeted piece
 						pieceAttacks = pieces[candidate] & attackMask;           // Set specific attacks
@@ -423,7 +424,6 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 				}
 				break;
 			case bk: // BLACK KING
-
 				// Calculate attacked pieces
 				BITLOOP(pos, attackingPieces){                             // Loop through all positions of pieces of kind bk
 					attackMask = ((KING_ATTACKS[pos] & attacks[bk] & whitePos) & ~whiteAtt); // Intersections with opponent pieces that would not place king in check
@@ -460,7 +460,9 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 				 // Find normal captures:
 				 // attackingPieces stands for attacked squares in this case
 				 BITLOOP(pos, attackingPieces){
-					 attackMask = (0x5ull << (pos - 1 + 8)) & blackPos;
+					 attackMask =  (bit_at(pos) << 9 & ~_right) & blackPos;
+					 attackMask |= (bit_at(pos) << 7 & ~_left)  & blackPos;
+
 					 if (attackMask)                                              // If pieces are targeted
 						 BLACKLOOP(candidate){                                    // Find targeted piece
 						 pieceAttacks = pieces[candidate] & attackMask;           // Set specific attacks
@@ -895,7 +897,12 @@ void Board::print() const
 	#endif
 }
 
-int Board::evaluate(color side, int depth)
+bool Board::isKingInCheck(color kingColor) const
+{
+	return kingColor == black ? pieces[bk] & whiteAtt : pieces[wk] & blackAtt;
+}
+
+int Board::evaluate(color side)
 {
 	// Returns the relative heuristic value of the board for the white player
 	// Score of black is the negative of white's score
@@ -943,7 +950,7 @@ int Board::evaluate(color side, int depth)
 	// Are nearby squares of king attacked? 
 
 	// WIP: King safety, pawn structure, special penalties ?
-	return (side == white ? 1 : -1) * (total_boardValue + depth * 5);
+	return (side == white ? 1 : -1) * total_boardValue;
 }
 
 unsigned inline Board::blockedPawn(color col)

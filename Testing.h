@@ -53,25 +53,6 @@ public:
 	void testGenerationAlgorithms();
 
 	// Tree testing
-	class TestingTree {
-	public:
-		TestingTree(Board& _chessBoard, int _targetDepth);
-		struct Node {
-			Node(float _boardValue);
-			float boardValue, value_alphabeta;
-			vector<Move> moveList;
-			vector<unique_ptr<Node>> nodeList;
-		};
-		void buildGameTree(unique_ptr<Node>& node, int depth, color side);
-		void traceback();
-
-		stack<Move> debugMoveStack;
-		int staticEvaluations;
-		Board& chessBoard;
-		unique_ptr<Node> Root;
-		int targetDepth;
-	};
-
 	class MinimalTree { // Low memory Tree, only stores current path
 	public:
 		MinimalTree(Board& _chessboard, color comp, int _targetDepth);

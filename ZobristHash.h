@@ -2,21 +2,19 @@
 #define ZOBRISTHASH_H
 #include <iostream>
 #include <random>
+
 #include "misc.h"
+#include "Move.h"
 
 // Zob_Hash stores already evaluated Boards and their value, 
 // search_depth and move quality
 
 enum hashPosition { CASTLE_HASH = 12, ENPASSENT_HASH = 13};
 
-enum MoveKind { 
-	PV_MOVE = 0x1, // Principal variation (the move that should be played)
-};
-
 enum valueType {
-	EXACT_VALUE = 0x100, // Board value lies between alpha and beta
-	LOWER_BOUND = 0x200, // Board value was < alpha
-	UPPER_BOUND = 0x400  // Board value was > beta
+	EXACT_VALUE = 0x1, // Board value lies between alpha and beta
+	LOWER_BOUND = 0x2, // Board value was < alpha
+	UPPER_BOUND = 0x4  // Board value was > beta
 };
 
 // Flag = [8 Bits: value type, 8 Bits: MoveKind]
@@ -29,7 +27,8 @@ private:
 		entry();
 		int value;
 		int search_depth;
-		u16 flags;
+		Move move;
+		byte flags;
 	};
 	vector<entry> entries; // Hash table
 	size_t hashSize;
@@ -38,6 +37,7 @@ public:
 	ZobristHash(size_t hashSize);
 	entry* const addEntry(const u64 Key, int  value, int depth);
 	entry& getEntry(const u64 Key);
+	int getValue(const u64 key) const;
 
 	void inline setBoundFlags(const u64 key, valueType);
 };

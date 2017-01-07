@@ -43,9 +43,10 @@ public:
 	void makeMove(const Move&, color side);
 	void unMakeMove(const Move&, color side);
 	void updateAllAttacks();
+	bool isKingInCheck(color kingColor) const;
 
 	// Evaluation
-	int evaluate(color side, int depth);
+	int evaluate(color side);
 
 	// Misc
 	void print() const;

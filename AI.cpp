@@ -5,7 +5,7 @@ AI::AI(string FEN, color computerColor) : aiColor(computerColor)
 	genChessData data;
 	data.gen(); // Generates bitboards needed for move generation
 	chessBoard = Board(FEN);
-	transposition_hash = ZobristHash();
+	transposition_hash = ZobristHash(1e7);
 	debug();
 }
 
@@ -33,150 +33,184 @@ void AI::printDebug(string showPieces)
 
 void AI::Play()
 {
-	targetDepth = 8;
 	Root.reset(new Node());
+	chessBoard.updateAllAttacks();
 	// Builds gametree and determines best move and plays it
 	// Root == current board position with depth = 0
-	///for (;;) { 
-	///	// Loop until time is up or set maximum iteration 
-	///	// depth is reached (depends on game options) 
-	///	/// Call Negamax here
-	///	targetDepth++;
-	///}
-	auto bHash = chessBoard.hashKey;
-	auto bestValue = negaMax_Search(Root, -oo, oo, targetDepth, aiColor == black ? white : black);
+	Move bestMove;
+	for (targetDepth = 1; targetDepth < 5; ++targetDepth) {
+		bestMove = distributeNegaMax();
+	}
+	chessBoard.makeMove(bestMove, aiColor);
 	chessBoard.updateAllAttacks();
-	Root.reset(new Node());
-
-	assert(bHash == chessBoard.hashKey);
-	if(bestValue == oo)       cout << "Best Value =  Infinity" << endl;
-	else if(bestValue == -oo) cout << "Best Value = -Infinity" << endl;
-	else cout << "Best Value = " << bestValue << endl;
-	chessBoard.print();
 }
 
-/*
-int AI::negaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side)
+void AI::sortMoves(nodePtr& node, color side)
 {
-	// Calculates the minimax boardvalue of a certain position with the negaMax algorithm
-	// and stores the move that leads to this position (Principal variation).
-	int bestValue = -oo, boardValue; // Initialize worst case scenario
+	sort(node->moveList.begin(), node->moveList.end(), [this, side](const Move& move1, const Move& move2) {
+		chessBoard.makeMove(move1, side);
+		int val1 = transposition_hash.getValue(chessBoard.hashKey);
+		chessBoard.unMakeMove(move1, side);
+		chessBoard.makeMove(move2, side);
+		int val2 = transposition_hash.getValue(chessBoard.hashKey);
+		chessBoard.unMakeMove(move2, side);
+		return val1 < val2;
+	});
+}
 
-	if (depth == 0) { // Get value of leaf
-		if (transposition_hash.hasBetterEntry(chessBoard.hashKey, targetDepth - depth)) {
-			// Use pre-calculated value if it exists
-			transposition_hash.getEntry(chessBoard.hashKey, boardValue);
+Move AI::distributeNegaMax()
+{
+	// distributeNegaMax() distributes negamax to all children of the Root node
+	// and tracks the move value associated with the move
+	typedef pair<Move, int> moveValue;
+	static vector<moveValue> RootMoveList;
+	// If Root value has not been calculated for current position:
+	chessBoard.updateAllAttacks();
+	if (!(Root->nodeFlags & Node::Flags::explored)) {
+		// Generate moves for computer player
+		// The computer is the maximizing player
+		chessBoard.generateMoveList(Root->moveList, aiColor);
+
+		// Clean initial move list at Root
+		for (auto move = Root->moveList.begin(); move != Root->moveList.end();) {
+			chessBoard.makeMove(*move, aiColor);
+			chessBoard.updateAllAttacks();
+			if (chessBoard.isKingInCheck(aiColor)) {
+				// Black king is in check, invalid move
+				chessBoard.unMakeMove(*move, aiColor);
+				move = Root->moveList.erase(move);
+				continue;
+			}
+			chessBoard.unMakeMove(*move, aiColor);
+			move++;
+		}
+		if (Root->moveList.empty()) {
+			// End of game. Human wins :/
+			clog << "You win!\n";
+			return Move();
+		}
+		// combine moves with their values
+		RootMoveList = vector<moveValue>(Root->moveList.size(), moveValue(Move(), -oo));
+		for (int i = 0; i < RootMoveList.size(); ++i) {
+			Root->nodeList.push_back(nodePtr(new Node()));
+		}
+
+		for (int i = 0; i < Root->moveList.size(); ++i)
+			RootMoveList[i].first = Root->moveList[i];
+	}
+
+	// Distribute moves to NegaMax if needed
+	int moveIter = 0;
+	for (auto& move_val : RootMoveList) {
+		chessBoard.makeMove(move_val.first, aiColor);
+		chessBoard.updateAllAttacks();
+		auto entry = transposition_hash.getEntry(chessBoard.hashKey);
+		if (entry.search_depth >= targetDepth) {
+			// Move has been evaluated well enough before 
+			move_val.second = entry.value;
 		}
 		else {
-			// Else make new hash-entry and evaluate board
-			boardValue = chessBoard.evaluate(side, targetDepth - depth);
-			transposition_hash.addEntry(chessBoard.hashKey, boardValue, targetDepth - depth);
+			move_val.second = -NegaMax_Search(Root->nodeList[moveIter++], -oo, oo, targetDepth, aiColor == black ? white : black);
 		}
-		return boardValue;
+		chessBoard.unMakeMove(move_val.first, aiColor);
 	}
-	// Generate all semi-legal moves and iterate over them
-	chessBoard.generateMoveList(node->moveList, side);
-	for (auto move = node->moveList.begin(); move != node->moveList.end();) {
-		auto saveHash = chessBoard.hashKey;
-		chessBoard.makeMove(*move, side);
-		chessBoard.updateAllAttacks();
 
-		// Check if king is left in check
-		if (chessBoard.pieces[side == black ? bk : wk] 
-			& (side == black ? chessBoard.whiteAtt : chessBoard.blackAtt)) {
-			chessBoard.unMakeMove(*move, side);
-			if (chessBoard.hashKey != saveHash) cerr << moveString(*move) << endl;
-			move = node->moveList.erase(move);
-			if (node->moveList.empty()) {
-				// Checkmate
-				boardValue = oo; 
-			}
-			continue;
-		}
-		//if (node->moveList.empty()) {
-		//	// Stalemate, prefer mate over stalemate
-		//	boardValue = oo - 300000; 
-		//  continue;
-		//}
-		node->nodeList.push_back(nodePtr(new Node()));
-		boardValue = -negaMax_Search(node->nodeList.back(), -beta, -alpha, depth - 1, side == black ? white : black);
-		bestValue = max(bestValue, boardValue);
-		alpha = max(alpha, boardValue);
-		if (alpha == boardValue) {
-			// Alpha has increased 
-		}
+	auto bestMove = max_element(RootMoveList.begin(), RootMoveList.end(),
+		[](const moveValue move1, const moveValue move2) {
+		return move1.second < move2.second;
+	});
 
-		// Irrelevant subtree found ? 
-		if (alpha >= beta) {
-			// Skip examination of this subtree
-			chessBoard.unMakeMove(*move, side);
-			break;
-		}
-		chessBoard.unMakeMove(*move, side);
-		if (chessBoard.hashKey != saveHash) cerr << moveString(*move) << endl;
-		move++;
-	}
-	return bestValue;
+	Root->nodeFlags |= Node::Flags::explored;
+	printf("Best move for computer is %s with value %d\n", moveString(bestMove->first).c_str(), bestMove->second);
+	printf("From: %d, To: %d, type: %d, mpiece: %c tpiece: %c\n", bestMove->first.from,
+																  bestMove->first.to,
+																  bestMove->first.flags,
+																  names[move_piece(bestMove->first.Pieces)],
+																  names[target_piece(bestMove->first.Pieces)]);
+	return bestMove->first;
 }
-*/
 
-int AI::negaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side)
+int AI::NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side)
 {
-	int oldAlpha = alpha;
-
 	auto hashEntry = transposition_hash.getEntry(chessBoard.hashKey);
-	if (hashEntry.search_depth >= targetDepth-depth) {
-		if (hashEntry.flags & EXACT_VALUE)
+    int oldAlpha = alpha;
+
+	if (hashEntry.search_depth >= targetDepth - depth) { 
+		// If stored move value is of higher quality use 
+		// data from previous search
+		if (hashEntry.flags & EXACT_VALUE) {
 			return hashEntry.value;
-		else if (hashEntry.flags & LOWER_BOUND)
+		}
+		else if (hashEntry.flags & LOWER_BOUND) {
 			alpha = max(alpha, hashEntry.value);
-		else if (hashEntry.flags & UPPER_BOUND)
+		}
+		else if (hashEntry.flags & UPPER_BOUND) {
 			beta = min(beta, hashEntry.value);
-		if (alpha >= beta)
+		}
+		if (alpha >= beta) { // Alpha Beta Cutoff
+			node->nodeFlags |= Node::Flags::cutNode;
 			return hashEntry.value;
+		}
 	}
 
-	if (depth == 0)
-		return chessBoard.evaluate(side, targetDepth- depth);
-	
-	int bestValue = -oo, boardValue = 0;
-	chessBoard.generateMoveList(node->moveList, side);
+	if (depth == 0 || node->nodeFlags & Node::Flags::terminal)
+		return chessBoard.evaluate(side);
+
+	int bestValue = -oo, boardValue = -oo;
+
+	// Calculate all possible moves if necessary:
+	if (node->nodeFlags & Node::Flags::explored)
+		// Node already exists in memory and has children
+		sortMoves(node, side);
+	else 
+		chessBoard.generateMoveList(node->moveList, side);
 
 	for (auto move = node->moveList.begin(); move != node->moveList.end();) {
 		chessBoard.makeMove(*move, side);
 		chessBoard.updateAllAttacks();
-		if (chessBoard.pieces[side == black ? bk : wk]
-			& (side == black ? chessBoard.whiteAtt : chessBoard.blackAtt)) {
+		if (chessBoard.isKingInCheck(side)) {
+			// Invalid move: King left in check
 			chessBoard.unMakeMove(*move, side);
 			move = node->moveList.erase(move);
-			if (node->moveList.empty()) {
-				// Checkmate
-				boardValue = oo;
-			}
 			continue;
 		}
-		
+		// Move is legal, append:
 		node->nodeList.push_back(nodePtr(new Node()));
-		boardValue = -negaMax_Search(node->nodeList.back(), -beta, -alpha, depth - 1, side == black ? white : black);
+
+		boardValue = -NegaMax_Search(node->nodeList.back(), -beta, -alpha, depth - 1, side == black ? white : black);
 		bestValue = max(bestValue, boardValue);
 		alpha = max(alpha, boardValue);
-		if (alpha == boardValue) {
-			cerr << '.';
-		}
 		if (alpha >= beta) {
+			// Stop search, bad strategy encountered
+			node->nodeFlags |= Node::Flags::cutNode;
 			chessBoard.unMakeMove(*move, side);
 			break;
 		}
+
 		chessBoard.unMakeMove(*move, side);
 		move++;
 	}
+	node->nodeFlags |= Node::Flags::explored; // Moves can be sorted in next iteration (iterative deepening)
 
+	if (node->moveList.empty()) {
+		// This player has no possible legal moves
+		node->nodeFlags |= Node::Flags::terminal;
+		if(chessBoard.isKingInCheck(side))
+			 return -oo;          // Checkmate
+		else return -oo + 100000; // Stalemate, slightly better than being checkmated
+	}
+
+	// Initialize hash entry
 	hashEntry.value = bestValue;
-	if (bestValue <= oldAlpha) 
-		hashEntry.flags = (hashEntry.flags & 0x00FF) | UPPER_BOUND;
-	else if (bestValue >= beta)
-		hashEntry.flags  = (hashEntry.flags & 0x00FF) | LOWER_BOUND;
-	else hashEntry.flags = (hashEntry.flags & 0x00FF) | EXACT_VALUE;
+	if (bestValue < oldAlpha) {
+		hashEntry.flags = UPPER_BOUND;
+	}
+	else if (bestValue >= beta) {
+		hashEntry.flags = LOWER_BOUND;
+	}
+	else {
+		hashEntry.flags = EXACT_VALUE;
+	}
 	hashEntry.search_depth = targetDepth - depth;
 	return bestValue;
 }
@@ -192,4 +226,4 @@ Board* AI::getBoardPtr()
 	//return static_cast<const Board*>(&chessBoard);
 }
 
-AI::Node::Node(){}
+AI::Node::Node() : nodeFlags(0x0) {}

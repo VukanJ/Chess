@@ -3,10 +3,16 @@
 
 #include "misc.h"
 
-const u64 col    = 0x101010101010101ull;
-const u64 row    = 0xFFull;
-const u64 _right = 0x0101010101010101ull;
-const u64 _left  = 0x8080808080808080ull;
+constexpr u64 col        = 0x101010101010101ull;
+constexpr u64 row        = 0xFFull;
+constexpr u64 _right     = 0x0101010101010101ull;
+constexpr u64 _left      = 0x8080808080808080ull;
+constexpr u64 _col       = 0x101010101010101ull;
+constexpr u64 _row       = 0xFFull;
+constexpr u64 _noSides   = 0x7E7E7E7E7E7E7E7Eull;
+constexpr u64 _sidesOnly = 0x8181818181818181ull;
+
+constexpr u64 _msb       = 0x1ull << 63; // Most significant bit
 
 class genChessData final
 {

@@ -412,123 +412,6 @@ void Benchmark::summarize()
 	clog << "\t::: END OF SUMMARY :::\n" << string(80, '~') << '\n';
 }
 
-void UnitTest::testTreeStructure()
-{
-	AI ai("r4rk1/p2nbp1p/1qp1bpp1/3p4/3P4/2NBPN2/PPQ2PPP/R4RK1 w - 1 0", white);
-	vector<Move> testList;
-	ai.chessBoard.generateMoveList(testList, black);
-	//for (auto& m : testList) {
-	//	cout << moveString(m) << endl;
-	//}
-	//for (int i = 0; i < 12; i++) {
-	//	if (ai.chessBoard.pieces[i])
-	//		printBitboardFigAttack(ai.chessBoard.pieces[i], ai.chessBoard.attacks[i], names[i]);
-	//}
-	cin.ignore();
-	clog << string(8, '~') << "::: Testing gameTree building :::" << string(8, '~') << '\n';
-	auto hashKey = ai.chessBoard.hashKey;
-	TestingTree gameTree(ai.chessBoard, 3);
-	// Measure time
-	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-	gameTree.buildGameTree(gameTree.Root, gameTree.targetDepth, white);
-	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-	printf("Execution time: %f\n", (double)chrono::duration_cast<chrono::milliseconds>(t2 - t1).count()/1000.0);
-
-	cout << gameTree.staticEvaluations << " static evaluations\n";
-
-	assert(hashKey == ai.chessBoard.hashKey);
-}
-
-UnitTest::TestingTree::TestingTree(Board& _chessBoard, int _targetDepth) : Root(nullptr), targetDepth(_targetDepth), chessBoard(_chessBoard)
-{
-	auto node = new Node(chessBoard.evaluate(white, 0));
-	Root.reset(node);
-	staticEvaluations = 0;
-}
-
-UnitTest::TestingTree::Node::Node(float _boardValue) : boardValue(_boardValue) {}
-
-void UnitTest::TestingTree::buildGameTree(unique_ptr<Node>& node, int depth, color side)
-{
-	if (chessBoard.castlingRights != 0x0) {
-		ERR:
-		cout << "Castling rights violated!!" << endl;
-		while (!debugMoveStack.empty()) {
-			cerr << moveString(debugMoveStack.top()) << " F: " << (int)debugMoveStack.top().from << ",T: " << (int)debugMoveStack.top().to
-				<< ",FF: " << (int)debugMoveStack.top().flags << ",P: " << names[move_piece(debugMoveStack.top().Pieces)] << ",Target: " << names[target_piece(debugMoveStack.top().Pieces)] << endl;
-			debugMoveStack.pop();
-		}
-		cin.ignore();
-		exit(1);
-	}
-	// Depth first search
-	// chessBoard.hashKey;
-	if (depth == 0) return;
-	if (node->moveList.size() == 0)
-		chessBoard.generateMoveList(node->moveList, side);
-	else {
-		int m = 0;
-		for (auto& move : node->moveList) {
-			// If already generated visit all nodes to targetdepth
-			chessBoard.makeMove(move, side);
-			if (chessBoard.castlingRights != 0) goto ERR;
-			debugMoveStack.push(move);
-			//cout << string(depth, '+') << ": " << moveString(move) << endl;
-			buildGameTree(node->nodeList[m++], depth - 1, side == black ? white : black);
-			chessBoard.unMakeMove(move, side);
-			if (chessBoard.castlingRights != 0) goto ERR;
-			debugMoveStack.pop();
-		}
-	}
-	for (auto move = node->moveList.begin(); move != node->moveList.end();) {
-		// Play moves, check if mate. If not: append to tree, goto new node
-		auto key = chessBoard.hashKey;
-		//cout << string(depth, '+') << ": " << moveString(*move) << endl;
-		chessBoard.makeMove(*move, side);
-		if (chessBoard.castlingRights != 0) goto ERR;
-		debugMoveStack.push(*move);
-		if ((chessBoard.pieces[side == black ? bk : wk]) & (side == black ? chessBoard.whiteAtt : chessBoard.blackAtt)) {
-			chessBoard.unMakeMove(*move, side);
-			if (chessBoard.castlingRights != 0) goto ERR;
-			debugMoveStack.pop();
-			if (key != chessBoard.hashKey) {
-				//cout << "Move Error with move " << moveString(*move) << "at depth " << depth << endl;
-				traceback();
-				chessBoard.print();
-				cin.ignore();
-				exit(1);
-			}
-			move = node->moveList.erase(move);
-			continue;
-		}
-		else {
-			node->nodeList.push_back(unique_ptr<Node>(new Node(chessBoard.evaluate(side, targetDepth - depth))));
-			staticEvaluations++;
-			buildGameTree(node->nodeList.back(), depth - 1, side == black ? white : black);
-			chessBoard.unMakeMove(*move, side);
-			if (chessBoard.castlingRights != 0) goto ERR;
-			debugMoveStack.pop();
-			if (key != chessBoard.hashKey) {
-				cout << "Move Error with move " << moveString(*move) << "at depth " << depth << endl;
-				traceback();
-				chessBoard.print();
-				cin.ignore();
-				exit(1);
-			}
-			move++;
-		}
-	}
-}
-
-void UnitTest::TestingTree::traceback()
-{
-	cerr << "+++ Traceback +++\n";
-	while (!debugMoveStack.empty()) {
-		cerr << moveString(debugMoveStack.top()) << endl;
-		debugMoveStack.pop();
-	}
-}
-
 void UnitTest::specialTest()
 {
 	AI ai("8/b1b5/1P2n1b1/1P3P11/8 w - 1 0", black);
@@ -574,7 +457,7 @@ int UnitTest::MinimalTree::buildGameTreeMinimax(int depth, color side)
 	// Even depths correspond to maximizing player (computer)
 	bool isMax = side == computerColor;
 
-	if (depth == 0) return chessBoard.evaluate(side, targetDepth - depth);
+	if (depth == 0) return chessBoard.evaluate(side);
 	vector<Move> moveList;
 	int bestValue = isMax ? -oo: +oo;
 	int testValue;
@@ -610,7 +493,7 @@ void UnitTest::testEvaluation()
 {
 	{
 		AI ai("*", white);
-		assert(ai.chessBoard.evaluate(black, 0) == ai.chessBoard.evaluate(white, 0)); // Symmetric position
+		assert(ai.chessBoard.evaluate(black) == ai.chessBoard.evaluate(white)); // Symmetric position
 	}
 	AI ai("3q1rk1/pp4bp/3p1p2/3N1pB1/2r5/1N6/PPPQ3P/1K5R w - 1 0", white);
 	//cout << "Score (w)" << ai.chessBoard.evaluate(white) << endl;

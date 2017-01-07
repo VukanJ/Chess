@@ -10,12 +10,6 @@
 
 using namespace std;
 
-const u64 _msb       = 0x11ull << 63;
-const u64 _col       = 0x101010101010101ull;
-const u64 _row       = 0xFFull;
-const u64 _noSides   = 0x7E7E7E7E7E7E7E7Eull;
-const u64 _sidesOnly = 0x8181818181818181ull;
-
 const string names = "prnbkqPRNBKQ";
 
 static void printBits(byte num)

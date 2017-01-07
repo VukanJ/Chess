@@ -1,6 +1,7 @@
 #ifndef AI_H
 #define AI_H
 #include <iostream>
+#include <cstdio>
 #include <string>
 #include <algorithm>
 #include <memory>
@@ -15,7 +16,7 @@ using namespace std;
 Computer is always maximizing player.
 */
 
-const unsigned int targetDepth = 1;
+constexpr unsigned int MAX_DEPTH = 64;
 
 class AI
 {
@@ -38,11 +39,22 @@ private:
 		Node();
 		vector<Move> moveList;
 		vector<nodePtr> nodeList;
+		byte nodeFlags;
+		enum Flags {
+			explored = 0x1,
+			leaf     = 0x2,
+			terminal = 0x4,
+			cutNode  = 0x8
+		};
 	};
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Master function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-	int negaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side);
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Master functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+	Move distributeNegaMax();
+	int NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side);
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+	
 	// TODO: Implement NegaScout instead of negaMax
+
+	void sortMoves(nodePtr&, color side);
 
 	nodePtr Root;
 	Board chessBoard;
@@ -59,6 +71,7 @@ public:
 	
 	void debug();
 	const Board& getBoardRef();
+
 	Board* getBoardPtr();
 
 	// Piece color of computer

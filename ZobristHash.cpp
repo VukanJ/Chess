@@ -30,12 +30,19 @@ ZobristHash::entry& ZobristHash::getEntry(const u64 key)
 	return entries[index];
 }
 
+int ZobristHash::getValue(const u64 key) const
+{
+	auto index = key % hashSize;
+	return entries[index].value;
+}
+
+// Probably not needed:
 void inline ZobristHash::setBoundFlags(const u64 key, valueType vt) 
 {
 	auto index = key % hashSize;
-	entries[index].flags = (entries[index].flags & 0x00FF) | vt;
+	entries[index].flags = vt;
 }
 
 // struct entry
 
-ZobristHash::entry::entry() : value(0), search_depth(-1), flags(0x0) {}
+ZobristHash::entry::entry() : value(-oo), search_depth(-1), flags(0x0) {}
