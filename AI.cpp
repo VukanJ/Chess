@@ -46,7 +46,7 @@ void AI::Play(sf::RenderWindow& window)
 	// Builds gametree and determines best move and plays it
 	// Root == current board position with depth = 0
 	pair<Move, int> bestMove;
-	for (targetDepth = 1; targetDepth < 2; ++targetDepth) {
+	for (targetDepth = 1; targetDepth < 6; ++targetDepth) {
 		bestMove = distributeNegaMax();
 		gui->visualizeScore(bestMove.second);
 		gui->render(window);

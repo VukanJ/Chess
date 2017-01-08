@@ -904,6 +904,7 @@ bool Board::isKingInCheck(color kingColor) const
 
 int Board::evaluate(color side)
 {
+	float endGameValue = 16.0f / (16.0f - min(popcount(whitePos), popcount(blackPos)));
 	// Returns the relative heuristic value of the board for the white player
 	// Score of black is the negative of white's score
 	int total_boardValue = 0;
@@ -922,7 +923,43 @@ int Board::evaluate(color side)
 		              + 300 * (popcount(pieces[wn]) - popcount(pieces[bn]))
 		              + 100 * (popcount(pieces[wp]) - popcount(pieces[bp]));
 	// ~~~ Position ~~~
-	// Rewards points, if positions are similar to piece-square-heuristics (WIP)
+	// Rewards points, if positions are similar to piece-square-heuristics
+	// Pawns:
+	u64 mask = pieces[wp];
+	BITLOOP(pos, mask)
+		total_boardValue += pieceSquareTable[0][63 - pos];
+	mask = pieces[bp];
+	BITLOOP(pos, mask)
+		total_boardValue -= pieceSquareTable[0][pos];
+	mask = pieces[wn];
+	BITLOOP(pos, mask)
+		total_boardValue += pieceSquareTable[1][63 - pos];
+	mask = pieces[bn];
+	BITLOOP(pos, mask)
+		total_boardValue -= pieceSquareTable[1][pos];
+	mask = pieces[wb];
+	BITLOOP(pos, mask)
+		total_boardValue += pieceSquareTable[2][63 - pos];
+	mask = pieces[bb];
+	BITLOOP(pos, mask)
+		total_boardValue -= pieceSquareTable[2][pos];
+
+	if (endGameValue > 0.8) {
+		mask = pieces[wk];
+		BITLOOP(pos, mask)
+			total_boardValue += pieceSquareTable[4][63 - pos];
+		mask = pieces[bk];
+		BITLOOP(pos, mask)
+			total_boardValue -= pieceSquareTable[4][pos];
+	}
+	else {
+		mask = pieces[wk];
+		BITLOOP(pos, mask)
+			total_boardValue += pieceSquareTable[3][63 - pos];
+		mask = pieces[bk];
+		BITLOOP(pos, mask)
+			total_boardValue -= pieceSquareTable[3][pos];
+	}
 
 	// ~~~ Mobility ~~~
 	// Determines how many squares are under attack, worth 10 cp each
@@ -931,13 +968,13 @@ int Board::evaluate(color side)
 	BLACKLOOP(i) mobility -= popcount(attacks[i] ^ whitePos);
 	total_boardValue += mobility * 10;
 	mobility = 0;
-	// Measure "hostiliy":
+	// Measure "hostiliy" number of attacked pieces of opponent. 15cp each
 	WHITELOOP(i) mobility += popcount(attacks[i] & blackPos);
 	BLACKLOOP(i) mobility += popcount(attacks[i] & whitePos);
 	total_boardValue += mobility * 15;
 	// ~~~ Blocked Pawns ~~~
-	// Determines how many pawns are blocked per player color, penalty of 2 cp for each
-	total_boardValue += 2 * (popcount((pieces[bp] >> 8) & allPos)
+	// Determines how many pawns are blocked per player color, penalty of 4 cp for each
+	total_boardValue += 4 * (popcount((pieces[bp] >> 8) & allPos)
 						   - popcount((pieces[wp] << 8) & allPos));
 
 	// ~~~ King safety ~~~
@@ -945,7 +982,9 @@ int Board::evaluate(color side)
 	// reduces number of possible moves
 	if (pieces[bk] & whiteAtt)      total_boardValue += 250;
 	else if (pieces[wk] & blackAtt) total_boardValue -= 250;
-	// Does king have a pawn shield? 
+	// Does king have a pawn shield?
+
+	//popcount(bitScan_rev64(pieces[wk]) & (pieces[wp]));
 
 	// Are nearby squares of king attacked? 
 
