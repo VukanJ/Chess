@@ -1,12 +1,14 @@
 #include "AI.h"
 
-AI::AI(string FEN, color computerColor) : aiColor(computerColor)
+AI::AI(string FEN, color computerColor) 
+	: aiColor(computerColor)
 {
 	genChessData data;
 	data.gen(); // Generates bitboards needed for move generation
 	chessBoard = Board(FEN);
 	transposition_hash = ZobristHash(1e7);
-	debug();
+	guiActive = false; // Not active for testing purposes.
+	//debug();
 }
 
 void AI::debug()
@@ -17,6 +19,12 @@ void AI::debug()
 void AI::printBoard()
 {
 	chessBoard.print();
+}
+
+void AI::bindGui(Gui* guiPtr)
+{
+	gui = guiPtr;
+	guiActive = true;
 }
 
 void AI::printDebug(string showPieces)
@@ -31,18 +39,23 @@ void AI::printDebug(string showPieces)
 	}
 }
 
-void AI::Play()
+void AI::Play(sf::RenderWindow& window)
 {
 	Root.reset(new Node());
 	chessBoard.updateAllAttacks();
 	// Builds gametree and determines best move and plays it
 	// Root == current board position with depth = 0
-	Move bestMove;
-	for (targetDepth = 1; targetDepth < 5; ++targetDepth) {
+	pair<Move, int> bestMove;
+	for (targetDepth = 1; targetDepth < 2; ++targetDepth) {
 		bestMove = distributeNegaMax();
+		gui->visualizeScore(bestMove.second);
+		gui->render(window);
+		window.display();
 	}
-	chessBoard.makeMove(bestMove, aiColor);
+	chessBoard.makeMove(bestMove.first, aiColor);
 	chessBoard.updateAllAttacks();
+
+	gui->visualizeLastMove(bestMove.first);
 }
 
 void AI::sortMoves(nodePtr& node, color side)
@@ -58,11 +71,11 @@ void AI::sortMoves(nodePtr& node, color side)
 	});
 }
 
-Move AI::distributeNegaMax()
+pair<Move, int> AI::distributeNegaMax()
 {
+	typedef pair<Move, int> moveValue;
 	// distributeNegaMax() distributes negamax to all children of the Root node
 	// and tracks the move value associated with the move
-	typedef pair<Move, int> moveValue;
 	static vector<moveValue> RootMoveList;
 	// If Root value has not been calculated for current position:
 	chessBoard.updateAllAttacks();
@@ -87,7 +100,7 @@ Move AI::distributeNegaMax()
 		if (Root->moveList.empty()) {
 			// End of game. Human wins :/
 			clog << "You win!\n";
-			return Move();
+			return moveValue(Move(), 0);
 		}
 		// combine moves with their values
 		RootMoveList = vector<moveValue>(Root->moveList.size(), moveValue(Move(), -oo));
@@ -127,7 +140,7 @@ Move AI::distributeNegaMax()
 																  bestMove->first.flags,
 																  names[move_piece(bestMove->first.Pieces)],
 																  names[target_piece(bestMove->first.Pieces)]);
-	return bestMove->first;
+	return *bestMove;
 }
 
 int AI::NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side)

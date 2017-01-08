@@ -1,5 +1,6 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
+#include <SFML/Window/ContextSettings.hpp>
 
 #include "info.h"
 #include "AI.h"
@@ -27,14 +28,14 @@ int main()
 	//AI computer("81p1p1p1p8PPPNNN7pPp53p1P8 w - 1 0", black);
 	//AI computer("1rr4r/2r2rrr/r1r2rr1/8/rR3R2/6R1/RRR2RRR/1R1RR111 w - 1 0", black);
 
-	AI computer("rnbqkbnr/pppppppp/8888/PPPPPPPP/RNBQKBNR w - 1 0", black);
+	//AI computer("rnbqkbnr/pppppppp/8888/PPPPPPPP/RNBQKBNR w - 1 0", black);
 
 	//AI computer("4r3/7q/nb2prRp/pk1p3P/3P4/P7/1P2N1P1/1K1B1N2 w - 1 0", black); // Mate in 5
 
 	//AI computer("8/b1b5/1P2n1b1/1P3P11/8887R w - 1 0", black);
 
 	//AI computer("2Q5/4b1k1/1Pp2rPp/2q5/4Bn2/pppp4/P6P/6RK w - 1 0", black);
-	//AI computer("rk5r/pp1Q1p1p/1q1p1N2/88/6P1/PP3PBP/2R3K1 w - 1 0", white); // Mate in 2 puzzle
+	AI computer("rk5r/pp1Q1p1p/1q1p1N2/88/6P1/PP3PBP/2R3K1 w - 1 0", black); // Mate in 2 puzzle
 
 	//AI computer("* w kKqQ 1 0", black);
 
@@ -44,12 +45,19 @@ int main()
 	//computer.Play();
 
 #ifdef GUI_MODE
-	sf::RenderWindow window(sf::VideoMode(800, 600), "Chess GUI", sf::Style::Close);
+	sf::RenderWindow window(sf::VideoMode(800, 600), "Chess GUI", sf::Style::Close, sf::ContextSettings(0, 0, 3));
 	window.setFramerateLimit(60);
 
 	Gui gui(computer, computer.aiColor);
-	computer.printBoard();
+
+	computer.bindGui(&gui);
+
+	float frameTime = 0;
+
+	sf::Clock clock;
+
 	while (window.isOpen()){
+		frameTime = clock.restart().asSeconds();
 		sf::Event ev;
 		while (window.pollEvent(ev)){
 			switch (ev.type){
@@ -74,12 +82,13 @@ int main()
 						// Human player played a valid move
 						gui.render(window);
 						window.display();
-						computer.Play();
+						computer.Play(window);
 					}
 					break;
 			}
 		}
 		window.clear(sf::Color::Black);
+		gui.update(frameTime);
 		gui.render(window);
 		window.display();
 	}

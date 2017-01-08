@@ -1,8 +1,10 @@
+#define _USE_MATH_DEFINES
 #ifndef GUI_H
 #define GUI_H
 
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <cmath>
 #include <vector>
 #include <string>
 
@@ -14,14 +16,50 @@ using namespace std;
 
 extern const unsigned int WIDTH, HEIGHT;
 
+class AI;
+
 class Gui
 {
 public:
 	Gui(AI& _ai, color aiColor);
 
+	void update(float frameTime);
 	void render(sf::RenderWindow& window);
 	bool handleEvent(sf::Event& ev, sf::RenderWindow& window);
+	void visualizeScore(int ChessScore);
+	void visualizeLastMove(const Move& move);
 private:
+	class ScoreGauge
+	{
+	public:
+		// Visual representation of the score
+		ScoreGauge();
+		void update(int ChessScore, color side);
+		void render(sf::RenderWindow& window);
+	private:
+		sf::Font font;
+		sf::Text scoreText;
+		sf::ConvexShape blackSide;
+		sf::ConvexShape whiteSide;
+		sf::CircleShape midCircle;
+		//sf::RectangleShape hide;
+		sf::Vector2f origin;
+	} scoreGauge;
+	
+	class Arrow {
+		// Arrow shows last move of computer
+	public:
+		Arrow();
+		void setMove(const Move& move);
+		void update(float frameTime);
+		void render(sf::RenderWindow& window);
+		float fadelevel;
+	private:
+		float elapsedTime;
+		sf::RectangleShape arrowBody;
+		sf::ConvexShape    arrowHead;
+	} guiArrow;
+
 	struct UserInput {
 		int from;
 		bool pieceSelected;
