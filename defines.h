@@ -59,9 +59,9 @@ byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 		return (x >> n) | (x << (64 - n));
 	}
 
-	#define BITLOOP(pos, mask) for (ulong pos = bitScan_rev64(pos, (mask)); \
-																	bitScan_rev64(pos, (mask)); \
-																	(mask) ^= 0x1ull << pos)
+	#define BITLOOP(__pos, mask) for(ulong __pos = bitScan_rev64(__pos, mask); \
+																	mask; mask ^= bit_at(bitScan_rev64(__pos, mask)), __pos = bitScan_rev64(__pos, mask))
+
 #endif
 
 // For increasing readability:
