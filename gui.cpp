@@ -57,6 +57,11 @@ Gui::Gui(AI& _ai, color aiColor) : chessBoard(_ai.chessBoard)
 	textDisplays[moveListText].setCharacterSize(10);
 }
 
+void Gui::update(float frametime)
+{
+	guiArrow.update(frametime);
+}
+
 void Gui::render(sf::RenderWindow& window)
 {
 	window.draw(boardspr);
@@ -81,10 +86,12 @@ void Gui::render(sf::RenderWindow& window)
 		}
 		pieceIndex++;
 	}
-	for (auto& text : textDisplays) {
-		window.draw(text);
-	}
+	//for (auto& text : textDisplays) {
+	//	window.draw(text);
+	//}
 	debugDrawSquareNumering(window);
+	scoreGauge.render(window);
+	guiArrow.render(window);
 }
 
 bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
@@ -135,6 +142,7 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				else {
 					chessBoard.makeMove(user_GUI_Move, humanColor);
 					chessBoard.updateAllAttacks();
+
 					//chessBoard.print();
 					movePlayed = true;
 				}
@@ -190,14 +198,14 @@ bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
 	chessBoard.generateMoveList(possibleMoves, humanColor);
 	chessBoard.generateMoveList(opponentPossibleMoves, humanColor == black ? white : black); // For Debugging
 
-	string moveStringList;
-	for (int i = 0; i < max(opponentPossibleMoves.size(), possibleMoves.size()); i++) {
-		if (i >= possibleMoves.size()) moveStringList += "   \t";
-		else moveStringList += moveString(possibleMoves[i]) + '\t';
-		if (i >= opponentPossibleMoves.size()) moveStringList += "   \n";
-		else moveStringList += moveString(opponentPossibleMoves[i]) + '\n';
-	}
-	textDisplays[moveListText].setString(moveStringList);
+	//string moveStringList;
+	//for (int i = 0; i < max(opponentPossibleMoves.size(), possibleMoves.size()); i++) {
+	//	if (i >= possibleMoves.size()) moveStringList += "   \t";
+	//	else moveStringList += moveString(possibleMoves[i]) + '\t';
+	//	if (i >= opponentPossibleMoves.size()) moveStringList += "   \n";
+	//	else moveStringList += moveString(opponentPossibleMoves[i]) + '\n';
+	//}
+	//textDisplays[moveListText].setString(moveStringList);
 
 	vector<Move>::iterator matchingMove = find_if(possibleMoves.begin(), possibleMoves.end(), [&](Move& pmove) {
 		if (inputMove.flags == WCASTLE   || 
@@ -288,5 +296,130 @@ void Gui::debugDrawSquareNumering(sf::RenderWindow& window)
 		Sq_Number.setString(to_string(i));
 		Sq_Number.setPosition(sf::Vector2f(((63 - i) % 8) * size, ((63 - i) / 8) * size));
 		window.draw(Sq_Number);
+	}
+}
+
+void Gui::visualizeScore(int ChessScore)
+{
+	scoreGauge.update(ChessScore, humanColor == black ? white : black);
+}
+
+void Gui::visualizeLastMove(const Move& move)
+{
+	guiArrow.setMove(move);
+}
+
+Gui::ScoreGauge::ScoreGauge()
+{
+	if (!font.loadFromFile("FiraMono-Regular.otf")) {
+		cerr << "Font File not found!\nAborting" << endl;
+		cin.ignore();
+		exit(1);
+	}
+	// Gauge position = origin
+	origin = sf::Vector2f(700, 600);
+	// Init Text
+	scoreText.setFont(font);
+	scoreText.setString("0");
+	scoreText.setPosition(origin.x-30, origin.y-30);
+	scoreText.setCharacterSize(24);
+	scoreText.setFillColor(sf::Color::White);
+	// Init black circle
+	midCircle = sf::CircleShape(50, 30);
+	midCircle.setFillColor(sf::Color::Black);
+	midCircle.setOrigin(50, 50);
+	midCircle.setPosition(origin);
+	// Init gauge
+	whiteSide.setPointCount(32);
+	blackSide.setPointCount(32);
+	whiteSide.setOrigin(origin);
+	blackSide.setOrigin(origin);
+	whiteSide.setPosition(origin);
+	blackSide.setPosition(origin);
+	whiteSide.setPoint(0, origin);
+	blackSide.setPoint(0, origin);
+
+	whiteSide.setFillColor(sf::Color::White);
+	blackSide.setFillColor(sf::Color(60, 60, 60));
+
+	int c = 1;
+	for (float alpha = 0; alpha <= M_PI; alpha += M_PI / 30) {
+		whiteSide.setPoint(c, sf::Vector2f(90  * cos(alpha + M_PI_2) + origin.x, -90 * sin(alpha + M_PI_2) + origin.y));
+		blackSide.setPoint(c, sf::Vector2f(-90 * cos(alpha + M_PI_2) + origin.x, -90 * sin(alpha + M_PI_2) + origin.y));
+		c++;
+	}
+}
+
+void Gui::ScoreGauge::update(int ChessScore, color side)
+{
+	scoreText.setString(to_string(-ChessScore));
+	scoreText.setFillColor(abs(ChessScore) >= 1000 ? sf::Color::Red : sf::Color::White);
+	float angle = 0;
+	if (abs(ChessScore) == oo) {
+		if (ChessScore < 0) {
+			angle = 90;
+			scoreText.setString("-inf");
+		}
+		else {
+			angle = -90;
+			scoreText.setString("inf");
+		}
+	}
+	else {
+		float logChessScore = log10(1 + (float)abs(ChessScore) / 13);
+		angle = (logChessScore / 3) * 90;
+		if (ChessScore < 0) angle *= -1;
+		if (side == black)  angle *= -1;
+	}
+	whiteSide.setRotation(angle);
+	blackSide.setRotation(angle);
+}
+
+void Gui::ScoreGauge::render(sf::RenderWindow& window)
+{
+	window.draw(whiteSide);
+	window.draw(blackSide);
+	window.draw(midCircle);
+	window.draw(scoreText);
+	//window.draw(hide);
+}
+
+Gui::Arrow::Arrow()
+{
+	arrowBody.setFillColor(sf::Color(0, 0, 255, 200));
+	arrowHead.setFillColor(sf::Color(0, 0, 255, 200));
+	fadelevel = 200; // Fades out
+}
+
+void Gui::Arrow::setMove(const Move& move)
+{
+	elapsedTime = 0;
+	fadelevel = 200;
+	if (!(move.flags & BCASTLE || move.flags & WCASTLE
+		|| move.flags & BCASTLE_2 || move.flags & WCASTLE_2)) {
+	sf::Vector2f from = sf::Vector2f(7.0 - move.from % 8, 8.0 - move.from / 8.0) * (HEIGHT / 8.0f);
+	sf::Vector2f   to = sf::Vector2f(7.0 - move.to   % 8, 8.0 - move.to   / 8.0) * (HEIGHT / 8.0f);
+	sf::Vector2f connect(to.x - from.x, to.y - from.y);
+	float distance = sqrt(pow(connect.x, 2) + pow(connect.y, 2));
+	float angle = atan(connect.y / connect.x);
+	arrowBody.setSize(sf::Vector2f(distance, 10));
+	arrowBody.setOrigin(distance / 2, 5);
+	arrowBody.setPosition(from + sf::Vector2f(connect.x / 2 + HEIGHT / 16, connect.y / 2));
+	arrowBody.setRotation(angle / M_PI * 180);
+	}
+}
+
+void Gui::Arrow::update(float frameTime)
+{
+	elapsedTime += frameTime;
+	fadelevel = 200 - (elapsedTime / 5.0f) * 200; // Fades out after 5 seconds
+	arrowBody.setFillColor(sf::Color(0, 0, 255, fadelevel));
+	arrowHead.setFillColor(sf::Color(0, 0, 255, fadelevel));
+}
+
+void Gui::Arrow::render(sf::RenderWindow& window)
+{
+	if (fadelevel > 0) {
+		window.draw(arrowBody);
 	}
 }

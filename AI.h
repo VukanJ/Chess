@@ -8,6 +8,7 @@
 #include <stack>
 
 #include "Board.h"
+#include "Gui.h"
 
 using namespace std;
 
@@ -24,9 +25,11 @@ friend class Benchmark;
 friend class UnitTest;
 friend class Gui;
 class Node;
+
 typedef unique_ptr<AI::Node> nodePtr;
 private:
 	enum moveOrdering{
+		// Currently unused
 		QUIET,
 		CAPTURE,
 		PV_MOVE,
@@ -48,7 +51,7 @@ private:
 		};
 	};
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Master functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-	Move distributeNegaMax();
+	pair<Move, int> distributeNegaMax();
 	int NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side);
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	
@@ -62,12 +65,15 @@ private:
 	int targetDepth; // Needed for iterative deepening
 
 	ZobristHash transposition_hash;
+	Gui* gui;
+	bool guiActive;
 public:
 	AI(string FEN, color computerColor);
 	void printDebug(string show = "prnbkqPRNBKQ");
 	void printBoard();
+	void bindGui(Gui* gui);
 
-	void Play(); // Play
+	void Play(sf::RenderWindow& window); // Play
 	
 	void debug();
 	const Board& getBoardRef();
