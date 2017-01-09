@@ -904,71 +904,78 @@ bool Board::isKingInCheck(color kingColor) const
 
 int Board::evaluate(color side)
 {
-	float endGameValue = 16.0f / (16.0f - min(popcount(whitePos), popcount(blackPos)));
 	// Returns the relative heuristic value of the board for the white player
 	// Score of black is the negative of white's score
+
+	// Endgamevalue determined by minimum number of piecer per player
+	float endGameValue = 1 - 1.0f / 16.0f * min(popcount(whitePos), popcount(blackPos));
 	int total_boardValue = 0;
+
+	// *************************** MATERIAL ***************************
 	/* Material values in units of centipawns (cp):
 	 * Queen  -> 900 cp 
 	 * Rook   -> 500 cp
-	 * Knight -> 300 cp
 	 * Bishop -> 300 cp
+	 * Knight -> 300 cp
 	 * Pawn   -> 100 cp
 	 * King   ->   0 cp
 	 */
-	// ~~~ Material ~~~
 	total_boardValue += 900 * (popcount(pieces[wq]) - popcount(pieces[bq]))
 		              + 500 * (popcount(pieces[wr]) - popcount(pieces[br]))
 		              + 300 * (popcount(pieces[wb]) - popcount(pieces[bb]))
 		              + 300 * (popcount(pieces[wn]) - popcount(pieces[bn]))
 		              + 100 * (popcount(pieces[wp]) - popcount(pieces[bp]));
-	// ~~~ Position ~~~
+
+	// *************************** POSITION ***************************
+
 	// Rewards points, if positions are similar to piece-square-heuristics
 	// Pawns:
+	int psh = 0;
 	u64 mask = pieces[wp];
 	BITLOOP(pos, mask)
-		total_boardValue += pieceSquareTable[0][63 - pos];
+		psh += pieceSquareTable[0][63 - pos];
 	mask = pieces[bp];
 	BITLOOP(pos, mask)
-		total_boardValue -= pieceSquareTable[0][pos];
+		psh -= pieceSquareTable[0][pos];
 	mask = pieces[wn];
 	BITLOOP(pos, mask)
-		total_boardValue += pieceSquareTable[1][63 - pos];
+		psh += pieceSquareTable[1][63 - pos];
 	mask = pieces[bn];
 	BITLOOP(pos, mask)
-		total_boardValue -= pieceSquareTable[1][pos];
+		psh -= pieceSquareTable[1][pos];
 	mask = pieces[wb];
 	BITLOOP(pos, mask)
-		total_boardValue += pieceSquareTable[2][63 - pos];
+		psh += pieceSquareTable[2][63 - pos];
 	mask = pieces[bb];
 	BITLOOP(pos, mask)
-		total_boardValue -= pieceSquareTable[2][pos];
+		psh -= pieceSquareTable[2][pos];
 
 	if (endGameValue > 0.8) {
 		mask = pieces[wk];
 		BITLOOP(pos, mask)
-			total_boardValue += pieceSquareTable[4][63 - pos];
+			psh += pieceSquareTable[4][63 - pos];
 		mask = pieces[bk];
 		BITLOOP(pos, mask)
-			total_boardValue -= pieceSquareTable[4][pos];
+			psh -= pieceSquareTable[4][pos];
 	}
 	else {
 		mask = pieces[wk];
 		BITLOOP(pos, mask)
-			total_boardValue += pieceSquareTable[3][63 - pos];
+			psh += pieceSquareTable[3][63 - pos];
 		mask = pieces[bk];
 		BITLOOP(pos, mask)
-			total_boardValue -= pieceSquareTable[3][pos];
+			psh -= pieceSquareTable[3][pos];
 	}
+	total_boardValue += psh / 10;
 
-	// ~~~ Mobility ~~~
-	// Determines how many squares are under attack, worth 10 cp each
+	// *************************** MOBILITY ***************************
+	// Determines how many squares are accessible, worth 10 cp each
 	int mobility = 0;
 	WHITELOOP(i) mobility += popcount(attacks[i] ^ blackPos);
 	BLACKLOOP(i) mobility -= popcount(attacks[i] ^ whitePos);
 	total_boardValue += mobility * 10;
 	mobility = 0;
-	// Measure "hostiliy" number of attacked pieces of opponent. 15cp each
+	// Measure "hostiliy" = number of attacked pieces of opponent. 15cp each
 	WHITELOOP(i) mobility += popcount(attacks[i] & blackPos);
 	BLACKLOOP(i) mobility += popcount(attacks[i] & whitePos);
 	total_boardValue += mobility * 15;
@@ -977,18 +984,30 @@ int Board::evaluate(color side)
 	total_boardValue += 4 * (popcount((pieces[bp] >> 8) & allPos)
 						   - popcount((pieces[wp] << 8) & allPos));
 
-	// ~~~ King safety ~~~
+	//*************************** KING SAFETY ***************************
 	// Penalty of 250 cp if king is in check, since it generally 
-	// reduces number of possible moves
+	// reduces number of possible moves.
 	if (pieces[bk] & whiteAtt)      total_boardValue += 250;
 	else if (pieces[wk] & blackAtt) total_boardValue -= 250;
-	// Does king have a pawn shield?
+	// ~~~ King freedom ~~~
+	// Measures number of fields the king can escape to. This should only be 
+	// active in the endgame -> Leads to a quicker checkmate and less transpositions
+	if (endGameValue > 0.5) {
+		//cout << "OK\n";
+		mask = pieces[wk];
+		for (int i = 0; i < 8; ++i) mask |= floodFill(mask, ~allPos, (dir)i);
+		total_boardValue += 10 * popcount(mask & ~blackAtt);
+		mask = pieces[bk];
+		for (int i = 0; i < 8; ++i) mask |= floodFill(mask, ~allPos, (dir)i);
+		total_boardValue -= 10 * popcount(mask & ~whiteAtt);
+	}
 
-	//popcount(bitScan_rev64(pieces[wk]) & (pieces[wp]));
+	// Pawn shield. Count number of pawns in front of kings in a 2x3 area 0x707
+	// Kings on the edges are not being rewarded points
 
-	// Are nearby squares of king attacked? 
+	total_boardValue += popcount((0x707ull >> (msb(pieces[wk] & _noSides) - 3)) & pieces[wp]);
+	total_boardValue -= popcount((0x707ull << (msb(pieces[bk] & _noSides) + 3)) & pieces[bp]);
 
-	// WIP: King safety, pawn structure, special penalties ?
 	return (side == white ? 1 : -1) * total_boardValue;
 }
 

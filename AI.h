@@ -8,7 +8,7 @@
 #include <stack>
 
 #include "Board.h"
-#include "Gui.h"
+#include "gui.h"
 
 using namespace std;
 
