@@ -35,11 +35,11 @@ Gui::Gui(AI& _ai, color aiColor) : chessBoard(_ai.chessBoard)
 
 	for (auto& p : pieces)
 		p.setScale(scale.x, scale.y);
-	
+
 	userInput.pieceSelected = false;
 	// sf::Text
 
-	if (!textFont.loadFromFile("lucon.ttf")) {
+	if (!textFont.loadFromFile("FiraMono-Regular.otf")) {
 		cout << "Font not found!\n";
 		exit(1);
 	}
@@ -121,7 +121,7 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 		assemble += 'h' - selectedSquare % 8;
 		assemble += '1' + selectedSquare / 8;
 
-		if (chessBoard.allPos & bit_at(selectedSquare)) { // User clicked on piece ? 
+		if (chessBoard.allPos & bit_at(selectedSquare)) { // User clicked on piece ?
 			for (int p = 0; p < 12; p++) {
 				if (chessBoard.pieces[p] & bit_at(selectedSquare)) {
 					pieceClicked = (piece)p;
@@ -190,10 +190,10 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 
 bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
 {
-	// Checks if selected move can be played. If it can, 
+	// Checks if selected move can be played. If it can,
 	// the needed move metadata is filled in correctly.
 	// -> Generates all possible moves and tries to find a match.
-	
+
 	vector<Move> possibleMoves, opponentPossibleMoves;
 	chessBoard.generateMoveList(possibleMoves, humanColor);
 	chessBoard.generateMoveList(opponentPossibleMoves, humanColor == black ? white : black); // For Debugging
@@ -208,9 +208,9 @@ bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
 	//textDisplays[moveListText].setString(moveStringList);
 
 	vector<Move>::iterator matchingMove = find_if(possibleMoves.begin(), possibleMoves.end(), [&](Move& pmove) {
-		if (inputMove.flags == WCASTLE   || 
-			inputMove.flags == WCASTLE_2 || 
-			inputMove.flags == BCASTLE   || 
+		if (inputMove.flags == WCASTLE   ||
+			inputMove.flags == WCASTLE_2 ||
+			inputMove.flags == BCASTLE   ||
 			inputMove.flags == BCASTLE_2) {
 			// Some type of castling
 			if (pmove.flags == inputMove.flags) { // Is castling side (and color) matching ?
@@ -228,13 +228,13 @@ bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
 				return true;
 			}
 			else if (inputMove.flags == MOVE && (target_piece(pmove.Pieces) == bq || target_piece(pmove.Pieces) == wq)) {
-				// Promotion ? 
+				// Promotion ?
 				if (pmove.flags & PROMOTION) {
 					return true;
 				}
 			}
 			else if (inputMove.flags == CAPTURE && (target_piece(pmove.Pieces) == bq || target_piece(pmove.Pieces) == wq)) {
-				// Promotion ? 
+				// Promotion ?
 				if (pmove.flags & C_PROMOTION) {
 					return true;
 				}

@@ -19,6 +19,8 @@ Computer is always maximizing player.
 
 constexpr unsigned int MAX_DEPTH = 64;
 
+class Gui;
+
 class AI
 {
 friend class Benchmark;
@@ -54,7 +56,7 @@ private:
 	pair<Move, int> distributeNegaMax();
 	int NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side);
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-	
+
 	// TODO: Implement NegaScout instead of negaMax
 
 	void sortMoves(nodePtr&, color side);
@@ -74,7 +76,7 @@ public:
 	void bindGui(Gui* gui);
 
 	void Play(sf::RenderWindow& window); // Play
-	
+
 	void debug();
 	const Board& getBoardRef();
 

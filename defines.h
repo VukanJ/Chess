@@ -51,6 +51,8 @@ byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 		 return index;
 	}
 
+	byte inline msb(u64 x) { ulong index; bitScan_rev64(index, x); return index; }
+
 	u64 inline rotate_l64(u64& x, uint n){
 		return (x << n) | (x >> (64 - n));
 	}
