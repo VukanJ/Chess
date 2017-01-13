@@ -8,7 +8,10 @@
 #include "ZobristHash.h"
 #include "Testing.h"
 
+
 // TODO: Write Testing function for Cprom
+// TODO: Track definite move history
+// TODO: The transposition table needs to store the best move for move ordering
 
 using namespace std;
 
@@ -23,18 +26,16 @@ int main()
 {
 	//sayHello();
 	//testing();
-	AI computer("4k37p888884K4 w - 1 0", black);
+	//AI computer("4k37p888884K4 w - 1 0", black);
 	//AI computer("r1b1r1k1/1p1n1p1p/2ppnqp1/4b3/p1P1P3/5P2/PPNQNBPP/1R2RBK1 w - 1 0",black);
 	//AI computer("81p1p1p1p8PPPNNN7pPp53p1P8 w - 1 0", black);
 	//AI computer("1rr4r/2r2rrr/r1r2rr1/8/rR3R2/6R1/RRR2RRR/1R1RR111 w - 1 0", black);
 
-	//AI computer("rnbqkbnr/pppppppp/8888/PPPPPPPP/RNBQKBNR w - 1 0", black);
+	//AI computer("rnbqkbnr/pppppppp/8888/PPPPPPPP/RNBQKBNR w - 1 0", white);
 
 	//AI computer("4r3/7q/nb2prRp/pk1p3P/3P4/P7/1P2N1P1/1K1B1N2 w - 1 0", black); // Mate in 5
 
-	//AI computer("r1b1k1n1/p1Pp1p1P/2n5/88/1PK1q3/P1P5/5q2 w - 1 0", black); // perpetual check bug
-
-	//AI computer("2Q5/4b1k1/1Pp2rPp/2q5/4Bn2/pppp4/P6P/6RK w - 1 0", black);
+	AI computer("2Q5/4b1k1/1Pp2rPp/2q5/4Bn2/pppp4/P6P/6RK w - 1 0", black);
 	//AI computer("rk5r/pp1Q1p1p/1q1p1N2/88/6P1/PP3PBP/2R3K1 w - 1 0", black); // Mate in 2 puzzle
 
 	//AI computer("* w kKqQ 1 0", black);
@@ -51,6 +52,7 @@ int main()
 	Gui gui(computer, computer.aiColor);
 
 	computer.bindGui(&gui);
+	//computer.Play(window);
 
 	float frameTime = 0;
 
