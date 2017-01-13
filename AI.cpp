@@ -49,6 +49,10 @@ void AI::Play(sf::RenderWindow& window)
 	pair<Move, int> bestMove;
 	for (targetDepth = 1; targetDepth < 5; ++targetDepth) {
 		bestMove = distributeNegaMax();
+		if (targetDepth == 1 && bestMove.second == oo) {
+			cout << "You Lose!\n" << endl;
+			break;
+		}
 		gui->visualizeScore(bestMove.second);
 		gui->render(window);
 		window.display();
@@ -104,7 +108,7 @@ pair<Move, int> AI::distributeNegaMax()
 			return moveValue(Move(), 0);
 		}
 		// combine moves with their values
-		RootMoveList = vector<moveValue>(Root->moveList.size(), moveValue(Move(), -oo));
+		RootMoveList = vector<moveValue>(Root->moveList.size(), moveValue(Move(), oo));
 		for (int i = 0; i < RootMoveList.size(); ++i) {
 			Root->nodeList.push_back(nodePtr(new Node()));
 		}
