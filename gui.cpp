@@ -142,6 +142,7 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				else {
 					chessBoard.makeMove(user_GUI_Move, humanColor);
 					chessBoard.updateAllAttacks();
+					lastMove = user_GUI_Move;
 
 					//chessBoard.print();
 					movePlayed = true;
@@ -161,6 +162,7 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				else {
 					chessBoard.makeMove(user_GUI_Move, humanColor);
 					chessBoard.updateAllAttacks();
+					lastMove = user_GUI_Move;
 					//chessBoard.print();
 					movePlayed = true;
 				}
@@ -366,8 +368,7 @@ void Gui::ScoreGauge::update(int ChessScore, color side)
 		}
 	}
 	else {
-		float logChessScore = log10(1 + (float)abs(ChessScore) / 13);
-		angle = (logChessScore / 3) * 90;
+		angle = (atan((float)ChessScore / 1000.0f))/M_PI*180;
 		if (ChessScore < 0) angle *= -1;
 		if (side == black)  angle *= -1;
 	}

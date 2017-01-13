@@ -27,6 +27,24 @@ void AI::bindGui(Gui* guiPtr)
 	guiActive = true;
 }
 
+string AI::boardToString() const
+{
+	string board = string(64, '_');
+	int c = 0;
+	for (auto p : chessBoard.pieces) {
+		BITLOOP(pos, p) {
+			board[63 - pos] = names[c];
+		}
+		c++;
+	}
+	return board;
+}
+
+void AI::writeToHistory(const Move& move)
+{
+	gameHistory.push_back(pair<string, Move>(boardToString(), move));
+}
+
 void AI::printDebug(string showPieces)
 {
 	chessBoard.print();
@@ -50,13 +68,14 @@ void AI::Play(sf::RenderWindow& window)
 	for (targetDepth = 1; targetDepth < 5; ++targetDepth) {
 		bestMove = distributeNegaMax();
 		if (targetDepth == 1 && bestMove.second == oo) {
-			cout << "You Lose!\n" << endl;
+			cout << "*===========*\n| You Lose! |\n*===========*" << endl;
 			break;
 		}
 		gui->visualizeScore(bestMove.second);
 		gui->render(window);
 		window.display();
 	}
+	gameHistory.push_back(pair<string, Move>(boardToString(), bestMove.first));
 	chessBoard.makeMove(bestMove.first, aiColor);
 	chessBoard.updateAllAttacks();
 
@@ -104,7 +123,7 @@ pair<Move, int> AI::distributeNegaMax()
 		}
 		if (Root->moveList.empty()) {
 			// End of game. Human wins :/
-			clog << "You win!\n";
+			cout << "*===========*\n| You Win! |\n*===========*" << endl;
 			return moveValue(Move(), 0);
 		}
 		// combine moves with their values
@@ -139,12 +158,12 @@ pair<Move, int> AI::distributeNegaMax()
 	});
 
 	Root->nodeFlags |= Node::Flags::explored;
-	printf("Best move for computer is %s with value %d\n", moveString(bestMove->first).c_str(), bestMove->second);
-	printf("From: %d, To: %d, type: %d, mpiece: %c tpiece: %c\n", bestMove->first.from,
-																  bestMove->first.to,
-																  bestMove->first.flags,
-																  names[move_piece(bestMove->first.Pieces)],
-																  names[target_piece(bestMove->first.Pieces)]);
+	//printf("Best move for computer is %s with value %d\n", moveString(bestMove->first).c_str(), bestMove->second);
+	//printf("From: %d, To: %d, type: %d, mpiece: %c tpiece: %c\n", bestMove->first.from,
+	//															  bestMove->first.to,
+	//															  bestMove->first.flags,
+	//															  names[move_piece(bestMove->first.Pieces)],
+	//															  names[target_piece(bestMove->first.Pieces)]);
 	return *bestMove;
 }
 
