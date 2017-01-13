@@ -28,6 +28,8 @@ public:
 	bool handleEvent(sf::Event& ev, sf::RenderWindow& window);
 	void visualizeScore(int ChessScore);
 	void visualizeLastMove(const Move& move);
+
+	Move lastMove; // Updated after each move from human player
 private:
 	class ScoreGauge
 	{

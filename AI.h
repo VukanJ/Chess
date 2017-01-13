@@ -69,6 +69,11 @@ private:
 	ZobristHash transposition_hash;
 	Gui* gui;
 	bool guiActive;
+
+	// Gamehistory contains string board representation for 
+	// exact comparison. (Hash can be overwritten)
+	string boardToString() const;
+	vector<pair<string, Move>> gameHistory;
 public:
 	AI(string FEN, color computerColor);
 	void printDebug(string show = "prnbkqPRNBKQ");
@@ -82,6 +87,7 @@ public:
 
 	Board* getBoardPtr();
 
+	void writeToHistory(const Move& move);
 	// Piece color of computer
 	const color aiColor;
 };
