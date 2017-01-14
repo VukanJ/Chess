@@ -33,8 +33,8 @@ int main()
 	//AI computer("81p1p1p1p8PPPNNN7pPp53p1P8 w - 1 0", black);
 	//AI computer("1rr4r/2r2rrr/r1r2rr1/8/rR3R2/6R1/RRR2RRR/1R1RR111 w - 1 0", black);
 
-	AI computer("r3k2r/pppppppp/8888/PPPPPPPP/R3K2R w KkQq 1 0", white);
-
+	AI computer("r3k2r/pppppppp/8888/PPPPPPPP/R3K2R w KkQq 1 0", black);
+	
 	//AI computer("4r3/7q/nb2prRp/pk1p3P/3P4/P7/1P2N1P1/1K1B1N2 w - 1 0", black); // Mate in 5
 
 	//AI computer("2Q5/4b1k1/1Pp2rPp/2q5/4Bn2/pppp4/P6P/6RK w - 1 0", black);
@@ -48,7 +48,7 @@ int main()
 	//computer.Play();
 
 #ifdef GUI_MODE
-	sf::RenderWindow window(sf::VideoMode(800, 600), "Chess GUI", sf::Style::Close, sf::ContextSettings(0, 0, 3));
+	sf::RenderWindow window(sf::VideoMode(800, 600), "Chess", sf::Style::Close, sf::ContextSettings(0, 0, 3));
 	window.setFramerateLimit(60);
 
 	Gui gui(computer, computer.aiColor);
@@ -59,7 +59,6 @@ int main()
 	float frameTime = 0;
 
 	sf::Clock clock;
-
 	while (window.isOpen()){
 		frameTime = clock.restart().asSeconds();
 		sf::Event ev;

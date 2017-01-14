@@ -28,6 +28,7 @@ public:
 	bool handleEvent(sf::Event& ev, sf::RenderWindow& window);
 	void visualizeScore(int ChessScore);
 	void visualizeLastMove(const Move& move);
+	void showMessage(const string&, sf::Color); // Show game info (invalid move, check etc. )
 
 	Move lastMove; // Updated after each move from human player
 private:
@@ -88,10 +89,12 @@ private:
 	sf::Vector2f orig_size; // original size of pieces
 	sf::Vector2f scale;     // scaling factor
 
-	enum{debugText, positionText, clickText, moveListText};
+	// Display texts
+	enum{history_text, mate_in_text};
 	void debugDrawSquareNumering(sf::RenderWindow& window);
 	sf::Font textFont;
 	vector<sf::Text> textDisplays;
+	vector<pair<sf::Text, float>> messages; // Text and fadeout-timer
 
 	color humanColor;
 };

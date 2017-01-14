@@ -69,6 +69,7 @@ void AI::Play(sf::RenderWindow& window)
 		bestMove = distributeNegaMax();
 		if (targetDepth == 1 && bestMove.second == oo) {
 			cout << "*===========*\n| You Lose! |\n*===========*" << endl;
+			gui->showMessage("Checkmate, You Lose", sf::Color::Yellow);
 			break;
 		}
 		gui->visualizeScore(bestMove.second);
@@ -80,6 +81,7 @@ void AI::Play(sf::RenderWindow& window)
 	chessBoard.updateAllAttacks();
 
 	gui->visualizeLastMove(bestMove.first);
+	if (chessBoard.isKingInCheck(aiColor == black ? white : black)) gui->showMessage("check", sf::Color(255,100,0));
 }
 
 void AI::sortMoves(nodePtr& node, color side)
@@ -124,6 +126,7 @@ pair<Move, int> AI::distributeNegaMax()
 		if (Root->moveList.empty()) {
 			// End of game. Human wins :/
 			cout << "*===========*\n| You Win! |\n*===========*" << endl;
+			gui->showMessage("Checkmate -- You Win!", sf::Color::Yellow);
 			return moveValue(Move(), 0);
 		}
 		// combine moves with their values
