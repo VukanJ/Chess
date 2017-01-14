@@ -43,22 +43,21 @@ Gui::Gui(AI& _ai, color aiColor) : chessBoard(_ai.chessBoard)
 		cout << "Font not found!\n";
 		exit(1);
 	}
-	textDisplays.push_back(sf::Text("Debug", textFont));
-	textDisplays[debugText].setPosition(600, 0);
-	textDisplays[debugText].setCharacterSize(12);
-	textDisplays.push_back(sf::Text("Position", textFont));
-	textDisplays[positionText].setPosition(600, 20);
-	textDisplays[positionText].setCharacterSize(12);
-	textDisplays.push_back(sf::Text("Klick", textFont));
-	textDisplays[clickText].setPosition(600, 40);
-	textDisplays[clickText].setCharacterSize(12);
-	textDisplays.push_back(sf::Text("MOVE", textFont));
-	textDisplays[moveListText].setPosition(600, 60);
-	textDisplays[moveListText].setCharacterSize(10);
 }
 
 void Gui::update(float frametime)
 {
+	static float elapsedTime = 0;
+	elapsedTime += frametime;
+	sf::Color tempCol;
+	for (auto msg = messages.begin(); msg != messages.end();) {
+		msg->second += frametime;
+		tempCol = msg->first.getFillColor();
+		tempCol.a = -10*msg->second + 255.0f;
+		msg->first.setFillColor(tempCol);
+		if (tempCol.a <= 10) msg = messages.erase(messages.begin());
+		else msg++;
+	}
 	guiArrow.update(frametime);
 }
 
@@ -86,10 +85,12 @@ void Gui::render(sf::RenderWindow& window)
 		}
 		pieceIndex++;
 	}
-	//for (auto& text : textDisplays) {
-	//	window.draw(text);
-	//}
-	debugDrawSquareNumering(window);
+	float dx = 0;
+	for (auto& msg : messages) {
+		msg.first.setPosition(sf::Vector2f(605, 400 + dx));
+		dx += 16.0f;
+		window.draw(msg.first);
+	}
 	scoreGauge.render(window);
 	guiArrow.render(window);
 }
@@ -106,9 +107,6 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 	string assemble;
 	switch (ev.type) {
 	case sf::Event::MouseMoved:
-		mouse = sf::Mouse::getPosition(window);
-		assemble = "Mouse at (" + to_string(mouse.x) + ',' + to_string(mouse.y) + ')';
-		textDisplays[positionText].setString(assemble);
 		break;
 	case sf::Event::MouseButtonPressed:
 		mouse = sf::Mouse::getPosition(window);
@@ -137,6 +135,7 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				user_GUI_Move.Pieces = userInput.movePiece;
 				if (!isUserMoveValid_completeMoveInfo(user_GUI_Move)) {
 					cerr << "Invalid move!\n";
+					showMessage("Invalid move!", sf::Color::White);
 				}
 				else {
 					chessBoard.makeMove(user_GUI_Move, humanColor);
@@ -157,6 +156,7 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				user_GUI_Move.Pieces = piece_pair(userInput.movePiece, pieceClicked);
 				if (!isUserMoveValid_completeMoveInfo(user_GUI_Move)) {
 					cerr << "Invalid move!\n";
+					showMessage("Invalid move!", sf::Color::White);
 				}
 				else {
 					chessBoard.makeMove(user_GUI_Move, humanColor);
@@ -172,7 +172,6 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				userInput.from = selectedSquare;
 			}
 		}
-		textDisplays[clickText].setString(assemble);
 		break;
 	case sf::Event::KeyPressed:
 		switch (ev.key.code) {
@@ -198,37 +197,38 @@ bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
 	chessBoard.generateMoveList(possibleMoves, humanColor);
 
 	vector<Move>::iterator matchingMove = find_if(possibleMoves.begin(), possibleMoves.end(), [&](const Move& pmove) {
-		if (pmove.flags == BCASTLE || pmove.flags == WCASTLE || pmove.flags == BCASTLE_2 || pmove.flags == WCASTLE_2){
+		byte pflags = pmove.flags & 0xF;
+		if (pflags == BCASTLE || pflags == WCASTLE || pflags == BCASTLE_2 || pflags == WCASTLE_2){
 			// Check if human wants to castle
 			if (userInput.movePiece == bk && humanColor == black) {
-				if (inputMove.from - inputMove.to ==  2 && chessBoard.castlingRights & BCASTLE && pmove.flags == BCASTLE)
+				if (inputMove.from - inputMove.to ==  2 && chessBoard.castlingRights & BCASTLE && pflags == BCASTLE)
 					return true;
-				if (inputMove.from - inputMove.to == -2 && chessBoard.castlingRights & BCASTLE_2 && pmove.flags == BCASTLE_2)
+				if (inputMove.from - inputMove.to == -2 && chessBoard.castlingRights & BCASTLE_2 && pflags == BCASTLE_2)
 					return true;
 			}
 			else if (userInput.movePiece == wk && humanColor == white) {
-				if (inputMove.from - inputMove.to ==  2 && chessBoard.castlingRights & WCASTLE && pmove.flags == WCASTLE)   return true;
-				if (inputMove.from - inputMove.to == -2 && chessBoard.castlingRights & WCASTLE_2 && pmove.flags == WCASTLE_2) return true;
+				if (inputMove.from - inputMove.to ==  2 && chessBoard.castlingRights & WCASTLE && pflags == WCASTLE)   return true;
+				if (inputMove.from - inputMove.to == -2 && chessBoard.castlingRights & WCASTLE_2 && pflags == WCASTLE_2) return true;
 			}
 		}
 		else if (pmove.from == inputMove.from && pmove.to == inputMove.to) {
 			// Strong indicator for existent move
-			if (pmove.flags == MOVE && inputMove.flags == MOVE) {
+			if (pflags == MOVE && inputMove.flags == MOVE) {
 				// quiet move is allowed
 				return true;
 			}
-			else if (pmove.flags == CAPTURE && inputMove.flags == CAPTURE) {
+			else if (pflags == CAPTURE && inputMove.flags == CAPTURE) {
 				return true;
 			}
 			else if (inputMove.flags == MOVE && (target_piece(pmove.Pieces) == bq || target_piece(pmove.Pieces) == wq)) {
 				// Promotion ?
-				if (pmove.flags & PROMOTION) {
+				if (pflags & PROMOTION) {
 					return true;
 				}
 			}
 			else if (inputMove.flags == CAPTURE && (target_piece(pmove.Pieces) == bq || target_piece(pmove.Pieces) == wq)) {
 				// Promotion ?
-				if (pmove.flags & C_PROMOTION) {
+				if (pflags & C_PROMOTION) {
 					return true;
 				}
 			}
@@ -302,6 +302,14 @@ void Gui::visualizeLastMove(const Move& move)
 	guiArrow.setMove(move);
 }
 
+void Gui::showMessage(const string& msg, sf::Color color=sf::Color::White)
+{
+	if (messages.size() == 5)
+		messages.erase(messages.begin());
+	messages.push_back(pair<sf::Text, float>(sf::Text(msg, textFont, 15), 0.0f));
+	messages.back().first.setFillColor(color);
+}
+
 Gui::ScoreGauge::ScoreGauge()
 {
 	if (!font.loadFromFile("FiraMono-Regular.otf")) {
@@ -315,7 +323,7 @@ Gui::ScoreGauge::ScoreGauge()
 	scoreText.setFont(font);
 	scoreText.setString("0");
 	scoreText.setPosition(origin.x-30, origin.y-30);
-	scoreText.setCharacterSize(24);
+	scoreText.setCharacterSize(20);
 	scoreText.setFillColor(sf::Color::White);
 	// Init black circle
 	midCircle = sf::CircleShape(50, 30);
@@ -387,8 +395,9 @@ void Gui::Arrow::setMove(const Move& move)
 {
 	elapsedTime = 0;
 	fadelevel = 200;
-	if (!(move.flags & BCASTLE || move.flags & WCASTLE
-		|| move.flags & BCASTLE_2 || move.flags & WCASTLE_2)) {
+	byte f = move.flags & 0xF;
+	if (!(f & BCASTLE || f & WCASTLE
+		|| f & BCASTLE_2 || f & WCASTLE_2)) {
 	sf::Vector2f from = sf::Vector2f(7.0 - move.from % 8, 8.0 - move.from / 8.0) * (HEIGHT / 8.0f);
 	sf::Vector2f   to = sf::Vector2f(7.0 - move.to   % 8, 8.0 - move.to   / 8.0) * (HEIGHT / 8.0f);
 	sf::Vector2f connect(to.x - from.x, to.y - from.y);

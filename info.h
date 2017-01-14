@@ -8,7 +8,7 @@
 
 using namespace std;
 
-const string VERSION = "1.0";
+const string VERSION = "0.1-alpha";
 
 void sayHello()
 {
