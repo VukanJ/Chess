@@ -67,8 +67,8 @@ private:
 		bool pieceSelected;
 		piece movePiece;
 		void reset();
-	};
-	UserInput userInput;
+	} userInput;
+
 	bool isUserMoveValid_completeMoveInfo(Move& userMove);
 	void colorSquares(u64 pattern, sf::Color color, sf::RenderWindow& window);
 

@@ -295,7 +295,6 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 			case bp:
 				// Find normal captures:
 				BITLOOP(pos, attackingPieces){
-					//attackMask = (0x5ull << (pos - 1 - 8)) & whitePos; // Error: Targets opponent on same rank
 					attackMask  = ((bit_at(pos) >> 9) & ~_left)  & whitePos;
 					attackMask |= ((bit_at(pos) >> 7) & ~_right) & whitePos;
 					if (attackMask)                                              // If pieces are targeted

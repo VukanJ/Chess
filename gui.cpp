@@ -17,7 +17,7 @@ Gui::Gui(AI& _ai, color aiColor) : chessBoard(_ai.chessBoard)
 	}
 	boardTex.loadFromImage(boardImage);
 	boardspr.setTexture(boardTex);
-	boardspr.setScale(sf::Vector2f(HEIGHT / 8, HEIGHT / 8));
+	boardspr.setScale(sf::Vector2f(HEIGHT / 8.0f, HEIGHT / 8.0f));
 
 	// Load Textures, crop sprites
 	pieceTex.loadFromFile("Chess_Pieces_Sprite.png");
@@ -118,8 +118,7 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 		selectedSquare = 63 - ((mouse.x / (HEIGHT / 8)) + 8 * (mouse.y / (HEIGHT / 8)));
 
 		assemble = "Klick at (" + to_string(mouse.x) + ',' + to_string(mouse.y) + ") = ";
-		assemble += 'h' - selectedSquare % 8;
-		assemble += '1' + selectedSquare / 8;
+		assemble += squareNames[selectedSquare];
 
 		if (chessBoard.allPos & bit_at(selectedSquare)) { // User clicked on piece ?
 			for (int p = 0; p < 12; p++) {
@@ -163,7 +162,6 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 					chessBoard.makeMove(user_GUI_Move, humanColor);
 					chessBoard.updateAllAttacks();
 					lastMove = user_GUI_Move;
-					//chessBoard.print();
 					movePlayed = true;
 				}
 				userInput.reset();
@@ -196,32 +194,25 @@ bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
 	// the needed move metadata is filled in correctly.
 	// -> Generates all possible moves and tries to find a match.
 
-	vector<Move> possibleMoves, opponentPossibleMoves;
+	vector<Move> possibleMoves;
 	chessBoard.generateMoveList(possibleMoves, humanColor);
-	chessBoard.generateMoveList(opponentPossibleMoves, humanColor == black ? white : black); // For Debugging
 
-	//string moveStringList;
-	//for (int i = 0; i < max(opponentPossibleMoves.size(), possibleMoves.size()); i++) {
-	//	if (i >= possibleMoves.size()) moveStringList += "   \t";
-	//	else moveStringList += moveString(possibleMoves[i]) + '\t';
-	//	if (i >= opponentPossibleMoves.size()) moveStringList += "   \n";
-	//	else moveStringList += moveString(opponentPossibleMoves[i]) + '\n';
-	//}
-	//textDisplays[moveListText].setString(moveStringList);
-
-	vector<Move>::iterator matchingMove = find_if(possibleMoves.begin(), possibleMoves.end(), [&](Move& pmove) {
-		if (inputMove.flags == WCASTLE   ||
-			inputMove.flags == WCASTLE_2 ||
-			inputMove.flags == BCASTLE   ||
-			inputMove.flags == BCASTLE_2) {
-			// Some type of castling
-			if (pmove.flags == inputMove.flags) { // Is castling side (and color) matching ?
-				// Player can castle
-				return true;
+	vector<Move>::iterator matchingMove = find_if(possibleMoves.begin(), possibleMoves.end(), [&](const Move& pmove) {
+		if (pmove.flags == BCASTLE || pmove.flags == WCASTLE || pmove.flags == BCASTLE_2 || pmove.flags == WCASTLE_2){
+			// Check if human wants to castle
+			if (userInput.movePiece == bk && humanColor == black) {
+				if (inputMove.from - inputMove.to ==  2 && chessBoard.castlingRights & BCASTLE && pmove.flags == BCASTLE)
+					return true;
+				if (inputMove.from - inputMove.to == -2 && chessBoard.castlingRights & BCASTLE_2 && pmove.flags == BCASTLE_2)
+					return true;
+			}
+			else if (userInput.movePiece == wk && humanColor == white) {
+				if (inputMove.from - inputMove.to ==  2 && chessBoard.castlingRights & WCASTLE && pmove.flags == WCASTLE)   return true;
+				if (inputMove.from - inputMove.to == -2 && chessBoard.castlingRights & WCASTLE_2 && pmove.flags == WCASTLE_2) return true;
 			}
 		}
 		else if (pmove.from == inputMove.from && pmove.to == inputMove.to) {
-			// Strong indicator for correct move
+			// Strong indicator for existent move
 			if (pmove.flags == MOVE && inputMove.flags == MOVE) {
 				// quiet move is allowed
 				return true;

@@ -12,20 +12,20 @@ const string VERSION = "1.0";
 
 void sayHello()
 {
-		cout << string(53, '~') << endl;
-		cout << left;
-		cout << setw(52) << string("| \"VChess\" Version " + VERSION) << "|\n";
-		cout << setw(52) << "| Author: VukanJ -- https://github.com/VukanJ" << "|\n";
-		cout << setw(52) << "| Press <C> for credits" << "|\n";
-		cout << setw(52) << "| Press <L> for license" << "|\n";
-		cout << string(53, '~') << endl;
+	cout << string(53, '~') << endl;
+	cout << left;
+	cout << setw(52) << string("| \"Unnamed Chess\" Version " + VERSION) << "|\n";
+	cout << setw(52) << "| Author: VukanJ -- https://github.com/VukanJ" << "|\n";
+	cout << setw(52) << "| Press <C> for credits" << "|\n";
+	cout << setw(52) << "| Press <L> for license" << "|\n";
+	cout << string(53, '~') << endl;
 }
 
 void showLicense()
 {
 	ifstream licenseFile("License.txt", ios::in);
 	if(!licenseFile.is_open()){
-		cout << "License file not found.\n";
+		cout << "License file missing!.\n";
 		cout << "Visit https://github.com/VukanJ/Chess for the full License\n";
 		return;
 	}
