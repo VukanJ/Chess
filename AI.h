@@ -90,6 +90,8 @@ public:
 	void writeToHistory(const Move& move);
 	// Piece color of computer
 	const color aiColor;
+
+	void resetGame();
 };
 
 #endif

@@ -33,35 +33,26 @@ struct Move
 static string moveString(Move m)
 {
 	// Short algebraic notation (AN)
-	if (m.flags == BCASTLE) {
-		return "b-o-o";
-	}
-	else if (m.flags == WCASTLE) {
-		return "w-o-o";
+	if (m.flags == BCASTLE || m.flags == WCASTLE) {
+		return "O-O";
 	}
 	else if (m.flags == PROMOTION) {
-		return target_piece(m.Pieces) == bq || target_piece(m.Pieces) == wq ? "Queen prom" : "Knight prom";
+		return string(1, squareNames[m.to][0]) + "8=" + string(1, toupper(names[target_piece(m.Pieces)]));
 	}
 	else if (m.flags == C_PROMOTION) {
-		return target_piece(m.Pieces) == bq || target_piece(m.Pieces) == wq ? "Queen c_prom" : "Knight c_prom";
+		return string(1, squareNames[m.to][0]) + "x" + squareNames[m.to] + "=" + string(1, toupper(names[target_piece(m.Pieces)]));
 	}
-	else if (m.flags == BCASTLE_2) {
-		return "b-O--O";
+	else if (m.flags == BCASTLE_2 || m.flags == BCASTLE_2) {
+		return "O-O-O";
 	}
-	else if (m.flags == WCASTLE_2) {
-		return "w-O--O";
-	}
-	string s(1, names[move_piece(m.Pieces)]);
+	string s(1, toupper(names[move_piece(m.Pieces)]));
 	if (m.flags == CAPTURE) {
-		if (s[0] == 'P' || s[0] == 'p') {
-			s.clear();
-			s += 'h' - (m.to % 8);
-		}
+		if (s[0] == 'P') 
+			s = squareNames[m.to][0];
 		s += 'x';
 	}
-	if (s[0] == 'P' || s[0] == 'p')s.clear();
-	s += 'h' - (m.to % 8);
-	s += '1' + (m.to / 8);
+	if (s[0] == 'P')s.clear(); // P is left out
+	s = squareNames[m.to];
 	return s;
 }
 
