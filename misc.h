@@ -52,6 +52,8 @@ enum piece {
 	nullPiece = -1
 };
 
+enum castlingRight { castle_k = 0x1, castle_q = 0x2, castle_K = 0x4, castle_Q = 0x8 };
+
 enum color {black, white};
 
 static piece getPieceIndex(char p)
