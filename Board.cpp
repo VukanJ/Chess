@@ -373,7 +373,15 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[br]; // Non capturing moves
 						BITLOOP(target, attackMask) {                                             // Add moves
 							if (!(CONNECTIONS[pos][target] & allPos)) {   // ..if no piece is in the way
-								moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & (pos == h8 ? castle_k : castle_q)), br));
+								if (pos == a8) {
+									moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & castle_q), br));
+								}
+								else if (pos == h8) {
+									moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & castle_k), br));
+								}
+								else {
+									moveList.push_back(Move(pos, target, MOVE, br));
+								}
 							}
 						}
 					}
@@ -552,6 +560,7 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 				 // Calculate attacked pieces
 				 BITLOOP(pos, attackingPieces) {                                                         // Loop through all positions of pieces of kind br
 					 attackMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[wr] & blackPos; // Intersections with opponent pieces
+					// printBitboard(attackMask);
 					 if (attackMask) {                                                    // If pieces are targeted
 						 BLACKLOOP(candidate) {                                        // Find targeted piece
 							 pieceAttacks = pieces[candidate] & attackMask;                        // Set specific attacks
@@ -565,10 +574,19 @@ void Board::generateMoveList(vector<Move>& moveList, color side) const
 						 }
 					 }
 					 attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[wr]; // Non capturing moves
+					// printBitboard(attackMask);
 					 //printBitboard(tempMask);
 					 BITLOOP(target, attackMask) {                        // Add moves..
 						 if (!(CONNECTIONS[pos][target] & allPos)) {       // ..if no piece is in the way
-							 moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & (pos == h1 ? castle_K : castle_Q)), wr));
+							 if (pos == a1) {
+								 moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & castle_Q), wr));
+							 }
+							 else if (pos == h1) {
+								 moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & castle_K), wr));
+							 }
+							 else {
+								 moveList.push_back(Move(pos, target, MOVE, wr));
+							 }
 						 }
 					 }
 				 }
@@ -893,7 +911,7 @@ void Board::unMakeMove(const Move& move, color side)
 			break;
 		case WCASTLE: // Castling short
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			makeMove(Move(g1, e1, MOVE, wk), white);
+			makeMove(Move(g1, e1, MOVE, wk), white); // TODO: rewrite this to explicit form
 			makeMove(Move(f1, h1, MOVE, wr), white);
 			castlingRights = move.from;
 			break;

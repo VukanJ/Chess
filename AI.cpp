@@ -7,7 +7,16 @@ AI::AI(string FEN, color computerColor)
 	data.gen(); // Generates bitboards needed for move generation
 	chessBoard = Board(FEN);
 	transposition_hash = ZobristHash(1e7);
-	guiActive = false; // Not active for testing purposes.
+	//debug();
+}
+
+AI::AI(string FEN, color computerColor, unsigned int hashSize)
+	: aiColor(computerColor)
+{
+	genChessData data;
+	data.gen(); // Generates bitboards needed for move generation
+	chessBoard = Board(FEN);
+	transposition_hash = ZobristHash(hashSize);
 	//debug();
 }
 
@@ -24,7 +33,6 @@ void AI::printBoard()
 void AI::bindGui(Gui* guiPtr)
 {
 	gui = guiPtr;
-	guiActive = true;
 }
 
 string AI::boardToString() const
@@ -82,6 +90,7 @@ void AI::Play(sf::RenderWindow& window)
 
 	gui->visualizeLastMove(bestMove.first);
 	if (chessBoard.isKingInCheck(aiColor == black ? white : black)) gui->showMessage("check", sf::Color(255,100,0));
+	printBits(chessBoard.castlingRights);
 }
 
 void AI::sortMoves(nodePtr& node, color side)

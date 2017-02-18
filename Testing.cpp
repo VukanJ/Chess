@@ -166,7 +166,7 @@ void UnitTest::testGenerationAlgorithms()
 
 void UnitTest::testPawnFill()
 {
-	AI ai("8/7p/P7/2P5/8/1p4p1/P2PP2P/8 w - 1 0", black);
+	AI ai("8/7p/P7/2P5/8/1p4p1/P2PP2P/8 w - 1 0", black, 10);
 	assert(ai.chessBoard.attacks[wp] == 0x80200099db0000ull);
 	assert(ai.chessBoard.attacks[bp] == 0x1010000c300ull);
 	ai.chessBoard.setupBoard("8/p2pp2p/1P4P1/8/8/pp4p1/7P/8 w - 1 0");
@@ -203,8 +203,12 @@ void UnitTest::testPawnFill()
 
 void UnitTest::testCastling()
 {
+	auto getMove = [](vector<Move>& mlist, int f, int t) {
+		return find_if(mlist.begin(), mlist.end(),
+			[f, t](const Move& m) {return m.from == f && m.to == t; }); };
+
 	vector<Move> moveList;
-	AI ai("r3k2r/8/8/8/8/8/8/R3K2R w - 1 0", black);
+	AI ai("r3k2r/8/8/8/8/8/8/R3K2R w - 1 0", black, 10);
 	ai.chessBoard.generateMoveList(moveList, black);
 
 	assert(!any_of(moveList.begin(), moveList.end(), [](Move& move) {
@@ -237,7 +241,7 @@ void UnitTest::testCastling()
 	ai.chessBoard.makeMove(wOO,   white);
 	ai.chessBoard.unMakeMove(wOO, white);
 	assert(ai.chessBoard.hashKey == hashKey);
-	// Check partial lost of castling rights
+	// Check partial loss of castling rights
 
 	Move Rook1(a1, a2, move_metadata(MOVE, castle_Q), wr);
 	Move Rook2(h1, h2, move_metadata(MOVE, castle_K), wr);
@@ -270,11 +274,35 @@ void UnitTest::testCastling()
 	ai.chessBoard.makeMove(captureRook2,   black);
 	ai.chessBoard.unMakeMove(captureRook2, black);
 	assert(hashKey == ai.chessBoard.hashKey);
+	// Rook moves back and forth (Lead to incorrect castling right update in the past)
+	
+	moveList.clear();
+	ai.chessBoard.setupBoard("r3k2r/pppppppp/8888/PPPPPPPP/R3K2R w KkQq 1 0");
+	ai.chessBoard.generateMoveList(moveList, white);
+	assert(ai.chessBoard.castlingRights == 0b1111);
+	auto rookMove = getMove(moveList, 0, 1);
+	assert(rookMove != moveList.end());
+	ai.chessBoard.makeMove(*rookMove, white);
+	ai.chessBoard.updateAllAttacks();
+	ai.chessBoard.print();
+	printBits(ai.chessBoard.castlingRights);
+	assert(ai.chessBoard.castlingRights == 0b1011);
+
+	moveList.clear();
+	ai.chessBoard.generateMoveList(moveList, white);
+	assert(ai.chessBoard.castlingRights == 0b1011);
+	rookMove = getMove(moveList, 1, 0);
+	assert(rookMove != moveList.end());
+	ai.chessBoard.makeMove(*rookMove, white);
+	ai.chessBoard.updateAllAttacks();
+	ai.chessBoard.print();
+	printBits(ai.chessBoard.castlingRights);
+	assert(ai.chessBoard.castlingRights == 0b1011);
 }
 
 void UnitTest::testProm()
 {
-	AI ai("5n2/1P4P1/8/8/8/8/1p4p1/5N w - 1 0", black);
+	AI ai("5n2/1P4P1/8/8/8/8/1p4p1/5N w - 1 0", black, 10);
 	vector<Move> whiteMoves, blackMoves;
 	ai.chessBoard.generateMoveList(whiteMoves, white);
 	ai.chessBoard.generateMoveList(blackMoves, black);
@@ -414,7 +442,7 @@ void Benchmark::summarize()
 
 void UnitTest::specialTest()
 {
-	AI ai("8/b1b5/1P2n1b1/1P3P11/8 w - 1 0", black);
+	AI ai("8/b1b5/1P2n1b1/1P3P11/8 w - 1 0", black, 10);
 	ai.chessBoard.print();
 	vector<Move> moveList;
 	ai.chessBoard.generateMoveList(moveList, white);
