@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstdint>
 #include <climits>
+#include <vector>
 
 typedef unsigned uint;
 typedef unsigned long ulong;
@@ -12,7 +13,7 @@ typedef uint32_t u32;
 typedef uint16_t u16;
 typedef uint8_t  byte;
 
-constexpr int oo = INT_MAX;
+constexpr int oo = INT_MAX; // Alpha-Beta infinity
 
 u64  inline bit_at(uint x)   { return 0x1ull << x; }        // Sets nth bit in number counting from least significant bit
 u64  inline bit_at_rev(uint x) { return 0x1ull << (63 - x); } // Sets nth bit in number counting from most significant bit
