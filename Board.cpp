@@ -111,7 +111,7 @@ void Board::debug()
 	//printf("blocked black pawns: %d\n", blockedPawn(black));
 	//printf("blocked white pawns: %d\n", blockedPawn(white));
 	auto startingHash = hashKey;
-	vector<Move> movelist;
+	MoveList movelist;
 	cout << "Board value (w): " << evaluate(white) << endl;
 	movelist.clear();
 	print();
@@ -276,7 +276,7 @@ void Board::pawnFill(color side)
 	}
 }
 // TODO: Corrected Pawn attacks. Needs testing
-void Board::generateMoveList(vector<Move>& moveList, color side) const
+void Board::generateMoveList(MoveList& moveList, color side) const
 {
 	/*
 	This method generates a list of all possible moves for a player.

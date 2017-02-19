@@ -201,14 +201,12 @@ bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
 		if (pflags == BCASTLE || pflags == WCASTLE || pflags == BCASTLE_2 || pflags == WCASTLE_2){
 			// Check if human wants to castle
 			if (userInput.movePiece == bk && humanColor == black) {
-				if (inputMove.from - inputMove.to ==  2 && chessBoard.castlingRights & BCASTLE && pflags == BCASTLE)
-					return true;
-				if (inputMove.from - inputMove.to == -2 && chessBoard.castlingRights & BCASTLE_2 && pflags == BCASTLE_2)
-					return true;
+				if (inputMove.from - inputMove.to ==  2 && chessBoard.castlingRights & castle_k && pflags == BCASTLE)   return true;																		  
+				if (inputMove.from - inputMove.to == -2 && chessBoard.castlingRights & castle_q && pflags == BCASTLE_2) return true;
 			}
 			else if (userInput.movePiece == wk && humanColor == white) {
-				if (inputMove.from - inputMove.to ==  2 && chessBoard.castlingRights & WCASTLE && pflags == WCASTLE)   return true;
-				if (inputMove.from - inputMove.to == -2 && chessBoard.castlingRights & WCASTLE_2 && pflags == WCASTLE_2) return true;
+				if (inputMove.from - inputMove.to ==  2 && chessBoard.castlingRights & castle_K && pflags == WCASTLE)   return true;
+				if (inputMove.from - inputMove.to == -2 && chessBoard.castlingRights & castle_Q && pflags == WCASTLE_2) return true;
 			}
 		}
 		else if (pmove.from == inputMove.from && pmove.to == inputMove.to) {

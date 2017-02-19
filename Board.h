@@ -15,6 +15,8 @@
 
 using namespace std;
 
+typedef vector<Move> MoveList;
+
 class Board
 {
 private:
@@ -39,7 +41,8 @@ public:
 	void setupBoard(string FEN);
 
 	// Move making
-	void generateMoveList(vector<Move>&, color) const;
+	void generateMoveList(MoveList&, color) const;
+
 	void makeMove(const Move&, color side);
 	void unMakeMove(const Move&, color side);
 	void updateAllAttacks();
