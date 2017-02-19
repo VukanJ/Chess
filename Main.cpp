@@ -26,15 +26,14 @@ void benchmark();
 
 int main()
 {
-	//sayHello();
+	sayHello();
 	testing();
 	//AI computer("4k37p888884K4 w - 1 0", black);
 	//AI computer("r1b1r1k1/1p1n1p1p/2ppnqp1/4b3/p1P1P3/5P2/PPNQNBPP/1R2RBK1 w - 1 0",black);
 	//AI computer("81p1p1p1p8PPPNNN7pPp53p1P8 w - 1 0", black);
 	//AI computer("1rr4r/2r2rrr/r1r2rr1/8/rR3R2/6R1/RRR2RRR/1R1RR111 w - 1 0", black);
 
-	AI computer("r3k2r/pppppppp/8888/PPPPPPPP/R3K2R w KkQq 1 0", black);
-	//AI computer("* w KkQq 1 0", black);
+	AI computer("* w KkQq 1 0", black);
 	//AI computer("4r3/7q/nb2prRp/pk1p3P/3P4/P7/1P2N1P1/1K1B1N2 w - 1 0", black); // Mate in 5
 
 	//AI computer("2Q5/4b1k1/1Pp2rPp/2q5/4Bn2/pppp4/P6P/6RK w - 1 0", black);

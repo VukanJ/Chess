@@ -14,7 +14,7 @@ void sayHello()
 {
 	cout << string(53, '~') << endl;
 	cout << left;
-	cout << setw(52) << string("| \"Unnamed Chess\" Version " + VERSION) << "|\n";
+	cout << setw(52) << string("| \"Unnamed Chess Engine\" Version " + VERSION) << "|\n";
 	cout << setw(52) << "| Author: VukanJ -- https://github.com/VukanJ" << "|\n";
 	cout << setw(52) << "| Press <C> for credits" << "|\n";
 	cout << setw(52) << "| Press <L> for license" << "|\n";
@@ -39,14 +39,11 @@ void showCredits()
 {
 	//cout << string(10,'~') << "CREDITS" << string(10,'~');
 	cout << setfill('-') << left;
-	cout << setw(30) << "Author"  << "VukanJ (github.com/VukanJ)\n";
-	cout << setw(30) << "Fonts"   << "FreeFonts.org\n";
+	cout << setw(30) << "Author"  << "VukanJ  (github.com/VukanJ)\n";
+	cout << setw(30) << "Fonts"   << "Mozilla (github.com/mozilla)\n";
 	cout << setw(30) << "Sprites" << "jurgenwesterhof\n";
 	cout << setw(30) << "Sprite Source" << "wikimedia.org/wiki/Template:SVG_chess_pieces\n";
-	cout << setw(30) << "Language" << "C++" << endl;
-//	printf(string(10,'~') + "EXTERNAL SOFTWARE" + string(10,'~'));
-	cout << setw(30) << "SFML" << "Simple and fast multimedia library\n";
-	cout << setw(30) << "Boost" << "C++ Boost\n";
+	cout << setw(30) << "Code" << "C++ && SFML && C++Boost\n";
 }
 
 #endif
