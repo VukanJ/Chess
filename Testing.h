@@ -68,7 +68,7 @@ public:
 		int targetDepth;
 	};
 
-	class fullTree // Tree containing NegaMax an Implementation
+	class fullTree // Tree containing NegaMax and Implementation
 	{ 
 	public:
 		fullTree(Board& _chessboard, color comp, int _targetDepth);
@@ -106,9 +106,11 @@ class Benchmark
 {
 public:
 	Benchmark();
+	~Benchmark();
 	void performAllbenchmarks();
 	void summarize();
 
+	void testPerft(int maxdepth, bool countMoveTypes);
 	void benchmarkMoveGeneration();
 	void benchmarkMovemaking();
 private:
@@ -120,7 +122,13 @@ private:
 		string msg;
 		double value;
 	};
+	Board testBoard;
 	vector<result> results;
+	void perft(int maxDepth, color startColor);
+	// perft statistics
+	long perftNodeCount;
+	long perftMoveCount;
+	long checkmateCount;
 };
 
 #endif

@@ -67,13 +67,14 @@ void AI::printDebug(string showPieces)
 
 void AI::Play(sf::RenderWindow& window)
 {
+	gui->showMessage("Thinking...", sf::Color(70, 70, 255));
 	Root.reset(new Node());
 	chessBoard.updateAllAttacks();
 	// Builds gametree and determines best move and plays it
 	// Root == current board position with depth = 0
 
 	pair<Move, int> bestMove;
-	for (targetDepth = 1; targetDepth < 2; ++targetDepth) {
+	for (targetDepth = 1; targetDepth < 6; ++targetDepth) {
 		bestMove = distributeNegaMax();
 		if (targetDepth == 1 && bestMove.second == oo) {
 			cout << "*===========*\n| You Lose! |\n*===========*" << endl;
@@ -112,8 +113,8 @@ pair<Move, int> AI::distributeNegaMax()
 	// distributeNegaMax() distributes negamax to all children of the Root node
 	// and tracks the move value associated with the move
 	static vector<moveValue> RootMoveList;
-	// If Root value has not been calculated for current position:
 	chessBoard.updateAllAttacks();
+	// If Root value has not been calculated for current position:
 	if (!(Root->nodeFlags & Node::Flags::explored)) {
 		// Generate moves for computer player
 		// The computer is the maximizing player

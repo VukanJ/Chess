@@ -17,7 +17,7 @@
 
 using namespace std;
 
-#define GUI_MODE
+//#define GUI_MODE
 
 const unsigned int WIDTH = 800, HEIGHT = 600; // GUI SIZE
 
@@ -26,7 +26,7 @@ void benchmark();
 
 int main()
 {
-	sayHello();
+	//sayHello();
 	testing();
 	//AI computer("4k37p888884K4 w - 1 0", black);
 	//AI computer("r1b1r1k1/1p1n1p1p/2ppnqp1/4b3/p1P1P3/5P2/PPNQNBPP/1R2RBK1 w - 1 0",black);
@@ -56,6 +56,11 @@ int main()
 	//computer.Play(window);
 
 	float frameTime = 0;
+
+	sf::RectangleShape testoverlay;
+	testoverlay.setSize(sf::Vector2f(WIDTH, HEIGHT));
+	testoverlay.setPosition(sf::Vector2f(0, 0));
+	testoverlay.setFillColor(sf::Color(30, 30, 30, 130));
 
 	sf::Clock clock;
 	while (window.isOpen()){
@@ -94,24 +99,29 @@ int main()
 		window.clear(sf::Color::Black);
 		gui.update(frameTime);
 		gui.render(window);
+		//window.draw(testoverlay);
 		window.display();
 	}
 #endif
+	cin.ignore();
 	return 0;
 }
 
 void testing(){
+	Benchmark benchmark;
 	UnitTest test;
 	//test.specialTest();
 	//test.testDefines();
 	//test.testIntrinsics();
 
-	test.testGenerationAlgorithms();
+	//test.testGenerationAlgorithms();
 	//test.testTreeStructure();
-//	test.testEvaluation();
+	//test.testEvaluation();
 	//test.testFullTree();
 	//test.testHashing();
 	//test.testMinimalTree();
+
+	benchmark.testPerft(3, false);
 
 	cout << "EOP\n";
 	//cin.ignore();

@@ -50,6 +50,7 @@ void Gui::update(float frametime)
 	static float elapsedTime = 0;
 	elapsedTime += frametime;
 	sf::Color tempCol;
+	// Text fades out and is then removed
 	for (auto msg = messages.begin(); msg != messages.end();) {
 		msg->second += frametime;
 		tempCol = msg->first.getFillColor();
@@ -97,21 +98,20 @@ void Gui::render(sf::RenderWindow& window)
 
 bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 {
+	// Handles window events
 	// returns true if human has played a move
 	Move user_GUI_Move; // Probably incorrect, since user makes mistakes
-						// Only contains raw data, without castling rights or specific attack types
+						// Only contains raw data (from and to-square), without castling rights or specific attack types
 	piece pieceClicked = nullPiece;
 	int selectedSquare = nullSquare;
 	bool movePlayed = false;
 	sf::Vector2i mouse;
 	string assemble;
 	switch (ev.type) {
-	case sf::Event::MouseMoved:
-		break;
 	case sf::Event::MouseButtonPressed:
 		mouse = sf::Mouse::getPosition(window);
 
-		if (mouse.x > HEIGHT || mouse.y > HEIGHT) break;
+		if (mouse.x > HEIGHT) break; // Clicked outside board
 
 		selectedSquare = 63 - ((mouse.x / (HEIGHT / 8)) + 8 * (mouse.y / (HEIGHT / 8)));
 

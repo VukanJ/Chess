@@ -178,20 +178,28 @@ void Board::updateAttack(piece p)
 		case bp:
 			pawnFill(black);
 			break;
-		case br:
-			attacks[br] = 0x0;
+		case wp:
+			pawnFill(white);
+			break;
+		case br: case wr:
+			attacks[p] = 0x0;
 			for (int i = 0; i < 4; ++i)
-				attacks[br] |= floodFill(pieces[br], ~allPos, (dir)i);
+				attacks[p] |= floodFill(pieces[p], ~allPos, (dir)i);
 			break;
 		case bn:
 			mask = pieces[bn];
 			attacks[bn] = 0x0;
 			BITLOOP(pos,mask) attacks[bn] |= KNIGHT_ATTACKS[pos] & ~blackPos;
 			break;
-		case bb:
-			attacks[bb] = 0x0;
+		case wn:
+			mask = pieces[wn];
+			attacks[wn] = 0x0;
+			BITLOOP(pos, mask) attacks[wn] |= KNIGHT_ATTACKS[pos] & ~whitePos;
+			break;
+		case bb: case wb:
+			attacks[p] = 0x0;
 			for (int i = 4; i < 8; ++i)
-				attacks[bb] |= floodFill(pieces[bb], ~allPos, (dir)i);
+				attacks[p] |= floodFill(pieces[p], ~allPos, (dir)i);
 			break;
 		case bk:
 			mask = pieces[bk];
@@ -199,39 +207,16 @@ void Board::updateAttack(piece p)
 			bitScan_rev64(pos, mask);
 			attacks[bk] |= KING_ATTACKS[pos] & ~blackPos;
 			break;
-		case bq:
-			attacks[bq] = 0x0;
-			for (int i = 0; i < 8; ++i)
-				attacks[bq] |= floodFill(pieces[bq], ~allPos, (dir)i);
-			break;
-		case wp:
-			pawnFill(white);
-			break;
-		case wr:
-			attacks[wr] = 0x0;
-			for (int i = 0; i < 4; ++i)
-				attacks[wr] |= floodFill(pieces[wr], ~allPos, (dir)i);
-			break;
-		case wn:
-			mask = pieces[wn];
-			attacks[wn] = 0x0;
-			BITLOOP(pos, mask) attacks[wn] |= KNIGHT_ATTACKS[pos] & ~whitePos;
-			break;
-		case wb:
-			attacks[wb] = 0x0;
-			for (int i = 4; i < 8; ++i)
-				attacks[wb] |= floodFill(pieces[wb], ~allPos, (dir)i);
-			break;
 		case wk:
 			mask = pieces[wk];
 			attacks[wk] = 0x0;
 			bitScan_rev64(pos, mask);
 			attacks[wk] |= KING_ATTACKS[pos] & ~whitePos;
 			break;
-		case wq:
-			attacks[wq] = 0x0;
+		case bq: case wq:
+			attacks[p] = 0x0;
 			for (int i = 0; i < 8; ++i)
-				attacks[wq] |= floodFill(pieces[wq], ~allPos, (dir)i);
+				attacks[p] |= floodFill(pieces[p], ~allPos, (dir)i);
 			break;
 	}
 }
@@ -305,6 +290,8 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 									if (target < 8) {
 										moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, bq)));
 										moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, bn)));
+										moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, br)));
+										moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, bb)));
 									}
 									else {
 										moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(bp, candidate)));
@@ -322,6 +309,8 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 						else {
 							moveList.insert(moveList.begin(), Move(pos + 8, pos, PROMOTION, piece_pair(bp, bq)));
 							moveList.insert(moveList.begin(), Move(pos + 8, pos, PROMOTION, piece_pair(bp, bn)));
+							moveList.insert(moveList.begin(), Move(pos + 8, pos, PROMOTION, piece_pair(bp, br)));
+							moveList.insert(moveList.begin(), Move(pos + 8, pos, PROMOTION, piece_pair(bp, bb)));
 						}
 					}
 					// Double pawn move
@@ -508,6 +497,8 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 									 if (target > 55) {
 										 moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, wq)));
 										 moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, wn)));
+										 moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, wr)));
+										 moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, wb)));
 									 }
 									 else {
 										 moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(wp, candidate)));
@@ -526,6 +517,8 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 					 else {
 						 moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, piece_pair(wp, wq)));
 						 moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, piece_pair(wp, wn)));
+						 moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, piece_pair(wp, wr)));
+						 moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, piece_pair(wp, wb)));
 					 }
 				 }
 				 attackingPieces = ((((0xFF00 & pieces[wp]) << 8) & wpMove) << 8) & wpMove;
@@ -744,13 +737,13 @@ void Board::makeMove(const Move& move, color side)
 			hashKey ^= randomSet[move.Pieces][move.from]; // Update hashKey...
 			hashKey ^= randomSet[move.Pieces][move.to];
 			hashKey ^= randomSet[ENPASSENT_HASH][move.from % 8];
-			(move.Pieces == bp ? w_enpassent : b_enpassent) |= 0x1 << (move.from % 8); // The other player can then perform enpassent
+			(move.Pieces == bp ? w_enpassent : b_enpassent) |= bit_at(move.from % 8); // The other player can then perform enpassent
 			// update position mask
 			side == black ? (blackPos = ((blackPos ^ bit_at(move.from)) | bit_at(move.to)))
 				          : (whitePos = ((whitePos ^ bit_at(move.from)) | bit_at(move.to)));
 			break;
 		case PROMOTION:
-			pieces[move_piece(move.Pieces)] ^= bit_at(move.from);     // removes pawn
+			pieces[move_piece(move.Pieces)] ^= bit_at(move.from);    // removes pawn
 			pieces[target_piece(move.Pieces)] |= bit_at(move.to);    // New piece appears
 			hashKey ^= randomSet[move_piece(move.Pieces)][move.from]; // Update hashKey...
 			hashKey ^= randomSet[target_piece(move.Pieces)][move.to];
