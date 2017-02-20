@@ -323,123 +323,6 @@ void UnitTest::testProm()
 	assert(hashKey == ai.chessBoard.hashKey);
 }
 
-Benchmark::Benchmark() : performingAll(false){}
-
-void Benchmark::performAllbenchmarks()
-{
-	clog << "\t::: STARTED ALL BENCHMARK :::\n";
-	performingAll = true;
-	benchmarkMoveGeneration();
-	benchmarkMovemaking();
-	performingAll = false;
-	clog << "\t::: END OF ALL BENCHMARKS :::\n";
-}
-
-#pragma optimize( "", off ) // Never "optimize" benchmarks
-void Benchmark::benchmarkMoveGeneration()
-{
-	if (performingAll) {
-		results.push_back(result{MOVEGEN, "generateMoveList", "", 0 });
-	}
-	else {
-		clog << "\t::: BENCHMARK :::\n";
-		clog << "Started Benchmarking Board::generateMoveList(...)\n";
-	}
-	// Measure move generation time
-	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5", black);
-	vector<Move> moves;
-
-	vector<double> measurement;
-	int testSize = (int)1e6;
-	measurement.reserve(testSize);
-	moves.reserve(testSize);
-
-	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-	for (int i = 0; i < testSize; i++) {
-		samplePlayer.chessBoard.generateMoveList(moves, black);
-	}
-	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-	measurement.push_back((double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count());
-	moves.clear();
-	double sum = 0;
-	for (auto& m : measurement) sum += m;
-	double averageMoveGenTime = (sum / testSize) * 1e-6; // in seconds
-
-	if (performingAll) {
-		results.back().msg = "Number of million boards per second: ";
-		results.back().value = averageMoveGenTime;
-	}
-	else {
-		printf("Move generation takes approx. %f microseconds\n", averageMoveGenTime  * 1e6);
-		printf("Generates %f million boards per second\n", (1.0 / averageMoveGenTime) * 1e-6);
-		clog << "\t::: END OF BENCHMARK :::\n";
-	}
-}
-#pragma optimize( "", on )
-
-#pragma optimize( "", off ) // Never "optimize" benchmarks
-void Benchmark::benchmarkMovemaking()
-{
-	// Measure move generation time
-	if (performingAll) {
-		results.push_back(result{MAKEMOVE, "makeMove/unMakeMove", "", 0 });
-	}
-	else {
-		clog << "\t::: BENCHMARK :::\n";
-		clog << "Started Benchmarking Board::makeMove/unMakeMove(...)\n";
-	}
-
-	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5", black);
-	vector<Move> moves;
-	samplePlayer.chessBoard.generateMoveList(moves, black);
-	auto& boardref = samplePlayer.chessBoard;
-	size_t numOfMoves = moves.size();
-	int testsize = (int)1e6;
-	vector<double> measurement;
-	measurement.reserve(testsize);
-
-	for (int i = 0; i < testsize; i++) {
-		chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-		for (auto& move : moves) {
-			boardref.makeMove(move, black);
-			boardref.unMakeMove(move, black);
-		}
-		chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-		measurement.push_back((double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count());
-	}
-	double sum = 0;
-	for (auto& m : measurement) sum += m;
-	double averageMoveMakeTime = (sum / (numOfMoves*testsize)) * 1e-6; // in seconds
-
-	if (performingAll) {
-		results.back().msg = "Number of million moves and unmake per second: ";
-		results.back().value = averageMoveMakeTime;
-	}
-	else {
-		printf("Move making and undoing takes approx. %f microseconds\n", averageMoveMakeTime * 1e6);
-		printf("Makes %f move/unmakemoves per second\n", 1.0 / averageMoveMakeTime);
-		clog << "\t::: END OF BENCHMARK :::\n";
-	}
-}
-#pragma optimize( "", on )
-
-void Benchmark::summarize()
-{
-	clog << "\t::: BENCHMARK SUMMARY:::\n" << string(80, '~') << '\n';
-	for (auto& result : results) {
-		clog << result.name << '\n';
-		switch(result.type){
-			case MOVEGEN:
-				clog << result.msg << '\t' << (1.0/result.value) * 1e-6 << '\n';
-			break;
-			case MAKEMOVE:
-				clog << result.msg << '\t' << (1.0/result.value) * 1e-6 << '\n';
-			break;
-		}
-	}
-	clog << "\t::: END OF SUMMARY :::\n" << string(80, '~') << '\n';
-}
-
 void UnitTest::specialTest()
 {
 	AI ai("8/b1b5/1P2n1b1/1P3P11/8 w - 1 0", black, 10);
@@ -628,4 +511,202 @@ void UnitTest::testHashing()
 		//assert(Hash.hasEntry(b));
 	}
 	//assert(Hash.hasEntry(boards[55]));
+}
+
+
+Benchmark::Benchmark() : performingAll(false) 
+{
+	genChessData data;
+	data.gen(); // Generates bitboards needed for move generation
+	//testBoard = Board("* w kKqQ 1 0");
+	testBoard = Board("* w - 0 1");
+	perftNodeCount = 0;
+}
+
+Benchmark::~Benchmark()
+{
+}
+
+void Benchmark::performAllbenchmarks()
+{
+	clog << "\t::: STARTED ALL BENCHMARK :::\n";
+	performingAll = true;
+	benchmarkMoveGeneration();
+	benchmarkMovemaking();
+	performingAll = false;
+	clog << "\t::: END OF ALL BENCHMARKS :::\n";
+}
+
+#pragma optimize( "", off ) // Never "optimize" benchmarks
+void Benchmark::benchmarkMoveGeneration()
+{
+	if (performingAll) {
+		results.push_back(result{ MOVEGEN, "generateMoveList", "", 0 });
+	}
+	else {
+		clog << "\t::: BENCHMARK :::\n";
+		clog << "Started Benchmarking Board::generateMoveList(...)\n";
+	}
+	// Measure move generation time
+	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5 w kKqQ 1 0", black);
+	vector<Move> moves;
+
+	vector<double> measurement;
+	int testSize = (int)1e6;
+	measurement.reserve(testSize);
+	moves.reserve(testSize);
+
+	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
+	for (int i = 0; i < testSize; i++) {
+		samplePlayer.chessBoard.generateMoveList(moves, black);
+		moves.clear();
+	}
+	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
+	measurement.push_back((double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count());
+	moves.clear();
+	double sum = 0;
+	for (auto& m : measurement) sum += m;
+	double averageMoveGenTime = (sum / testSize) * 1e-6; // in seconds
+
+	if (performingAll) {
+		results.back().msg = "Number of million boards per second: ";
+		results.back().value = averageMoveGenTime;
+	}
+	else {
+		printf("Move generation takes approx. %f microseconds\n", averageMoveGenTime  * 1e6);
+		printf("Generates %f million boards per second\n", (1.0 / averageMoveGenTime) * 1e-6);
+		clog << "\t::: END OF BENCHMARK :::\n";
+	}
+}
+#pragma optimize( "", on )
+
+#pragma optimize( "", off ) // Never "optimize" benchmarks
+void Benchmark::benchmarkMovemaking()
+{
+	// Measure move generation time
+	if (performingAll) {
+		results.push_back(result{ MAKEMOVE, "makeMove/unMakeMove", "", 0 });
+	}
+	else {
+		clog << "\t::: BENCHMARK :::\n";
+		clog << "Started Benchmarking Board::makeMove/unMakeMove(...)\n";
+	}
+
+	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5", black);
+	vector<Move> moves;
+	samplePlayer.chessBoard.generateMoveList(moves, black);
+	auto& boardref = samplePlayer.chessBoard;
+	size_t numOfMoves = moves.size();
+	int testsize = (int)1e6;
+	vector<double> measurement;
+	measurement.reserve(testsize);
+
+	for (int i = 0; i < testsize; i++) {
+		chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
+		for (auto& move : moves) {
+			boardref.makeMove(move, black);
+			boardref.unMakeMove(move, black);
+		}
+		chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
+		measurement.push_back((double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count());
+	}
+	double sum = 0;
+	for (auto& m : measurement) sum += m;
+	double averageMoveMakeTime = (sum / (numOfMoves*testsize)) * 1e-6; // in seconds
+
+	if (performingAll) {
+		results.back().msg = "Number of million moves and unmake per second: ";
+		results.back().value = averageMoveMakeTime;
+	}
+	else {
+		printf("Move making and undoing takes approx. %f microseconds\n", averageMoveMakeTime * 1e6);
+		printf("Makes %f move/unmakemoves per second\n", 1.0 / averageMoveMakeTime);
+		clog << "\t::: END OF BENCHMARK :::\n";
+	}
+}
+#pragma optimize( "", on )
+
+void Benchmark::summarize()
+{
+	clog << "\t::: BENCHMARK SUMMARY:::\n" << string(80, '~') << '\n';
+	for (auto& result : results) {
+		clog << result.name << '\n';
+		switch (result.type) {
+		case MOVEGEN:
+			clog << result.msg << '\t' << (1.0 / result.value) * 1e-6 << '\n';
+			break;
+		case MAKEMOVE:
+			clog << result.msg << '\t' << (1.0 / result.value) * 1e-6 << '\n';
+			break;
+		}
+	}
+	clog << "\t::: END OF SUMMARY :::\n" << string(80, '~') << '\n';
+}
+
+void Benchmark::testPerft(int maxdepth, bool countMoveTypes)
+{
+	vector<long> perftNums{
+		20ul,
+		400ul,
+		8902ul,
+		197281ul,
+		4865609ul,
+		119060324ul
+	};
+
+	if (maxdepth == -1) {
+		// Check perft numbers
+		for (int d = 1; d < 7; d++) {
+			chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
+			perft(d, black);
+			chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
+			auto microseconds = (double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
+			cout << "Depth: " << d << endl;
+			//cout << "\tTargeted number of moves: " << perftNums[d-1] << endl;
+			cout << "Execution time " << microseconds*1e-3 << "ms\n";
+			cout << "\tComputed number of moves: " << perftMoveCount << endl;
+			//cout << "\tDifference " << max(perftMoveCount,perftNums[d-1]) - min(perftMoveCount, perftNums[d-1]) << endl;
+			//testBoard.print();
+			perftMoveCount = 0;
+		}
+		return;
+	}
+	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
+	perft(maxdepth, white);
+	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
+	auto microseconds = (double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
+
+	cout << "Depth: " << maxdepth << endl;
+	cout << "\tExecution time " << microseconds*1e-3 << "ms\n";
+	cout << "\t# of generated nodes: " << perftNodeCount << endl;
+	cout << "\t# of generated moves: " << perftMoveCount << endl;
+	cout << "\t# of checkmates: " << checkmateCount << endl;
+	perftNodeCount = 0;
+
+}
+
+void Benchmark::perft(int depth, color side)
+{
+	// Builds a tree to benchmark move generation
+	if (depth == 0) return;
+	perftNodeCount++;
+	MoveList movelist;
+	testBoard.generateMoveList(movelist, side);
+	// Store pairs of root moves and number of possible moves after them
+	bool checkmate = true;
+	for (auto& move : movelist) {
+		testBoard.makeMove(move, side);
+		testBoard.updateAllAttacks();
+		perftMoveCount++;
+		if (testBoard.isKingInCheck(side)) {
+			testBoard.unMakeMove(move, side);
+			perftMoveCount--;
+			continue;
+		}
+		checkmate = false; // Moves were found
+		perft(depth - 1, static_cast<color>(!side));
+		testBoard.unMakeMove(move, static_cast<color>(side));
+		testBoard.updateAllAttacks();
+	}
+	if (checkmate) checkmateCount++;
 }
