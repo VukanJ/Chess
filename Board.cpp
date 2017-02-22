@@ -81,7 +81,7 @@ void Board::setupBoard(string FEN)
 void Board::initHash()
 {
 	// Generates initial hashkey. 
-	// Generates constant table of random 64Bit numbers
+	// Generates constant table of random 64Bit numbers.
 	random_device r_device;
 	mt19937_64 generator(r_device());
 	//generator.seed(42);
@@ -91,6 +91,25 @@ void Board::initHash()
 	for (auto& r1 : randomSet)
 		for (auto& r2 : r1)
 			r2 = distr(generator);
+	randomSet.push_back(vector<u64>(4, 0x0));
+
+	// The following calculations do not need to be repeated when castling
+	randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_k] = randomSet[bk][e8]
+		                                           ^ randomSet[bk][g8]
+		                                           ^ randomSet[br][h8]
+		                                           ^ randomSet[br][f8];
+	randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_q] = randomSet[bk][e8]
+		                                           ^ randomSet[bk][c8]
+		                                           ^ randomSet[br][a8]
+		                                           ^ randomSet[br][d8];
+	randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_K] = randomSet[wk][e1]
+		                                           ^ randomSet[wk][g1]
+		                                           ^ randomSet[wr][h1]
+		                                           ^ randomSet[wr][f1];
+	randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_Q] = randomSet[wk][e1]
+		                                           ^ randomSet[wk][c1]
+		                                           ^ randomSet[wr][a1]
+		                                           ^ randomSet[wr][d1];
 
 	auto pos = 0, i = 0;
 	for (auto p : pieces) {
@@ -697,8 +716,8 @@ void Board::makeMove(const Move& move, color side)
 		case MOVE:
 			pieces[move.Pieces] ^= bit_at(move.from);     // Piece disappears from departure
 			pieces[move.Pieces] |= bit_at(move.to);       // Piece appears at destination
-			hashKey ^= randomSet[move.Pieces][move.from]; // Update hashKey...
-			hashKey ^= randomSet[move.Pieces][move.to];
+			hashKey ^= randomSet[move.Pieces][move.from]  // Update hashKey...
+			         ^ randomSet[move.Pieces][move.to];
 			// update position mask
 			side == black ? (blackPos = ((blackPos ^ bit_at(move.from)) | bit_at(move.to)))
 						  : (whitePos = ((whitePos ^ bit_at(move.from)) | bit_at(move.to)));
@@ -707,9 +726,9 @@ void Board::makeMove(const Move& move, color side)
 			pieces[move_piece(move.Pieces)] ^= bit_at(move.from);     // Piece disappears from departure
 			pieces[move_piece(move.Pieces)] |= bit_at(move.to);       // Piece appears at destination
 			pieces[target_piece(move.Pieces)] ^= bit_at(move.to);    // Captured piece is deleted
-			hashKey ^= randomSet[move_piece(move.Pieces)][move.from]; // Update hashKey...
-			hashKey ^= randomSet[move_piece(move.Pieces)][move.to];
-			hashKey ^= randomSet[target_piece(move.Pieces)][move.to];
+			hashKey ^= randomSet[move_piece(move.Pieces)][move.from] // Update hashKey...
+			         ^ randomSet[move_piece(move.Pieces)][move.to]
+			         ^ randomSet[target_piece(move.Pieces)][move.to];
 			// Update position mask
 			if (side == black) {
 				blackPos = (blackPos ^ bit_at(move.from)) | bit_at(move.to);
@@ -723,9 +742,9 @@ void Board::makeMove(const Move& move, color side)
 		case PAWN2:
 			pieces[move.Pieces] ^= bit_at(move.from);     // Piece disappears from departure
 			pieces[move.Pieces] |= bit_at(move.to);       // Piece appears at destination
-			hashKey ^= randomSet[move.Pieces][move.from]; // Update hashKey...
-			hashKey ^= randomSet[move.Pieces][move.to];
-			hashKey ^= randomSet[ENPASSENT_HASH][move.from % 8];
+			hashKey ^= randomSet[move.Pieces][move.from] // Update hashKey...
+			         ^ randomSet[move.Pieces][move.to]
+			         ^ randomSet[ENPASSENT_HASH][move.from % 8];
 
 			// The other player can then sometimes perform enpassent (if other pawn is available)
 			if (move.Pieces == bp && (0x5ull << (move.to - 1)) & (_row << 32) & pieces[wp]) {
@@ -742,8 +761,8 @@ void Board::makeMove(const Move& move, color side)
 		case PROMOTION:
 			pieces[move_piece(move.Pieces)] ^= bit_at(move.from);    // removes pawn
 			pieces[target_piece(move.Pieces)] |= bit_at(move.to);    // New piece appears
-			hashKey ^= randomSet[move_piece(move.Pieces)][move.from]; // Update hashKey...
-			hashKey ^= randomSet[target_piece(move.Pieces)][move.to];
+			hashKey ^= randomSet[move_piece(move.Pieces)][move.from] // Update hashKey...
+			         ^ randomSet[target_piece(move.Pieces)][move.to];
 			// update position mask
 			side == black ? (blackPos = ((blackPos ^ bit_at(move.from)) | bit_at(move.to)))
 				          : (whitePos = ((whitePos ^ bit_at(move.from)) | bit_at(move.to)));
@@ -754,9 +773,9 @@ void Board::makeMove(const Move& move, color side)
 				pieces[bp] ^= bit_at(move.from);
 				pieces[move_piece(move.Pieces)] ^= bit_at(move.to);
 				pieces[target_piece(move.Pieces)] |= bit_at(move.to);
-				hashKey ^= randomSet[bp][move.from];
-				hashKey ^= randomSet[move_piece(move.Pieces)][move.to];
-				hashKey ^= randomSet[target_piece(move.Pieces)][move.to];
+				hashKey ^= randomSet[bp][move.from]
+				         ^ randomSet[move_piece(move.Pieces)][move.to]
+				         ^ randomSet[target_piece(move.Pieces)][move.to];
 
 				blackPos = (blackPos ^ bit_at(move.from)) | bit_at(move.to);
 				whitePos ^= bit_at(move.to);
@@ -765,9 +784,9 @@ void Board::makeMove(const Move& move, color side)
 				pieces[wp] ^= bit_at(move.from);
 				pieces[move_piece(move.Pieces)] ^= bit_at(move.to);
 				pieces[target_piece(move.Pieces)] |= bit_at(move.to);
-				hashKey ^= randomSet[wp][move.from];
-				hashKey ^= randomSet[move_piece(move.Pieces)][move.to];
-				hashKey ^= randomSet[target_piece(move.Pieces)][move.to];
+				hashKey ^= randomSet[wp][move.from]
+				        ^ randomSet[move_piece(move.Pieces)][move.to]
+				        ^ randomSet[target_piece(move.Pieces)][move.to];
 
 				whitePos = (whitePos ^ bit_at(move.from)) | bit_at(move.to);
 				blackPos ^= bit_at(move.to);
@@ -779,9 +798,8 @@ void Board::makeMove(const Move& move, color side)
 			pieces[br] ^= bit_at(h8);
 			pieces[br] |= bit_at(f8);
 			// Update hash
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			hashKey ^= randomSet[bk][e8] ^ randomSet[bk][g8];
-			hashKey ^= randomSet[br][h8] ^ randomSet[br][f8];
+			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
+			         ^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_k];
 			// Override position
 			blackPos ^= blackPos & 0xF00000000000000ull;
 			blackPos |= 0x600000000000000ull;
@@ -792,9 +810,8 @@ void Board::makeMove(const Move& move, color side)
 			pieces[wr] ^= bit_at(h1);
 			pieces[wr] |= bit_at(f1);
 			// Update hash
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			hashKey ^= randomSet[wk][e1] ^ randomSet[wk][g1];
-			hashKey ^= randomSet[wr][h1] ^ randomSet[wr][f1];
+			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
+			         ^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_K];
 			// Override position
 			whitePos ^= whitePos & 0xF;
 			whitePos |= 0x6;
@@ -805,9 +822,8 @@ void Board::makeMove(const Move& move, color side)
 			pieces[br] ^= bit_at(a8);
 			pieces[br] |= bit_at(d8);
 			// Update hash
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			hashKey ^= randomSet[bk][e8] ^ randomSet[bk][c8];
-			hashKey ^= randomSet[br][a8] ^ randomSet[br][d8];
+			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
+				    ^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_q];
 			// Override position
 			blackPos ^= blackPos & 0xF800000000000000ull;
 			blackPos |= 0x3000000000000000ull;
@@ -818,9 +834,8 @@ void Board::makeMove(const Move& move, color side)
 			pieces[wr] ^= bit_at(a1);
 			pieces[wr] |= bit_at(d1);
 			// Update hash
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			hashKey ^= randomSet[wk][e1] ^ randomSet[wk][c1];
-			hashKey ^= randomSet[wr][a1] ^ randomSet[wr][d1];
+			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
+			         ^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_Q];
 			// Override position
 			whitePos ^= whitePos & 0xF8ull;
 			whitePos |= 0x30ull;
@@ -860,19 +875,19 @@ void Board::unMakeMove(const Move& move, color side)
 		case MOVE:
 			pieces[move.Pieces] ^= bit_at(move.to);       // Piece disappears from destination
 			pieces[move.Pieces] |= bit_at(move.from);     // Piece reappears at departure
-			hashKey ^= randomSet[move.Pieces][move.from]; // Update hashKey...
-			hashKey ^= randomSet[move.Pieces][move.to];
+			hashKey ^= randomSet[move.Pieces][move.from]  // Update hashKey...
+			        ^ randomSet[move.Pieces][move.to];
 			// Update position mask
 			side == black ? (blackPos = ((blackPos ^ bit_at(move.to)) | bit_at(move.from)))
 						  : (whitePos = ((whitePos ^ bit_at(move.to)) | bit_at(move.from)));
 			break;
 		case CAPTURE:
-			pieces[move_piece(move.Pieces)]    ^= bit_at(move.to);    // Piece disappears from destination
-			pieces[move_piece(move.Pieces)]    |= bit_at(move.from);  // Piece appears at departure
+			pieces[move_piece(move.Pieces)]   ^= bit_at(move.to);    // Piece disappears from destination
+			pieces[move_piece(move.Pieces)]   |= bit_at(move.from);  // Piece appears at departure
 			pieces[target_piece(move.Pieces)] |= bit_at(move.to);    // Captured piece reappears
-			hashKey ^= randomSet[move_piece(move.Pieces)][move.from]; // Update hashKey...
-			hashKey ^= randomSet[move_piece(move.Pieces)][move.to];
-			hashKey ^= randomSet[target_piece(move.Pieces)][move.to];
+			hashKey ^= randomSet[move_piece(move.Pieces)][move.from] // Update hashKey...
+			         ^ randomSet[move_piece(move.Pieces)][move.to]
+			         ^ randomSet[target_piece(move.Pieces)][move.to];
 			// Update position mask
 			if (side == black) {
 				blackPos = (blackPos ^ bit_at(move.to)) | bit_at(move.from);
@@ -884,11 +899,11 @@ void Board::unMakeMove(const Move& move, color side)
 			}
 			break;
 		case PAWN2:
-			pieces[move.Pieces] ^= bit_at(move.to);       // Piece disappears from destination
-			pieces[move.Pieces] |= bit_at(move.from);     // Piece appears at departure
-			hashKey ^= randomSet[move.Pieces][move.to]; // Update hashKey...
-			hashKey ^= randomSet[move.Pieces][move.from];
-			hashKey ^= randomSet[ENPASSENT_HASH][move.from % 8];
+			pieces[move.Pieces] ^= bit_at(move.to);     // Piece disappears from destination
+			pieces[move.Pieces] |= bit_at(move.from);   // Piece appears at departure
+			hashKey ^= randomSet[move.Pieces][move.to]  // Update hashKey...
+			         ^ randomSet[move.Pieces][move.from]
+			         ^ randomSet[ENPASSENT_HASH][move.from % 8];
 			b_enpassent = w_enpassent = 0x0;
 			// update position mask
 			side == black ? (blackPos = ((blackPos ^ bit_at(move.to)) | bit_at(move.from)))
@@ -897,8 +912,8 @@ void Board::unMakeMove(const Move& move, color side)
 		case PROMOTION:
 			pieces[move_piece(move.Pieces)]    |= bit_at(move.from);
 			pieces[target_piece(move.Pieces)] ^= bit_at(move.to);
-			hashKey ^= randomSet[move_piece(move.Pieces)][move.from];
-			hashKey ^= randomSet[target_piece(move.Pieces)][move.to];
+			hashKey ^= randomSet[move_piece(move.Pieces)][move.from]
+			         ^ randomSet[target_piece(move.Pieces)][move.to];
 			// update position mask
 			side == black ? (blackPos = ((blackPos ^ bit_at(move.to)) | bit_at(move.from)))
 				          : (whitePos = ((whitePos ^ bit_at(move.to)) | bit_at(move.from)));
@@ -908,9 +923,9 @@ void Board::unMakeMove(const Move& move, color side)
 				pieces[bp] |= bit_at(move.from);
 				pieces[move_piece(move.Pieces)] |= bit_at(move.to);
 				pieces[target_piece(move.Pieces)] ^= bit_at(move.to);
-				hashKey ^= randomSet[bp][move.from];
-				hashKey ^= randomSet[move_piece(move.Pieces)][move.to];
-				hashKey ^= randomSet[target_piece(move.Pieces)][move.to];
+				hashKey ^= randomSet[bp][move.from]
+				         ^ randomSet[move_piece(move.Pieces)][move.to]
+				         ^ randomSet[target_piece(move.Pieces)][move.to];
 			
 				blackPos = (blackPos | bit_at(move.from)) ^ bit_at(move.to);
 				whitePos |= bit_at(move.to);
@@ -919,9 +934,9 @@ void Board::unMakeMove(const Move& move, color side)
 				pieces[wp] |= bit_at(move.from);
 				pieces[move_piece(move.Pieces)] |= bit_at(move.to);
 				pieces[target_piece(move.Pieces)] ^= bit_at(move.to);
-				hashKey ^= randomSet[wp][move.from];
-				hashKey ^= randomSet[move_piece(move.Pieces)][move.to];
-				hashKey ^= randomSet[target_piece(move.Pieces)][move.to];
+				hashKey ^= randomSet[wp][move.from]
+				         ^ randomSet[move_piece(move.Pieces)][move.to]
+				         ^ randomSet[target_piece(move.Pieces)][move.to];
 			
 				whitePos = (whitePos | bit_at(move.from)) ^ bit_at(move.to);
 				blackPos |= bit_at(move.to);
@@ -932,9 +947,8 @@ void Board::unMakeMove(const Move& move, color side)
 			pieces[br] ^= bit_at(f8);
 			pieces[br] |= bit_at(h8);
 			// Update hash
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			hashKey ^= randomSet[bk][g8] ^ randomSet[bk][e8];
-			hashKey ^= randomSet[br][f8] ^ randomSet[br][h8];
+			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
+			         ^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_k];
 			// Override position
 			blackPos ^= blackPos & 0xF00000000000000ull;
 			blackPos |= 0x900000000000000ull;
@@ -945,9 +959,8 @@ void Board::unMakeMove(const Move& move, color side)
 			pieces[wr] ^= bit_at(f1);
 			pieces[wr] |= bit_at(h1);
 			// Update hash
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			hashKey ^= randomSet[wk][g1] ^ randomSet[wk][e1];
-			hashKey ^= randomSet[wr][f1] ^ randomSet[wr][h1];
+			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
+				     ^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_K]; 
 			// Override position
 			whitePos ^= whitePos & 0xF;
 			whitePos |= 0x9;
@@ -958,9 +971,8 @@ void Board::unMakeMove(const Move& move, color side)
 			pieces[br] ^= bit_at(d8);
 			pieces[br] |= bit_at(a8);
 			// Update hash
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			hashKey ^= randomSet[bk][c8] ^ randomSet[bk][e8];
-			hashKey ^= randomSet[br][d8] ^ randomSet[br][a8];
+			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
+			         ^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_q];
 			// Override position
 			blackPos ^= blackPos & 0xF800000000000000ull;
 			blackPos |= 0x8800000000000000ull;
@@ -971,9 +983,8 @@ void Board::unMakeMove(const Move& move, color side)
 			pieces[wr] ^= bit_at(d1);
 			pieces[wr] |= bit_at(a1);
 			// Update hash
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			hashKey ^= randomSet[wk][c1] ^ randomSet[wk][e1];
-			hashKey ^= randomSet[wr][d1] ^ randomSet[wr][a1];
+			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
+			         ^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_Q];
 			// Override position
 			whitePos ^= whitePos & 0xF8ull;
 			whitePos |= 0x88ull;
