@@ -316,7 +316,6 @@ void UnitTest::testEnpassent()
 	AI ai("4k3/pppppppp8888PPPPPPPP/4K3 w - 1 0", white, 10);
 	MoveList movelist;
 	ai.chessBoard.updateAllAttacks();
-	ai.chessBoard.print();
 
 	auto hashKey = ai.chessBoard.hashKey;
 
@@ -369,8 +368,72 @@ void UnitTest::testEnpassent()
 
 		assert(hashKey == ai.chessBoard.hashKey);
 	}
+	ai.chessBoard.updateAllAttacks();
+	for (int pos = 0; pos < 7; ++pos) {
+		otherpawn = Move(h2 + pos, h5 + pos, MOVE, wp);
+		pawn2 = Move(g7 + pos, g5 + pos, PAWN2, bp);
+	
+		ai.chessBoard.makeMove(otherpawn, white);
+		ai.chessBoard.makeMove(pawn2, black);
+		ai.chessBoard.updateAllAttacks();
+	
+		movelist.clear();
+		ai.chessBoard.generateMoveList(movelist, white);
+		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
+		assert(ep != movelist.end());
+		assert(ep->from == h5 + pos && ep->to == g6 + pos && ep->Pieces == wp);
+		ai.chessBoard.makeMove(*ep,   white);
+		ai.chessBoard.unMakeMove(*ep, white);
+	
+		ai.chessBoard.unMakeMove(pawn2, black);
+		ai.chessBoard.unMakeMove(otherpawn, white);
+		ai.chessBoard.updateAllAttacks();
+	
+		assert(hashKey == ai.chessBoard.hashKey);
+	}
+	for (int pos = 1; pos < 8; ++pos) {
+		otherpawn = Move(h2 + pos, h5 + pos, MOVE, wp);
+		pawn2 = Move(h7 - 1 + pos, h5 - 1 + pos, PAWN2, bp);
+	
+		ai.chessBoard.makeMove(otherpawn, white);
+		ai.chessBoard.makeMove(pawn2, black);
+		ai.chessBoard.updateAllAttacks();
+	
+		movelist.clear();
+		ai.chessBoard.generateMoveList(movelist, white);
+		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
+		assert(ep != movelist.end());
+		assert(ep->from == h5 + pos && ep->to == a5 + pos && ep->Pieces == wp);
+		ai.chessBoard.makeMove(*ep,   white);
+		ai.chessBoard.unMakeMove(*ep, white);
+	
+		ai.chessBoard.unMakeMove(pawn2, black);
+		ai.chessBoard.unMakeMove(otherpawn, white);
+		ai.chessBoard.updateAllAttacks();
+	
+		assert(hashKey == ai.chessBoard.hashKey);
+	}
+	ai.chessBoard.print();
+	Move m1(b7, b5, PAWN2, bp);
+	Move m2(d7, d5, PAWN2, bp);
+	Move dummy(h2, h3, MOVE, wp);
 
-	// Test loss of ep-right
+	pawn2 = Move(c2, c5, MOVE, wp);
+	ai.chessBoard.makeMove(pawn2, white);
+	ai.chessBoard.print();
+	cout << (int)ai.chessBoard.w_enpassent << endl;
+	ai.chessBoard.makeMove(m1, black);
+	ai.chessBoard.print();
+	cout << (int)ai.chessBoard.w_enpassent << endl;
+	ai.chessBoard.makeMove(dummy, white);
+	ai.chessBoard.print();
+	cout << (int)ai.chessBoard.w_enpassent << endl;
+	ai.chessBoard.makeMove(m2, black);
+	ai.chessBoard.print();
+	cout << (int)ai.chessBoard.w_enpassent << endl;
+	ai.chessBoard.unMakeMove(m2, black);
+	ai.chessBoard.print();
+	cout << (int)ai.chessBoard.w_enpassent << endl;
 }
 
 void UnitTest::testProm()

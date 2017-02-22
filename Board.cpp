@@ -93,7 +93,7 @@ void Board::initHash()
 			r2 = distr(generator);
 	randomSet.push_back(vector<u64>(4, 0x0));
 
-	// The following calculations do not need to be repeated when castling
+	// The following calculations do not need to be repeated when castling in game
 	randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_k] = randomSet[bk][e8]
 		                                           ^ randomSet[bk][g8]
 		                                           ^ randomSet[br][h8]
@@ -181,8 +181,8 @@ void Board::updateAllAttacks()
 	// Exclude pieces that attack pieces of same color
 	BLACKLOOP(i) attacks[i] &= ~blackPos;
 	WHITELOOP(i) attacks[i] &= ~whitePos;
-	BLACKLOOP(i) blackAtt  |= attacks[i];
-	WHITELOOP(i) whiteAtt  |= attacks[i];
+	BLACKLOOP(i) blackAtt   |= attacks[i];
+	WHITELOOP(i) whiteAtt   |= attacks[i];
 }
 
 void Board::updateAttack(piece p)
@@ -533,33 +533,21 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 				 BITLOOP(pos, attackingPieces) {
 					 moveList.push_back(Move(pos - 16, pos, PAWN2, wp));
 				 }
-				 /*
-				 if (w_enpassent) { // if enpassent is available possible
-				 // Check if pawns are able to do enpassent
-					 attackingPieces = (pieces[wp] >> 1) & pieces[bp] & (_row << 32);
-					 // Are white pawns left of black pawns?
-					 if (attackingPieces) {
-						 // Add move
-						 bitScan_rev64(pos, attackingPieces);
-						 if (bit_at(pos + 8) & allPos)
-							moveList.insert(moveList.begin(), Move(pos, pos + 8, ENPASSENT, wp));
+				 if (w_enpassent) { 
+					// There surely exists an enpassent move
+					 if ((bit_at(30 + w_enpassent) & pieces[wp]) & (_row << 32)) {
+						 // white pawn right of ep square
+						 moveList.push_back(Move(30 + w_enpassent, 39 + w_enpassent, ENPASSENT, wp));
 					 }
-					 else {
-						 // Are white pawns right of black pawns?
-						 attackingPieces = (pieces[wp] << 1) & pieces[bp] & (_row << 32);
-						 if (attackingPieces) {
-							 // Add move
-							 bitScan_rev64(pos, attackingPieces);
-							 if (bit_at(pos + 8) & allPos)
-								 moveList.insert(moveList.begin(), Move(pos, pos + 8, ENPASSENT, wp));
-						 }
+					 if (bit_at(32 + w_enpassent) & pieces[wp] & (_row << 32)) {
+						 // white pawn left of ep square
+						 moveList.push_back(Move(32 + w_enpassent, 39 + w_enpassent, ENPASSENT, wp));
 					 }
 				 }
-				 */
 				 break;
 			 case wr: // WHITE ROOK
 				 // Calculate attacked pieces
-				 BITLOOP(pos, attackingPieces) {                                                         // Loop through all positions of pieces of kind br
+				 BITLOOP(pos, attackingPieces) {                                                          // Loop through all positions of pieces of kind br
 					 attackMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[wr] & blackPos; // Intersections with opponent pieces
 					// printBitboard(attackMask);
 					 if (attackMask) {                                                    // If pieces are targeted
@@ -852,7 +840,14 @@ void Board::makeMove(const Move& move, color side)
 				b_enpassent = 0;
 			}
 			else {
-				// WIP
+				hashKey ^= randomSet[wp][move.from]
+					     ^ randomSet[wp][move.to]
+					     ^ randomSet[bp][move.to - 8]
+					     ^ randomSet[ENPASSENT_HASH][w_enpassent - 1];
+				pieces[wp] ^= bit_at(move.from);
+				pieces[wp] |= bit_at(move.to);
+				pieces[bp] ^= bit_at(move.to - 8);
+				w_enpassent = 0;
 			}
 			break;
 		default:
@@ -1002,7 +997,14 @@ void Board::unMakeMove(const Move& move, color side)
 				pieces[wp] |= bit_at(move.to + 8);
 			}
 			else {
-				// WIP
+				hashKey ^= randomSet[wp][move.from]
+					     ^ randomSet[wp][move.to]
+					     ^ randomSet[bp][move.to - 8]
+					     ^ randomSet[ENPASSENT_HASH][move.to % 8];
+				w_enpassent = (move.to % 8) + 1;
+				pieces[wp] ^= bit_at(move.to);
+				pieces[wp] |= bit_at(move.from);
+				pieces[bp] |= bit_at(move.to - 8);
 			}
 			break;
 		default:
