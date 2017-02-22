@@ -224,9 +224,13 @@ void UnitTest::testCastling()
 	Move boo(ai.chessBoard.castlingRights, BCASTLE);
 	Move bOO(ai.chessBoard.castlingRights, BCASTLE_2);
 	ai.chessBoard.makeMove(boo,   black);
+	assert(ai.chessBoard.castlingRights == 0b1100);
 	ai.chessBoard.unMakeMove(boo, black);
+	assert(ai.chessBoard.castlingRights == 0b1111);
 	ai.chessBoard.makeMove(bOO,   black);
+	assert(ai.chessBoard.castlingRights == 0b1100);
 	ai.chessBoard.unMakeMove(bOO, black);
+	assert(ai.chessBoard.castlingRights == 0b1111);
 	assert(ai.chessBoard.hashKey == hashKey);
 
 	moveList.clear();
@@ -237,9 +241,13 @@ void UnitTest::testCastling()
 	Move woo(ai.chessBoard.castlingRights, WCASTLE);
 	Move wOO(ai.chessBoard.castlingRights, WCASTLE_2);
 	ai.chessBoard.makeMove(woo,   white);
+	assert(ai.chessBoard.castlingRights == 0b0011);
 	ai.chessBoard.unMakeMove(woo, white);
+	assert(ai.chessBoard.castlingRights == 0b1111);
 	ai.chessBoard.makeMove(wOO,   white);
+	assert(ai.chessBoard.castlingRights == 0b0011);
 	ai.chessBoard.unMakeMove(wOO, white);
+	assert(ai.chessBoard.castlingRights == 0b1111);
 	assert(ai.chessBoard.hashKey == hashKey);
 	// Check partial loss of castling rights
 
@@ -303,13 +311,15 @@ void UnitTest::testCastling()
 void UnitTest::testProm()
 {
 	AI ai("5n2/1P4P1/8/8/8/8/1p4p1/5N w - 1 0", black, 10);
+	ai.chessBoard.updateAllAttacks();
+	ai.chessBoard.print();
 	vector<Move> whiteMoves, blackMoves;
 	ai.chessBoard.generateMoveList(whiteMoves, white);
 	ai.chessBoard.generateMoveList(blackMoves, black);
-	assert(count_if(whiteMoves.begin(), whiteMoves.end(), [](Move& move) {return move.flags == PROMOTION; })   == 4);
-	assert(count_if(whiteMoves.begin(), whiteMoves.end(), [](Move& move) {return move.flags == C_PROMOTION; }) == 2);
-	assert(count_if(blackMoves.begin(), blackMoves.end(), [](Move& move) {return move.flags == PROMOTION; })   == 4);
-	assert(count_if(blackMoves.begin(), blackMoves.end(), [](Move& move) {return move.flags == C_PROMOTION; }) == 2);
+	assert(count_if(whiteMoves.begin(), whiteMoves.end(), [](Move& move) {return move.flags == PROMOTION; })   == 8);
+	assert(count_if(whiteMoves.begin(), whiteMoves.end(), [](Move& move) {return move.flags == C_PROMOTION; }) == 4);
+	assert(count_if(blackMoves.begin(), blackMoves.end(), [](Move& move) {return move.flags == PROMOTION; })   == 8);
+	assert(count_if(blackMoves.begin(), blackMoves.end(), [](Move& move) {return move.flags == C_PROMOTION; }) == 4);
 	auto hashKey = ai.chessBoard.hashKey;
 	for (auto& m : blackMoves) {
 		ai.chessBoard.makeMove(m, black);
@@ -519,7 +529,7 @@ Benchmark::Benchmark() : performingAll(false)
 	genChessData data;
 	data.gen(); // Generates bitboards needed for move generation
 	//testBoard = Board("* w kKqQ 1 0");
-	testBoard = Board("* w - 0 1");
+	testBoard = Board("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq 0 1");
 	perftNodeCount = 0;
 }
 
@@ -656,9 +666,9 @@ void Benchmark::testPerft(int maxdepth, bool countMoveTypes)
 
 	if (maxdepth == -1) {
 		// Check perft numbers
-		for (int d = 1; d < 7; d++) {
+		for (int d = 1; d < 6; d++) {
 			chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-			perft(d, black);
+			perft(d, white);
 			chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
 			auto microseconds = (double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 			cout << "Depth: " << d << endl;
@@ -697,10 +707,10 @@ void Benchmark::perft(int depth, color side)
 	for (auto& move : movelist) {
 		testBoard.makeMove(move, side);
 		testBoard.updateAllAttacks();
-		perftMoveCount++;
+		if(depth == 1)perftMoveCount++;
 		if (testBoard.isKingInCheck(side)) {
 			testBoard.unMakeMove(move, side);
-			perftMoveCount--;
+			if (depth == 1)perftMoveCount--;
 			continue;
 		}
 		checkmate = false; // Moves were found
