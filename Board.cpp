@@ -776,29 +776,57 @@ void Board::makeMove(const Move& move, color side)
 				blackPos ^= bit_at(move.to);
 			}
 			break;
-		case BCASTLE: // Castling short
-			castlingRights &= ~(castle_k | castle_q);          // No castling rights after castling
-			makeMove(Move(e8, g8, MOVE, bk), black);           // move king and rook...
-			makeMove(Move(h8, f8, MOVE, br), black);
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights]; // update hashKey with new castling rights
+		case BCASTLE: // Kingside castling
+			castlingRights &= ~(castle_k | castle_q);
+			pieces[bk]  = bit_at(g8);
+			pieces[br] ^= bit_at(h8);
+			pieces[br] |= bit_at(f8);
+			// Update hash
+			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
+			hashKey ^= randomSet[bk][e8] ^ randomSet[bk][g8];
+			hashKey ^= randomSet[br][h8] ^ randomSet[br][f8];
+			// Override position
+			blackPos ^= blackPos & 0xF00000000000000ull;
+			blackPos |= 0x600000000000000ull;
 			break;
 		case WCASTLE: // Castling short
 			castlingRights &= ~(castle_K | castle_Q);
-			makeMove(Move(e1, g1, MOVE, wk), white);
-			makeMove(Move(h1, f1, MOVE, wr), white);
+			pieces[wk]  = bit_at(g1);
+			pieces[wr] ^= bit_at(h1);
+			pieces[wr] |= bit_at(f1);
+			// Update hash
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
+			hashKey ^= randomSet[wk][e1] ^ randomSet[wk][g1];
+			hashKey ^= randomSet[wr][h1] ^ randomSet[wr][f1];
+			// Override position
+			whitePos ^= whitePos & 0xF;
+			whitePos |= 0x6;
 			break;
 		case BCASTLE_2: // Castling long
 			castlingRights &= ~(castle_k | castle_q);
-			makeMove(Move(e8, c8, MOVE, bk), black);
-			makeMove(Move(a8, d8, MOVE, br), black);
+			pieces[bk]  = bit_at(c8);
+			pieces[br] ^= bit_at(a8);
+			pieces[br] |= bit_at(d8);
+			// Update hash
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
+			hashKey ^= randomSet[bk][e8] ^ randomSet[bk][c8];
+			hashKey ^= randomSet[br][a8] ^ randomSet[br][d8];
+			// Override position
+			blackPos ^= blackPos & 0xF800000000000000ull;
+			blackPos |= 0x3000000000000000ull;
 			break;
 		case WCASTLE_2: // Castling long
 			castlingRights &= ~(castle_K | castle_Q);
-			makeMove(Move(e1, c1, MOVE, wk), white);
-			makeMove(Move(a1, d1, MOVE, wr), white);
+			pieces[wk]  = bit_at(c1);
+			pieces[wr] ^= bit_at(a1);
+			pieces[wr] |= bit_at(d1);
+			// Update hash
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
+			hashKey ^= randomSet[wk][e1] ^ randomSet[wk][c1];
+			hashKey ^= randomSet[wr][a1] ^ randomSet[wr][d1];
+			// Override position
+			whitePos ^= whitePos & 0xF8ull;
+			whitePos |= 0x30ull;
 			break;
 		case ENPASSENT:
 			if (move.Pieces == bp) {
@@ -897,27 +925,55 @@ void Board::unMakeMove(const Move& move, color side)
 			}
 			break;
 		case BCASTLE:
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights]; // Reapply new castling rights to hash (inverse operation)
-			makeMove(Move(g8, e8, MOVE, bk), black);           // move king and rook...
-			makeMove(Move(f8, h8, MOVE, br), black);
-			castlingRights = move.from;                        // Restore old rights
+			pieces[bk]  = bit_at(e8);
+			pieces[br] ^= bit_at(f8);
+			pieces[br] |= bit_at(h8);
+			// Update hash
+			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
+			hashKey ^= randomSet[bk][g8] ^ randomSet[bk][e8];
+			hashKey ^= randomSet[br][f8] ^ randomSet[br][h8];
+			// Override position
+			blackPos ^= blackPos & 0xF00000000000000ull;
+			blackPos |= 0x900000000000000ull;
+			castlingRights = move.from;
 			break;
 		case WCASTLE: // Castling short
+			pieces[wk]  = bit_at(e1);
+			pieces[wr] ^= bit_at(f1);
+			pieces[wr] |= bit_at(h1);
+			// Update hash
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			makeMove(Move(g1, e1, MOVE, wk), white); // TODO: rewrite this to explicit form
-			makeMove(Move(f1, h1, MOVE, wr), white);
+			hashKey ^= randomSet[wk][g1] ^ randomSet[wk][e1];
+			hashKey ^= randomSet[wr][f1] ^ randomSet[wr][h1];
+			// Override position
+			whitePos ^= whitePos & 0xF;
+			whitePos |= 0x9;
 			castlingRights = move.from;
 			break;
 		case BCASTLE_2:
+			pieces[bk]  = bit_at(e8);
+			pieces[br] ^= bit_at(d8);
+			pieces[br] |= bit_at(a8);
+			// Update hash
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			makeMove(Move(c8, e8, MOVE, bk), black);
-			makeMove(Move(d8, a8, MOVE, br), black);
+			hashKey ^= randomSet[bk][c8] ^ randomSet[bk][e8];
+			hashKey ^= randomSet[br][d8] ^ randomSet[br][a8];
+			// Override position
+			blackPos ^= blackPos & 0xF800000000000000ull;
+			blackPos |= 0x8800000000000000ull;
 			castlingRights = move.from;
 			break;
 		case WCASTLE_2: // Castling long
+			pieces[wk]  = bit_at(e1);
+			pieces[wr] ^= bit_at(d1);
+			pieces[wr] |= bit_at(a1);
+			// Update hash
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			makeMove(Move(c1, e1, MOVE, wk), white);
-			makeMove(Move(d1, a1, MOVE, wr), white);
+			hashKey ^= randomSet[wk][c1] ^ randomSet[wk][e1];
+			hashKey ^= randomSet[wr][d1] ^ randomSet[wr][a1];
+			// Override position
+			whitePos ^= whitePos & 0xF8ull;
+			whitePos |= 0x88ull;
 			castlingRights = move.from;
 			break;
 		case ENPASSENT:
