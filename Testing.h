@@ -97,6 +97,7 @@ public:
 private:
 	void testPawnFill();
 	void testCastling();
+	void testEnpassent();
 	void testProm();
 };
 

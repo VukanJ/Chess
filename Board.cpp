@@ -319,29 +319,18 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 						moveList.push_back(Move(pos + 16, pos, PAWN2, bp));
 					}
 					// Enpassent
-					/*
-					if (b_enpassent) { // if enpassent is available/possible
-						// Check if pawns are able to do enpassent
-						attackingPieces = (pieces[bp] >> 1) & pieces[wp] & (_row << 24);
-						// Are white pawns left of black pawns?
-						if (attackingPieces) {
-							// Add move
-							bitScan_rev64(pos, attackingPieces);
-							if (bit_at(pos - 8) & allPos)
-								moveList.insert(moveList.begin(), Move(pos, pos - 8, ENPASSENT, bp));
+					
+					if (b_enpassent) { 
+						// There surely exists an enpassent move
+						if ((bit_at(24 + b_enpassent) & pieces[bp]) & (_row << 24)) {
+							// black pawn right of ep square
+							moveList.push_back(Move(24+b_enpassent, 15 + b_enpassent, ENPASSENT, bp));
 						}
-						else{
-							// Are white pawns right of black pawns?
-							attackingPieces = (pieces[bp] << 1) & pieces[wp] & (_row << 24);
-							if (attackingPieces) {
-								// Add move
-								bitScan_rev64(pos, attackingPieces);
-								if (bit_at(pos - 8) & allPos)
-									moveList.insert(moveList.begin(), Move(pos, pos - 8, ENPASSENT, bp));
-							}
+						if (bit_at(22 + b_enpassent) & pieces[bp] & (_row << 24)) {
+							// black pawn left of ep square
+							moveList.push_back(Move(22 + b_enpassent, 15 + b_enpassent, ENPASSENT, bp));
 						}
 					}
-					*/
 					break;
 				case br: // BLACK ROOK
 					// Calculate attacked pieces
@@ -737,7 +726,15 @@ void Board::makeMove(const Move& move, color side)
 			hashKey ^= randomSet[move.Pieces][move.from]; // Update hashKey...
 			hashKey ^= randomSet[move.Pieces][move.to];
 			hashKey ^= randomSet[ENPASSENT_HASH][move.from % 8];
-			(move.Pieces == bp ? w_enpassent : b_enpassent) |= bit_at(move.from % 8); // The other player can then perform enpassent
+
+			// The other player can then sometimes perform enpassent (if other pawn is available)
+			if (move.Pieces == bp && (0x5ull << (move.to - 1)) & (_row << 32) & pieces[wp]) {
+				w_enpassent = (move.from % 8) + 1;
+			}
+			else if (move.Pieces == wp && (0x5ull << (move.to - 1)) & (_row << 24) & pieces[bp]) {
+				b_enpassent = (move.from % 8) + 1;
+			}
+
 			// update position mask
 			side == black ? (blackPos = ((blackPos ^ bit_at(move.from)) | bit_at(move.to)))
 				          : (whitePos = ((whitePos ^ bit_at(move.from)) | bit_at(move.to)));
@@ -830,9 +827,14 @@ void Board::makeMove(const Move& move, color side)
 			break;
 		case ENPASSENT:
 			if (move.Pieces == bp) {
+				hashKey ^= randomSet[bp][move.from] 
+					     ^ randomSet[bp][move.to] 
+					     ^ randomSet[wp][move.to + 8]
+					     ^ randomSet[ENPASSENT_HASH][b_enpassent - 1];
 				pieces[bp] ^= bit_at(move.from);
 				pieces[bp] |= bit_at(move.to);
 				pieces[wp] ^= bit_at(move.to + 8);
+				b_enpassent = 0;
 			}
 			else {
 				// WIP
@@ -848,6 +850,7 @@ void Board::makeMove(const Move& move, color side)
 		castlingRights &= ~cast;
 		hashKey ^= randomSet[CASTLE_HASH][castlingRights];
 	}
+	if (move.flags != PAWN2) { w_enpassent = b_enpassent = 0; }
 	allPos = blackPos | whitePos;
 }
 
@@ -977,6 +980,19 @@ void Board::unMakeMove(const Move& move, color side)
 			castlingRights = move.from;
 			break;
 		case ENPASSENT:
+			if (move.Pieces == bp) {
+				hashKey ^= randomSet[bp][move.from] 
+					     ^ randomSet[bp][move.to] 
+					     ^ randomSet[wp][move.to + 8]
+						 ^ randomSet[ENPASSENT_HASH][move.to % 8];
+				b_enpassent = (move.to % 8) + 1;
+				pieces[bp] ^= bit_at(move.to);
+				pieces[bp] |= bit_at(move.from);
+				pieces[wp] |= bit_at(move.to + 8);
+			}
+			else {
+				// WIP
+			}
 			break;
 		default:
 			cerr << "Invalid move encountered!\n";
