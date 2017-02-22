@@ -9,7 +9,8 @@
 // Zob_Hash stores already evaluated Boards and their value, 
 // search_depth and move quality
 
-enum hashPosition { CASTLE_HASH = 12, ENPASSENT_HASH = 13};
+enum hashPosition { CASTLE_HASH = 12, ENPASSENT_HASH = 13, CASTLE_POSITION_HASH = 14};
+enum hashDoCastle { HASH_CASTLE_k, HASH_CASTLE_q, HASH_CASTLE_K, HASH_CASTLE_Q};
 
 enum valueType {
 	EXACT_VALUE = 0x1, // Board value lies between alpha and beta
