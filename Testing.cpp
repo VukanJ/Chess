@@ -162,6 +162,8 @@ void UnitTest::testGenerationAlgorithms()
 	testCastling();
 	cout << "Testing pawn promotion...\n";
 	testProm();
+	cout << "Testing enpassent...\n";
+	testEnpassent();
 }
 
 void UnitTest::testPawnFill()
@@ -306,6 +308,69 @@ void UnitTest::testCastling()
 	ai.chessBoard.print();
 	printBits(ai.chessBoard.castlingRights);
 	assert(ai.chessBoard.castlingRights == 0b1011);
+}
+
+void UnitTest::testEnpassent()
+{
+	// Test enpassent move system
+	AI ai("4k3/pppppppp8888PPPPPPPP/4K3 w - 1 0", white, 10);
+	MoveList movelist;
+	ai.chessBoard.updateAllAttacks();
+	ai.chessBoard.print();
+
+	auto hashKey = ai.chessBoard.hashKey;
+
+	// Test all possible enpassent moves for black
+	Move pawn2;            // pawn that is captured
+	Move otherpawn;        // pawn, that performs enpassent
+	MoveList::iterator ep; // enpassent
+	for (int pos = 1; pos < 8; ++pos) {
+		otherpawn = Move(h7 + pos, h4 + pos, MOVE, bp);
+		pawn2 = Move(7 + pos, 23 + pos, PAWN2, wp);
+	
+		ai.chessBoard.makeMove(otherpawn, black);
+		ai.chessBoard.makeMove(pawn2, white);
+		ai.chessBoard.updateAllAttacks();
+	
+		movelist.clear();
+		ai.chessBoard.generateMoveList(movelist, black);
+		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
+		assert(ep != movelist.end());
+		assert(ep->from == h4 + pos && ep->to == 15 + pos && ep->Pieces == bp);
+		ai.chessBoard.makeMove(*ep, black);
+		ai.chessBoard.unMakeMove(*ep, black);
+	
+		ai.chessBoard.unMakeMove(pawn2, white);
+		ai.chessBoard.unMakeMove(otherpawn, black);
+		ai.chessBoard.updateAllAttacks();
+	
+		assert(hashKey == ai.chessBoard.hashKey);
+	}
+	for (int pos = 0; pos < 7; ++pos) {
+		otherpawn = Move(h7 + pos, h4 + pos, MOVE, bp);
+		pawn2 = Move(9 + pos, 25 + pos, PAWN2, wp);
+
+		ai.chessBoard.makeMove(otherpawn, black);
+		ai.chessBoard.makeMove(pawn2, white);
+		ai.chessBoard.updateAllAttacks();
+
+		movelist.clear();
+		ai.chessBoard.generateMoveList(movelist, black);
+		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
+		assert(ep != movelist.end());
+		assert(ep->from == h4 + pos && ep->to == 17+pos && ep->Pieces == bp);
+
+		ai.chessBoard.makeMove(*ep, black);
+		ai.chessBoard.unMakeMove(*ep, black);
+
+		ai.chessBoard.unMakeMove(pawn2, white);
+		ai.chessBoard.unMakeMove(otherpawn, black);
+		ai.chessBoard.updateAllAttacks();
+
+		assert(hashKey == ai.chessBoard.hashKey);
+	}
+
+	// Test loss of ep-right
 }
 
 void UnitTest::testProm()
