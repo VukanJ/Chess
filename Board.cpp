@@ -833,7 +833,7 @@ void Board::makeMove(const Move& move, color side)
 				hashKey ^= randomSet[bp][move.from] 
 					     ^ randomSet[bp][move.to] 
 					     ^ randomSet[wp][move.to + 8]
-					     ^ randomSet[ENPASSENT_HASH][b_enpassent - 1];
+					     ^ randomSet[ENPASSENT_HASH][move.from % 8];
 				pieces[bp] ^= bit_at(move.from);
 				pieces[bp] |= bit_at(move.to);
 				pieces[wp] ^= bit_at(move.to + 8);
@@ -843,7 +843,7 @@ void Board::makeMove(const Move& move, color side)
 				hashKey ^= randomSet[wp][move.from]
 					     ^ randomSet[wp][move.to]
 					     ^ randomSet[bp][move.to - 8]
-					     ^ randomSet[ENPASSENT_HASH][w_enpassent - 1];
+					     ^ randomSet[ENPASSENT_HASH][move.from % 8];
 				pieces[wp] ^= bit_at(move.from);
 				pieces[wp] |= bit_at(move.to);
 				pieces[bp] ^= bit_at(move.to - 8);
@@ -860,7 +860,6 @@ void Board::makeMove(const Move& move, color side)
 		castlingRights &= ~cast;
 		hashKey ^= randomSet[CASTLE_HASH][castlingRights];
 	}
-	if (move.flags != PAWN2) { w_enpassent = b_enpassent = 0; }
 	allPos = blackPos | whitePos;
 }
 
@@ -990,7 +989,7 @@ void Board::unMakeMove(const Move& move, color side)
 				hashKey ^= randomSet[bp][move.from] 
 					     ^ randomSet[bp][move.to] 
 					     ^ randomSet[wp][move.to + 8]
-						 ^ randomSet[ENPASSENT_HASH][move.to % 8];
+						 ^ randomSet[ENPASSENT_HASH][move.from % 8];
 				b_enpassent = (move.to % 8) + 1;
 				pieces[bp] ^= bit_at(move.to);
 				pieces[bp] |= bit_at(move.from);
@@ -1000,7 +999,7 @@ void Board::unMakeMove(const Move& move, color side)
 				hashKey ^= randomSet[wp][move.from]
 					     ^ randomSet[wp][move.to]
 					     ^ randomSet[bp][move.to - 8]
-					     ^ randomSet[ENPASSENT_HASH][move.to % 8];
+					     ^ randomSet[ENPASSENT_HASH][move.from % 8];
 				w_enpassent = (move.to % 8) + 1;
 				pieces[wp] ^= bit_at(move.to);
 				pieces[wp] |= bit_at(move.from);

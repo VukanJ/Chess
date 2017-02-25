@@ -128,6 +128,7 @@ private:
 	void perft(int maxDepth, color startColor);
 	// perft statistics
 	long perftNodeCount;
+	long perftEPCount;
 	long perftMoveCount;
 	long checkmateCount;
 };
