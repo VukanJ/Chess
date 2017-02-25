@@ -656,8 +656,13 @@ Benchmark::Benchmark() : performingAll(false)
 {
 	genChessData data;
 	data.gen(); // Generates bitboards needed for move generation
-	//testBoard = Board("* w kKqQ 1 0");
-	testBoard = Board("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq 0 1");
+	testBoard = Board("* w kKqQ 1 0");
+	//testBoard = Board("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq 0 1");
+	//testBoard = Board("4k3/p1p14/8/8/8/8/1P1P4/4K3 w - 1 0");
+	MoveList moveList;
+	testBoard.generateMoveList(moveList, white);
+	cout << "Length " << moveList.size() << endl;
+
 	perftNodeCount = 0;
 }
 
@@ -794,7 +799,8 @@ void Benchmark::testPerft(int maxdepth, bool countMoveTypes)
 
 	if (maxdepth == -1) {
 		// Check perft numbers
-		for (int d = 1; d < 6; d++) {
+		auto hashKey = testBoard.hashKey;
+		for (int d = 1; d < 8; d++) {
 			chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
 			perft(d, white);
 			chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
@@ -803,9 +809,11 @@ void Benchmark::testPerft(int maxdepth, bool countMoveTypes)
 			//cout << "\tTargeted number of moves: " << perftNums[d-1] << endl;
 			cout << "Execution time " << microseconds*1e-3 << "ms\n";
 			cout << "\tComputed number of moves: " << perftMoveCount << endl;
-			//cout << "\tDifference " << max(perftMoveCount,perftNums[d-1]) - min(perftMoveCount, perftNums[d-1]) << endl;
+			cout << "\tE.P. count: " << perftEPCount << endl;
 			//testBoard.print();
 			perftMoveCount = 0;
+			perftEPCount = 0;
+			assert(hashKey == testBoard.hashKey);
 		}
 		return;
 	}
@@ -841,6 +849,7 @@ void Benchmark::perft(int depth, color side)
 			if (depth == 1)perftMoveCount--;
 			continue;
 		}
+		if (move.flags == ENPASSENT) perftEPCount++;
 		checkmate = false; // Moves were found
 		perft(depth - 1, static_cast<color>(!side));
 		testBoard.unMakeMove(move, static_cast<color>(side));

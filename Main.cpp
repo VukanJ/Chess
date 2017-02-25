@@ -100,14 +100,14 @@ void testing(){
 	//test.testDefines();
 	//test.testIntrinsics();
 
-	test.testGenerationAlgorithms();
+	//test.testGenerationAlgorithms();
 	//test.testTreeStructure();
 	//test.testEvaluation();
 	//test.testFullTree();
 	//test.testHashing();
 	//test.testMinimalTree();
 
-	//benchmark.testPerft(-1, false);
+	benchmark.testPerft(-1, false);
 
 	cout << "EOP\n";
 	//cin.ignore();
