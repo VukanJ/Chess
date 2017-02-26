@@ -1,7 +1,5 @@
 #include "Board.h"
 
-// TODO: King cannot walk in front of pawn, (solved, needs testing)
-
 Board::Board()
 	: whitePos(0x0), blackPos(0x0), whiteAtt(0x0), blackAtt(0x0), hashKey(0x0),
 	castlingRights(0x0), b_enpassent(0x0), w_enpassent(0x0)
@@ -171,18 +169,24 @@ void Board::debug()
 void Board::updateAllAttacks()
 {
 	whiteAtt = blackAtt = 0x0;
-	for (int i = 0; i < 12; i++){
+	BLACKLOOP(i){
 		 // Generate only if bitboard not empty
 		if(pieces[i])
 			updateAttack((piece)i);
 		else
 			attacks[i] = 0x0;
+		attacks[i] &= ~blackPos;
+		blackAtt   |= attacks[i];
 	}
-	// Exclude pieces that attack pieces of same color
-	BLACKLOOP(i) attacks[i] &= ~blackPos;
-	WHITELOOP(i) attacks[i] &= ~whitePos;
-	BLACKLOOP(i) blackAtt   |= attacks[i];
-	WHITELOOP(i) whiteAtt   |= attacks[i];
+	WHITELOOP(i) {
+		 // Generate only if bitboard not empty
+		if(pieces[i])
+			updateAttack((piece)i);
+		else
+			attacks[i] = 0x0;
+		attacks[i] &= ~whitePos;
+		whiteAtt   |= attacks[i];
+	}
 }
 
 void Board::updateAttack(piece p)
@@ -279,7 +283,7 @@ void Board::pawnFill(color side)
 		attacks[wp] |= blackPos & ((pieces[wp] & ~_right) << 7);
 	}
 }
-// TODO: Corrected Pawn attacks. Needs testing
+
 void Board::generateMoveList(MoveList& moveList, color side) const
 {
 	/*
