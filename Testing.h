@@ -125,12 +125,14 @@ private:
 	};
 	Board testBoard;
 	vector<result> results;
-	void perft(int maxDepth, color startColor);
+	void perft(int maxDepth, const int targetDepth, color startColor);
 	// perft statistics
 	long perftNodeCount;
 	long perftEPCount;
 	long perftMoveCount;
-	long checkmateCount;
+	long perftCheckmateCount;
+
+	long totalPerftMoveCount;
 };
 
 #endif

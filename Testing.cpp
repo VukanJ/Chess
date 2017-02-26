@@ -656,14 +656,14 @@ Benchmark::Benchmark() : performingAll(false)
 {
 	genChessData data;
 	data.gen(); // Generates bitboards needed for move generation
-	testBoard = Board("* w kKqQ 1 0");
+	//testBoard = Board("* w kKqQ 1 0");
 	//testBoard = Board("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq 0 1");
-	//testBoard = Board("4k3/p1p14/8/8/8/8/1P1P4/4K3 w - 1 0");
+	testBoard = Board("4k3/p1p14/8/8/8/8/1P1P4/4K3 w - 1 0");
 	MoveList moveList;
 	testBoard.generateMoveList(moveList, white);
 	cout << "Length " << moveList.size() << endl;
 
-	perftNodeCount = 0;
+	perftNodeCount = perftEPCount = perftMoveCount = perftCheckmateCount = totalPerftMoveCount = 0;
 }
 
 Benchmark::~Benchmark()
@@ -800,25 +800,26 @@ void Benchmark::testPerft(int maxdepth, bool countMoveTypes)
 	if (maxdepth == -1) {
 		// Check perft numbers
 		auto hashKey = testBoard.hashKey;
-		for (int d = 1; d < 8; d++) {
+		for (int d = 1; d < 7; d++) {
 			chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-			perft(d, white);
+			perft(d, d, white);
 			chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-			auto microseconds = (double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
-			cout << "Depth: " << d << endl;
-			//cout << "\tTargeted number of moves: " << perftNums[d-1] << endl;
-			cout << "Execution time " << microseconds*1e-3 << "ms\n";
-			cout << "\tComputed number of moves: " << perftMoveCount << endl;
+			double microseconds = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
+			cout << string(40, '=') << endl;
+			cout << "Depth " << d << " summary:\n";
+			cout << "\tExecution time " << microseconds * 1e-3 << "ms\n";
+			cout << "\tComputed number of moves: " << totalPerftMoveCount << endl;
 			cout << "\tE.P. count: " << perftEPCount << endl;
-			//testBoard.print();
-			perftMoveCount = 0;
+			cout << "\tNodes per second: " << (double)totalPerftMoveCount/microseconds << " M\n";
+			
+			totalPerftMoveCount = 0;
 			perftEPCount = 0;
 			assert(hashKey == testBoard.hashKey);
 		}
 		return;
 	}
 	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-	perft(maxdepth, white);
+	perft(maxdepth, maxdepth, white);
 	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
 	auto microseconds = (double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 
@@ -826,16 +827,14 @@ void Benchmark::testPerft(int maxdepth, bool countMoveTypes)
 	cout << "\tExecution time " << microseconds*1e-3 << "ms\n";
 	cout << "\t# of generated nodes: " << perftNodeCount << endl;
 	cout << "\t# of generated moves: " << perftMoveCount << endl;
-	cout << "\t# of checkmates: " << checkmateCount << endl;
+	cout << "\t# of checkmates: " << perftCheckmateCount << endl;
 	perftNodeCount = 0;
-
 }
 
-void Benchmark::perft(int depth, color side)
+void Benchmark::perft(int depth, const int targetDepth, color side)
 {
 	// Builds a tree to benchmark move generation
 	if (depth == 0) return;
-	perftNodeCount++;
 	MoveList movelist;
 	testBoard.generateMoveList(movelist, side);
 	// Store pairs of root moves and number of possible moves after them
@@ -843,17 +842,26 @@ void Benchmark::perft(int depth, color side)
 	for (auto& move : movelist) {
 		testBoard.makeMove(move, side);
 		testBoard.updateAllAttacks();
-		if(depth == 1)perftMoveCount++;
+
+		if(depth == 1) perftMoveCount++;
+		
 		if (testBoard.isKingInCheck(side)) {
 			testBoard.unMakeMove(move, side);
-			if (depth == 1)perftMoveCount--;
+			if (depth == 1) perftMoveCount--;
 			continue;
 		}
-		if (move.flags == ENPASSENT) perftEPCount++;
+
+		if (move.flags == ENPASSENT && depth == 1) perftEPCount++;
+		
 		checkmate = false; // Moves were found
-		perft(depth - 1, static_cast<color>(!side));
+		perft(depth - 1, targetDepth, static_cast<color>(!side));
 		testBoard.unMakeMove(move, static_cast<color>(side));
 		testBoard.updateAllAttacks();
+		if (depth == targetDepth) {
+			cout << (char)('h' - (move.from % 8)) << (char)('1' + (move.from / 8)) << (char)('h' - (move.to % 8)) << (char)('1' + (move.to / 8)) << ": " << perftMoveCount << endl;
+			totalPerftMoveCount += perftMoveCount;
+			perftMoveCount = 0;
+		}
 	}
-	if (checkmate) checkmateCount++;
+	if (checkmate && depth == 1) perftCheckmateCount++;
 }
