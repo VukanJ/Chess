@@ -658,10 +658,13 @@ Benchmark::Benchmark() : performingAll(false)
 	data.gen(); // Generates bitboards needed for move generation
 	//testBoard = Board("* w kKqQ 1 0");
 	//testBoard = Board("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq 0 1");
-	testBoard = Board("4k3/p1p14/8/8/8/8/1P1P4/4K3 w - 1 0");
-	MoveList moveList;
-	testBoard.generateMoveList(moveList, white);
-	cout << "Length " << moveList.size() << endl;
+	//testBoard = Board("4k3/p1p14/8/8/8/8/1P1P4/4K3 w - 1 0"); // Error at depth seven after b2b4
+
+	//testBoard = Board("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq 1 0"); Chess.com
+	testBoard = Board("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - 1 0");
+	testBoard.updateAllAttacks();
+	MoveList moves;
+	testBoard.generateMoveList(moves, white);
 
 	perftNodeCount = perftEPCount = perftMoveCount = perftCheckmateCount = totalPerftMoveCount = 0;
 }
@@ -800,7 +803,7 @@ void Benchmark::testPerft(int maxdepth, bool countMoveTypes)
 	if (maxdepth == -1) {
 		// Check perft numbers
 		auto hashKey = testBoard.hashKey;
-		for (int d = 1; d < 7; d++) {
+		for (int d = 1; d < 100; d++) {
 			chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
 			perft(d, d, white);
 			chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
@@ -815,6 +818,7 @@ void Benchmark::testPerft(int maxdepth, bool countMoveTypes)
 			totalPerftMoveCount = 0;
 			perftEPCount = 0;
 			assert(hashKey == testBoard.hashKey);
+			cin.ignore();
 		}
 		return;
 	}
@@ -842,7 +846,13 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 	for (auto& move : movelist) {
 		testBoard.makeMove(move, side);
 		testBoard.updateAllAttacks();
-
+		//if (move.flags == ENPASSENT) {
+		//	testBoard.print();
+		//	printBitboard(testBoard.pieces[wr]);
+		//	printBitboard(testBoard.pieces[bk]);
+		//	printBitboard(testBoard.attacks[wr]);
+		//	cin.ignore();
+		//}
 		if(depth == 1) perftMoveCount++;
 		
 		if (testBoard.isKingInCheck(side)) {
