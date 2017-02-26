@@ -741,9 +741,11 @@ void Board::makeMove(const Move& move, color side)
 			// The other player can then sometimes perform enpassent (if other pawn is available)
 			if (move.Pieces == bp && (0x5ull << (move.to - 1)) & (_row << 32) & pieces[wp]) {
 				w_enpassent = (move.from % 8) + 1;
+				b_enpassent = 0;
 			}
 			else if (move.Pieces == wp && (0x5ull << (move.to - 1)) & (_row << 24) & pieces[bp]) {
 				b_enpassent = (move.from % 8) + 1;
+				w_enpassent = 0;
 			}
 
 			// update position mask
@@ -834,13 +836,19 @@ void Board::makeMove(const Move& move, color side)
 			break;
 		case ENPASSENT:
 			if (move.Pieces == bp) {
+				// Update hashkey
 				hashKey ^= randomSet[bp][move.from] 
 					     ^ randomSet[bp][move.to] 
 					     ^ randomSet[wp][move.to + 8]
 					     ^ randomSet[ENPASSENT_HASH][move.from % 8];
+				// Update positions
 				pieces[bp] ^= bit_at(move.from);
 				pieces[bp] |= bit_at(move.to);
 				pieces[wp] ^= bit_at(move.to + 8);
+
+				blackPos = (blackPos ^ bit_at(move.from)) | bit_at(move.to);
+				whitePos ^= bit_at(move.to + 8);
+				// No more enpassent squares after enpassent
 				b_enpassent = 0;
 			}
 			else {
@@ -851,12 +859,19 @@ void Board::makeMove(const Move& move, color side)
 				pieces[wp] ^= bit_at(move.from);
 				pieces[wp] |= bit_at(move.to);
 				pieces[bp] ^= bit_at(move.to - 8);
+
+				whitePos = (whitePos ^ bit_at(move.from)) | bit_at(move.to);
+				blackPos ^= bit_at(move.to - 8);
 				w_enpassent = 0;
 			}
 			break;
 		default:
 			cerr << "Invalid move info encountered!\n";
 			exit(1);
+	}
+	// No enpassent squares after any other move than double pawn push
+	if ((move.flags & 0xF) != PAWN2) {
+		b_enpassent = w_enpassent = 0;
 	}
 	// Check if castling still permitted
 	byte cast = move.flags >> 4;
@@ -990,6 +1005,7 @@ void Board::unMakeMove(const Move& move, color side)
 			break;
 		case ENPASSENT:
 			if (move.Pieces == bp) {
+				// Update hashkey
 				hashKey ^= randomSet[bp][move.from] 
 					     ^ randomSet[bp][move.to] 
 					     ^ randomSet[wp][move.to + 8]
@@ -998,6 +1014,10 @@ void Board::unMakeMove(const Move& move, color side)
 				pieces[bp] ^= bit_at(move.to);
 				pieces[bp] |= bit_at(move.from);
 				pieces[wp] |= bit_at(move.to + 8);
+
+				blackPos ^= bit_at(move.to);
+				blackPos |= bit_at(move.from);
+				whitePos |= bit_at(move.to + 8);
 			}
 			else {
 				hashKey ^= randomSet[wp][move.from]
@@ -1008,6 +1028,10 @@ void Board::unMakeMove(const Move& move, color side)
 				pieces[wp] ^= bit_at(move.to);
 				pieces[wp] |= bit_at(move.from);
 				pieces[bp] |= bit_at(move.to - 8);
+
+				whitePos ^= bit_at(move.to);
+				whitePos |= bit_at(move.from);
+				blackPos |= bit_at(move.to - 8);
 			}
 			break;
 		default:
