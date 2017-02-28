@@ -107,7 +107,8 @@ void testing(){
 	//test.testHashing();
 	//test.testMinimalTree();
 
-	benchmark.testPerft(-1, false);
+	//benchmark.testPerft(-1, false);
+	benchmark.perftTestSuite();
 
 	cout << "EOP\n";
 	//cin.ignore();

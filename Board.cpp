@@ -44,7 +44,7 @@ void Board::setupBoard(string FEN)
 				fenArgs.push_back("");
 			else fenArgs.back().push_back(f);
 		}
-		if (fenArgs.size() != 5) {
+		if (fenArgs.size() != 6) {
 			cerr << "Invalid FEN!\n";
 			exit(1);
 		}
@@ -59,8 +59,8 @@ void Board::setupBoard(string FEN)
 				}
 			}
 		}
-		for (int p = 0; p < 6; p++) blackPos |= pieces[p];
-		for (int p = 6; p < 12; p++) whitePos |= pieces[p];
+		BLACKLOOP(p) blackPos |= pieces[p];
+		WHITELOOP(p) whitePos |= pieces[p];
 		// Set castling rights
 		for (auto c : fenArgs[2]) {
 			switch (c) {
@@ -365,7 +365,16 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 								if (pieceAttacks) {
 									BITLOOP(target, pieceAttacks) {                                    // Add moves
 										if (!(CONNECTIONS[pos][target] & allPos)) {   // ..if no piece is in the way
-											moveList.insert(moveList.begin(), Move(pos, target, move_metadata(CAPTURE, castlingRights & (pos == h8 ? castle_k : castle_q)), piece_pair(br, candidate)));
+											//moveList.insert(moveList.begin(), Move(pos, target, move_metadata(CAPTURE, castlingRights & (pos == h8 ? castle_k : castle_q)), piece_pair(br, candidate)));
+											if (pos == a8) {
+												moveList.insert(moveList.begin(), Move(pos, target, move_metadata(CAPTURE, castlingRights & castle_q), piece_pair(br, candidate)));
+											}
+											else if (pos == h8) {
+												moveList.insert(moveList.begin(), Move(pos, target, move_metadata(CAPTURE, castlingRights & castle_k), piece_pair(br, candidate)));
+											}
+											else {
+												moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(br, candidate)));
+											}
 										}
 									}
 								}
@@ -560,7 +569,15 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 							 if (pieceAttacks) {
 								 BITLOOP(target, pieceAttacks) {                                        // Add moves..
 									 if (!(CONNECTIONS[pos][target] & allPos)) {   // ..if no piece is in the way
-										 moveList.insert(moveList.begin(), Move(pos, target, move_metadata(CAPTURE, castlingRights & (pos == h1 ? castle_K : castle_Q)), piece_pair(wr, candidate)));
+										 if (pos == a1) {
+											 moveList.insert(moveList.begin(), Move(pos, target, move_metadata(CAPTURE, castlingRights & castle_Q), piece_pair(wr, candidate)));
+										 }
+										 else if (pos == h1) {
+											 moveList.insert(moveList.begin(), Move(pos, target, move_metadata(CAPTURE, castlingRights & castle_K), piece_pair(wr, candidate)));
+										 }
+										 else {
+											 moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(wr, candidate)));
+										 }
 									 }
 								 }
 							 }
@@ -673,10 +690,11 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 			}
 		}
 	 }
+	 //  Castling permission King-rook path is not obstructed and not under attack
 	 if (castlingRights & castle_K && !(allPos & 0x6ull) && !(blackAtt & 0xEull)) { // White King can castle
 		 moveList.push_back(Move(castlingRights, WCASTLE));
 	 }
-	 if (castlingRights & castle_Q && !(allPos & 0x70ull) && !(blackAtt & 0x38ull)) { // White King can castle (big)
+	 if (castlingRights & castle_Q && !(allPos & 0x70ull) && !(blackAtt & 0x38ull)) { // White King can castle queenside
 		 moveList.push_back(Move(castlingRights, WCASTLE_2));
 	 }
 	}

@@ -2,6 +2,7 @@
 #define TESTING_H
 #include <iostream>
 #include <algorithm>
+#include <fstream>
 #include <random>
 #include <memory>
 #include <stack>
@@ -112,6 +113,7 @@ public:
 	void summarize();
 
 	void testPerft(int maxdepth, bool countMoveTypes);
+	void perftTestSuite();
 	void benchmarkMoveGeneration();
 	void benchmarkMovemaking();
 private:
