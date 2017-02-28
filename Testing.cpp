@@ -168,16 +168,16 @@ void UnitTest::testGenerationAlgorithms()
 
 void UnitTest::testPawnFill()
 {
-	AI ai("8/7p/P7/2P5/8/1p4p1/P2PP2P/8 w - 1 0", black, 10);
+	AI ai("8/7p/P7/2P5/8/1p4p1/P2PP2P/8 w - - 1 0", black, 10);
 	assert(ai.chessBoard.attacks[wp] == 0x80200099db0000ull);
 	assert(ai.chessBoard.attacks[bp] == 0x1010000c300ull);
-	ai.chessBoard.setupBoard("8/p2pp2p/1P4P1/8/8/pp4p1/7P/8 w - 1 0");
+	ai.chessBoard.setupBoard("8/p2pp2p/1P4P1/8/8/pp4p1/7P/8 w - - 1 0");
 	assert(ai.chessBoard.attacks[wp] == 0xc3000001030000);
 	assert(ai.chessBoard.attacks[bp] == 0xdb990000c300);
 
 	// Is pawn capture oriented correctly
 
-	ai.chessBoard.setupBoard("8/4p3/3N1N2/88888 w - 1 0");
+	ai.chessBoard.setupBoard("8/4p3/3N1N2/88888 w - - 1 0");
 	auto hashKey = ai.chessBoard.hashKey;
 	vector<Move> moveList;
 	ai.chessBoard.generateMoveList(moveList, black);
@@ -189,7 +189,7 @@ void UnitTest::testPawnFill()
 	}
 	assert(hashKey == ai.chessBoard.hashKey);
 
-	ai.chessBoard.setupBoard("8/8/3n1n2/4P3/8888 w - 1 0");
+	ai.chessBoard.setupBoard("8/8/3n1n2/4P3/8888 w - - 1 0");
 	hashKey = ai.chessBoard.hashKey;
 	moveList.clear();
 	ai.chessBoard.generateMoveList(moveList, white);
@@ -210,13 +210,13 @@ void UnitTest::testCastling()
 			[f, t](const Move& m) {return m.from == f && m.to == t; }); };
 
 	vector<Move> moveList;
-	AI ai("r3k2r/8/8/8/8/8/8/R3K2R w - 1 0", black, 10);
+	AI ai("r3k2r/8/8/8/8/8/8/R3K2R w - - 1 0", black, 10);
 	ai.chessBoard.generateMoveList(moveList, black);
 
 	assert(!any_of(moveList.begin(), moveList.end(), [](Move& move) {
 		return move.flags == BCASTLE || move.flags == BCASTLE_2; }));
 
-	ai.chessBoard.setupBoard("r3k2r/8/8/8/8/8/8/R3K2R w KkQq 1 0");
+	ai.chessBoard.setupBoard("r3k2r/8/8/8/8/8/8/R3K2R w KkQq - 1 0");
 
 	moveList.clear();
 	ai.chessBoard.generateMoveList(moveList, black);
@@ -272,7 +272,7 @@ void UnitTest::testCastling()
 	ai.chessBoard.unMakeMove(rook2, black);
 	assert(hashKey == ai.chessBoard.hashKey);
 
-	ai.chessBoard.setupBoard("8/8/8/8/8/8/7r/R3K2R w KQ 1 0");
+	ai.chessBoard.setupBoard("8/8/8/8/8/8/7r/R3K2R w KQ - 1 0");
 	hashKey = ai.chessBoard.hashKey;
 	// Metadata should be filled in by MoveGenerator
 	Move captureRook2(h2, h1, move_metadata(CAPTURE, castle_K), wr);
@@ -287,7 +287,7 @@ void UnitTest::testCastling()
 	// Rook moves back and forth (Lead to incorrect castling right update in the past)
 	
 	moveList.clear();
-	ai.chessBoard.setupBoard("r3k2r/pppppppp/8888/PPPPPPPP/R3K2R w KkQq 1 0");
+	ai.chessBoard.setupBoard("r3k2r/pppppppp/8888/PPPPPPPP/R3K2R w KkQq - 1 0");
 	ai.chessBoard.generateMoveList(moveList, white);
 	assert(ai.chessBoard.castlingRights == 0b1111);
 	auto rookMove = getMove(moveList, 0, 1);
@@ -313,7 +313,7 @@ void UnitTest::testCastling()
 void UnitTest::testEnpassent()
 {
 	// Test enpassent move system
-	AI ai("4k3/pppppppp8888PPPPPPPP/4K3 w - 1 0", white, 10);
+	AI ai("4k3/pppppppp8888PPPPPPPP/4K3 w - - 1 0", white, 10);
 	MoveList movelist;
 	ai.chessBoard.updateAllAttacks();
 
@@ -438,7 +438,7 @@ void UnitTest::testEnpassent()
 
 void UnitTest::testProm()
 {
-	AI ai("5n2/1P4P1/8/8/8/8/1p4p1/5N w - 1 0", black, 10);
+	AI ai("5n2/1P4P1/8/8/8/8/1p4p1/5N w - - 1 0", black, 10);
 	ai.chessBoard.updateAllAttacks();
 	ai.chessBoard.print();
 	vector<Move> whiteMoves, blackMoves;
@@ -656,12 +656,10 @@ Benchmark::Benchmark() : performingAll(false)
 {
 	genChessData data;
 	data.gen(); // Generates bitboards needed for move generation
-	//testBoard = Board("* w kKqQ 1 0");
-	//testBoard = Board("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq 0 1");
-	//testBoard = Board("4k3/p1p14/8/8/8/8/1P1P4/4K3 w - 1 0"); // Error at depth seven after b2b4
 
-	//testBoard = Board("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq 1 0"); Chess.com
-	testBoard = Board("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - 1 0");
+	testBoard = Board("K7/8/8/3Q4/4q3/8/8/7k w - - 0 1");
+	testBoard.print();
+
 	testBoard.updateAllAttacks();
 	MoveList moves;
 	testBoard.generateMoveList(moves, white);
@@ -791,21 +789,16 @@ void Benchmark::summarize()
 
 void Benchmark::testPerft(int maxdepth, bool countMoveTypes)
 {
-	vector<long> perftNums{
-		20ul,
-		400ul,
-		8902ul,
-		197281ul,
-		4865609ul,
-		119060324ul
-	};
-
 	if (maxdepth == -1) {
 		// Check perft numbers
 		auto hashKey = testBoard.hashKey;
 		for (int d = 1; d < 100; d++) {
 			chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
+			testBoard.print();
 			perft(d, d, white);
+			printBitboard(testBoard.whiteAtt);
+			printBitboard(testBoard.blackAtt);
+			testBoard.print();
 			chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
 			double microseconds = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 			cout << string(40, '=') << endl;
@@ -846,17 +839,12 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 	for (auto& move : movelist) {
 		testBoard.makeMove(move, side);
 		testBoard.updateAllAttacks();
-		//if (move.flags == ENPASSENT) {
-		//	testBoard.print();
-		//	printBitboard(testBoard.pieces[wr]);
-		//	printBitboard(testBoard.pieces[bk]);
-		//	printBitboard(testBoard.attacks[wr]);
-		//	cin.ignore();
-		//}
+
 		if(depth == 1) perftMoveCount++;
 		
 		if (testBoard.isKingInCheck(side)) {
 			testBoard.unMakeMove(move, side);
+			testBoard.updateAllAttacks();
 			if (depth == 1) perftMoveCount--;
 			continue;
 		}
@@ -874,4 +862,55 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 		}
 	}
 	if (checkmate && depth == 1) perftCheckmateCount++;
+}
+
+void Benchmark::perftTestSuite()
+{
+	// Loading perft data and fens from file
+	ifstream testFile("perftsuite.txt", ios::in);
+	if (!testFile.is_open()) {
+		cout << "Error: Perft testsuite not found in project dir!\n";
+		return;
+	}
+	vector<vector<string>> perftTestData = vector<vector<string>>(125, vector<string>(7, ""));
+	string read;
+	int i = 0;
+	for (int i = 0; i < 125; ++i) {
+		for (int j = 0; j < 12; ++j) {
+			testFile >> read;
+			if (read[0] != ';') {
+				if(j < 6)
+					perftTestData[i][0] += " " + read;
+				else 
+					perftTestData[i][j-5] = read;
+			}
+			else j--;
+		}
+	}
+	testFile.close();
+	// Start perft
+	int errorCount = 0;
+	int c = 1;
+	for (auto& testNum : perftTestData) {
+		c = 1;
+		testBoard.setupBoard(testNum[0]);
+		testBoard.print();
+		for (auto& moveCount = testNum.begin() + 1; moveCount != testNum.end(); ++moveCount) {
+			if (c == 6) continue;
+			cout << "Depth " << c << " start...\n";
+			perft(c, c, any_of(testNum[0].begin(), testNum[0].end(), [](char c) {return c == 'w'; }) ? white : black);
+			c++;
+			if (totalPerftMoveCount != stol(*moveCount)) {
+				cout << "Discrepancy detected: " << testNum[0] << " Depth : " << c - 1 << endl;
+				cout << "Expected: " << *moveCount << " Found: " << totalPerftMoveCount << endl;
+				cout << "Press Enter\n";
+				errorCount++;
+				cin.ignore();
+			}
+			totalPerftMoveCount = 0;
+		}
+	}
+	cout << "Correct percentage: " << 100*((float)(perftTestData.size() - errorCount) / (float)perftTestData.size()) << "%\n";
+
+	cin.ignore();
 }
