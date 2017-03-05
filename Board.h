@@ -47,6 +47,7 @@ public:
 	void unMakeMove(const Move&, color side);
 	void updateAllAttacks();
 	bool isKingInCheck(color kingColor) const;
+	bool isKingLeftInCheck(color KingColor, const Move& lastMove);
 
 	// Evaluation
 	int evaluate(color side);
