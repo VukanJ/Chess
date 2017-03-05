@@ -285,7 +285,7 @@ void UnitTest::testCastling()
 	ai.chessBoard.unMakeMove(captureRook2, black);
 	assert(hashKey == ai.chessBoard.hashKey);
 	// Rook moves back and forth (Lead to incorrect castling right update in the past)
-	
+
 	moveList.clear();
 	ai.chessBoard.setupBoard("r3k2r/pppppppp/8888/PPPPPPPP/R3K2R w KkQq - 1 0");
 	ai.chessBoard.generateMoveList(moveList, white);
@@ -326,11 +326,11 @@ void UnitTest::testEnpassent()
 	for (int pos = 1; pos < 8; ++pos) {
 		otherpawn = Move(h7 + pos, h4 + pos, MOVE, bp);
 		pawn2 = Move(7 + pos, 23 + pos, PAWN2, wp);
-	
+
 		ai.chessBoard.makeMove(otherpawn, black);
 		ai.chessBoard.makeMove(pawn2, white);
 		ai.chessBoard.updateAllAttacks();
-	
+
 		movelist.clear();
 		ai.chessBoard.generateMoveList(movelist, black);
 		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
@@ -338,11 +338,11 @@ void UnitTest::testEnpassent()
 		assert(ep->from == h4 + pos && ep->to == 15 + pos && ep->Pieces == bp);
 		ai.chessBoard.makeMove(*ep, black);
 		ai.chessBoard.unMakeMove(*ep, black);
-	
+
 		ai.chessBoard.unMakeMove(pawn2, white);
 		ai.chessBoard.unMakeMove(otherpawn, black);
 		ai.chessBoard.updateAllAttacks();
-	
+
 		assert(hashKey == ai.chessBoard.hashKey);
 	}
 	for (int pos = 0; pos < 7; ++pos) {
@@ -372,11 +372,11 @@ void UnitTest::testEnpassent()
 	for (int pos = 0; pos < 7; ++pos) {
 		otherpawn = Move(h2 + pos, h5 + pos, MOVE, wp);
 		pawn2 = Move(g7 + pos, g5 + pos, PAWN2, bp);
-	
+
 		ai.chessBoard.makeMove(otherpawn, white);
 		ai.chessBoard.makeMove(pawn2, black);
 		ai.chessBoard.updateAllAttacks();
-	
+
 		movelist.clear();
 		ai.chessBoard.generateMoveList(movelist, white);
 		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
@@ -384,21 +384,21 @@ void UnitTest::testEnpassent()
 		assert(ep->from == h5 + pos && ep->to == g6 + pos && ep->Pieces == wp);
 		ai.chessBoard.makeMove(*ep,   white);
 		ai.chessBoard.unMakeMove(*ep, white);
-	
+
 		ai.chessBoard.unMakeMove(pawn2, black);
 		ai.chessBoard.unMakeMove(otherpawn, white);
 		ai.chessBoard.updateAllAttacks();
-	
+
 		assert(hashKey == ai.chessBoard.hashKey);
 	}
 	for (int pos = 1; pos < 8; ++pos) {
 		otherpawn = Move(h2 + pos, h5 + pos, MOVE, wp);
 		pawn2 = Move(h7 - 1 + pos, h5 - 1 + pos, PAWN2, bp);
-	
+
 		ai.chessBoard.makeMove(otherpawn, white);
 		ai.chessBoard.makeMove(pawn2, black);
 		ai.chessBoard.updateAllAttacks();
-	
+
 		movelist.clear();
 		ai.chessBoard.generateMoveList(movelist, white);
 		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
@@ -406,11 +406,11 @@ void UnitTest::testEnpassent()
 		assert(ep->from == h5 + pos && ep->to == a5 + pos && ep->Pieces == wp);
 		ai.chessBoard.makeMove(*ep,   white);
 		ai.chessBoard.unMakeMove(*ep, white);
-	
+
 		ai.chessBoard.unMakeMove(pawn2, black);
 		ai.chessBoard.unMakeMove(otherpawn, white);
 		ai.chessBoard.updateAllAttacks();
-	
+
 		assert(hashKey == ai.chessBoard.hashKey);
 	}
 	ai.chessBoard.print();
@@ -584,7 +584,7 @@ UnitTest::fullTree::fullTree(Board& _chessBoard, color comp, int _targetDepth)
 UnitTest::fullTree::Node::Node() {}
 
 int UnitTest::fullTree::test_NegaMax(unique_ptr<Node>& node, int alpha, int beta, int depth, color side)
-{	
+{
 	int bestValue = -oo, boardValue = 0;
 	if (depth == 0) {
 		//if (chessBoard.hash.hasBetterEntry(chessBoard.hashKey, targetDepth - depth)) {
@@ -605,7 +605,7 @@ int UnitTest::fullTree::test_NegaMax(unique_ptr<Node>& node, int alpha, int beta
 		// Play move
 		//cout << moveString(*move) << endl;
 		chessBoard.makeMove(*move, side);
-		// Is king in check? 
+		// Is king in check?
 		if (chessBoard.pieces[side == black ? bk : wk] & (side == black ? chessBoard.whiteAtt : chessBoard.blackAtt)) {
 			chessBoard.unMakeMove(*move, side);
 			move = node->moveList.erase(move);
@@ -652,7 +652,7 @@ void UnitTest::testHashing()
 }
 
 
-Benchmark::Benchmark() : performingAll(false) 
+Benchmark::Benchmark() : performingAll(false)
 {
 	genChessData data;
 	data.gen(); // Generates bitboards needed for move generation
@@ -809,7 +809,7 @@ void Benchmark::testPerft(int maxdepth, bool countMoveTypes)
 			cout << "\tComputed number of moves: " << totalPerftMoveCount << endl;
 			cout << "\tE.P. count: " << perftEPCount << endl;
 			cout << "\tNodes per second: " << (double)totalPerftMoveCount/microseconds << " M\n";
-			
+
 			totalPerftMoveCount = 0;
 			perftEPCount = 0;
 			assert(hashKey == testBoard.hashKey);
@@ -850,7 +850,7 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 		}
 
 		if (move.flags == ENPASSENT && depth == 1) perftEPCount++;
-		
+
 		checkmate = false; // Moves were found
 		perft(depth - 1, targetDepth, static_cast<color>(!side));
 		testBoard.unMakeMove(move, static_cast<color>(side));
@@ -886,7 +886,7 @@ void Benchmark::perftTestSuite()
 			if (read[0] != ';') {
 				if(j < 6)
 					perftTestData[i][0] += " " + read;
-				else 
+				else
 					perftTestData[i][j-5] = read;
 			}
 			else j--;
@@ -902,7 +902,7 @@ void Benchmark::perftTestSuite()
 		testBoard.setupBoard(testNum[0]);
 		//testBoard.print();
 
-		for (auto& moveCount = testNum.begin() + 1; moveCount != testNum.end(); ++moveCount) {
+		for (auto moveCount = testNum.begin() + 1; moveCount != testNum.end(); ++moveCount) {
 			if (c == 6) continue;
 			cout << "Depth " << c << " start...\n";
 			perft(c, c, any_of(testNum[0].begin(), testNum[0].end(), [](char c) {return c == 'w'; }) ? white : black);
