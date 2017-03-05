@@ -657,7 +657,8 @@ Benchmark::Benchmark() : performingAll(false)
 	genChessData data;
 	data.gen(); // Generates bitboards needed for move generation
 
-	testBoard = Board("K7/8/8/3Q4/4q3/8/8/7k w - - 0 1");
+	testBoard = Board("k7/8/8/7p/6P1/8/8/K7 w - - 0 1");
+
 	testBoard.print();
 
 	testBoard.updateAllAttacks();
@@ -796,9 +797,10 @@ void Benchmark::testPerft(int maxdepth, bool countMoveTypes)
 			chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
 			testBoard.print();
 			perft(d, d, white);
-			printBitboard(testBoard.whiteAtt);
-			printBitboard(testBoard.blackAtt);
-			testBoard.print();
+			//testBoard.print();
+			//printBitboard(testBoard.attacks[bk]);
+			//printBitboard(testBoard.blackAtt);
+			//testBoard.print();
 			chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
 			double microseconds = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 			cout << string(40, '=') << endl;
@@ -833,18 +835,16 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 	// Builds a tree to benchmark move generation
 	if (depth == 0) return;
 	MoveList movelist;
+	testBoard.updateAllAttacks();
 	testBoard.generateMoveList(movelist, side);
 	// Store pairs of root moves and number of possible moves after them
 	bool checkmate = true;
 	for (auto& move : movelist) {
 		testBoard.makeMove(move, side);
-		testBoard.updateAllAttacks();
 
 		if(depth == 1) perftMoveCount++;
-		
-		if (testBoard.isKingInCheck(side)) {
+		if (testBoard.isKingLeftInCheck(side, move)) {
 			testBoard.unMakeMove(move, side);
-			testBoard.updateAllAttacks();
 			if (depth == 1) perftMoveCount--;
 			continue;
 		}
@@ -854,7 +854,6 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 		checkmate = false; // Moves were found
 		perft(depth - 1, targetDepth, static_cast<color>(!side));
 		testBoard.unMakeMove(move, static_cast<color>(side));
-		testBoard.updateAllAttacks();
 		if (depth == targetDepth) {
 			cout << (char)('h' - (move.from % 8)) << (char)('1' + (move.from / 8)) << (char)('h' - (move.to % 8)) << (char)('1' + (move.to / 8)) << ": " << perftMoveCount << endl;
 			totalPerftMoveCount += perftMoveCount;
@@ -863,6 +862,12 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 	}
 	if (checkmate && depth == 1) perftCheckmateCount++;
 }
+
+// Scoreboard:
+// commit 226506b6038d0991f0b10a4998adaea203f2af50
+//		  Perft computation time: 85.6962 s (depth 5)
+// most recent commit:
+//		  Perft computation time: 39.49 s (depth 5)
 
 void Benchmark::perftTestSuite()
 {
@@ -891,10 +896,12 @@ void Benchmark::perftTestSuite()
 	// Start perft
 	int errorCount = 0;
 	int c = 1;
+	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
 	for (auto& testNum : perftTestData) {
 		c = 1;
 		testBoard.setupBoard(testNum[0]);
-		testBoard.print();
+		//testBoard.print();
+
 		for (auto& moveCount = testNum.begin() + 1; moveCount != testNum.end(); ++moveCount) {
 			if (c == 6) continue;
 			cout << "Depth " << c << " start...\n";
@@ -906,11 +913,16 @@ void Benchmark::perftTestSuite()
 				cout << "Press Enter\n";
 				errorCount++;
 				cin.ignore();
+				totalPerftMoveCount = 0;
+				break;
 			}
 			totalPerftMoveCount = 0;
 		}
 	}
+	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
+	double microseconds = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 	cout << "Correct percentage: " << 100*((float)(perftTestData.size() - errorCount) / (float)perftTestData.size()) << "%\n";
+	cout << "Computation time: " << microseconds*1e-6 << " s" << endl;
 
 	cin.ignore();
 }

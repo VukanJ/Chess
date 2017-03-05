@@ -18,8 +18,8 @@ void Board::setupBoard(string FEN)
 {
 	for (auto& p : pieces)  p = 0x0;
 	for (auto& a : attacks) a = 0x0;
-	blackPos = whitePos = castlingRights 
-		= b_enpassent = w_enpassent = bpMove = wpMove = 0x0;
+	blackPos = whitePos  
+		 = bpMove = wpMove = b_enpassent = w_enpassent = castlingRights = 0x0;
 
 	// Sets up Board according to FEN
 	// FEN = [position(white's perspective) sideToMove castlingrights enpassentSquares NofHalfMoves MoveNumber]
@@ -562,7 +562,6 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 				 // Calculate attacked pieces
 				 BITLOOP(pos, attackingPieces) {                                                          // Loop through all positions of pieces of kind br
 					 attackMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[wr] & blackPos; // Intersections with opponent pieces
-					// printBitboard(attackMask);
 					 if (attackMask) {                                                    // If pieces are targeted
 						 BLACKLOOP(candidate) {                                        // Find targeted piece
 							 pieceAttacks = pieces[candidate] & attackMask;                        // Set specific attacks
@@ -584,8 +583,6 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 						 }
 					 }
 					 attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[wr]; // Non capturing moves
-					// printBitboard(attackMask);
-					 //printBitboard(tempMask);
 					 BITLOOP(target, attackMask) {                        // Add moves..
 						 if (!(CONNECTIONS[pos][target] & allPos)) {       // ..if no piece is in the way
 							 if (pos == a1) {
@@ -702,7 +699,7 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 	// TODO: Needs nicer solution
 	for_each(moveList.begin(), moveList.end(), [this](Move& move) {
 		if (target_piece(move.Pieces) == wr) {
-			if ((move.flags & 0xF) == CAPTURE || (move.flags & 0xF) == C_PROMOTION) {
+			if (move_type(move.flags) == CAPTURE || move_type(move.flags) == C_PROMOTION) {
 				if (move.to == a1) 
 					move.flags |= (castlingRights & castle_Q) << 4; 
 				else if (move.to == h1) 
@@ -710,7 +707,7 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 			}
 		}
 		else if (target_piece(move.Pieces) == br) {
-			if ((move.flags & 0xF) == CAPTURE || (move.flags & 0xF) == C_PROMOTION) {
+			if (move_type(move.flags) == CAPTURE || move_type(move.flags) == C_PROMOTION) {
 				if (move.to == a8) 
 					move.flags |= (castlingRights & castle_q) << 4;
 				else if (move.to == h8)  
@@ -722,7 +719,7 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 
 void Board::makeMove(const Move& move, color side)
 {
-	switch (move.flags & 0xFull){
+	switch (move_type(move.flags)){
 		case MOVE:
 			pieces[move.Pieces] ^= bit_at(move.from);     // Piece disappears from departure
 			pieces[move.Pieces] |= bit_at(move.to);       // Piece appears at destination
@@ -888,7 +885,7 @@ void Board::makeMove(const Move& move, color side)
 			exit(1);
 	}
 	// No enpassent squares after any other move than double pawn push
-	if ((move.flags & 0xF) != PAWN2) {
+	if (move_type(move.flags) != PAWN2) {
 		b_enpassent = w_enpassent = 0;
 	}
 	// Check if castling still permitted
@@ -902,7 +899,7 @@ void Board::makeMove(const Move& move, color side)
 
 void Board::unMakeMove(const Move& move, color side)
 {
-	switch (move.flags & 0xFull){
+	switch (move_type(move.flags)){
 		case MOVE:
 			pieces[move.Pieces] ^= bit_at(move.to);       // Piece disappears from destination
 			pieces[move.Pieces] |= bit_at(move.from);     // Piece reappears at departure
@@ -1099,7 +1096,49 @@ void Board::print() const
 
 bool Board::isKingInCheck(color kingColor) const
 {
-	return kingColor == black ? pieces[bk] & whiteAtt : pieces[wk] & blackAtt;
+	// Returns true if king is in check. Requires accurate attack sets.
+	return kingColor == black ? (pieces[bk] & whiteAtt) != 0 : (pieces[wk] & blackAtt) != 0;
+}
+
+bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove)
+{
+	// Returns true if last played move leaves king in check. 
+	piece king = kingColor == white ? wk : bk;
+	byte kingPos = msb(pieces[king]);
+	u64 kingRect = 0x0, kingDiags = 0x0;
+	if (move_type(lastMove.flags) > 5) return false;      // Castling does not put king in check
+	
+	if (KNIGHT_ATTACKS[kingPos] & pieces[kingColor == white ? bn : wn]) return true; // King attacked by opponent knight
+	if (KING_ATTACKS[kingPos] & pieces[kingColor == white ? bk : wk]) return true;   // King attacked by opponent king
+
+	if ((0x5ull << ((kingPos - 1) + (kingColor == white ? 8 : -8))) 
+		& (_row << 8*((kingPos/8)+(kingColor==white ? +1 : -1))) 
+		& pieces[kingColor == white ? bp : wp]) return true; // King attacked by opponent pawns
+
+	// Check if enemy attack was uncovered by lastMove
+	for (int i = 0; i < 4; ++i) {
+		kingRect  |= floodFill(pieces[king], ~allPos, (dir)i);
+		kingDiags |= floodFill(pieces[king], ~allPos, (dir)(i + 4));
+	}
+	kingRect  &= ~(kingColor == white ? whitePos : blackPos);
+	kingDiags &= ~(kingColor == white ? whitePos : blackPos);
+
+	if (kingColor == white) {
+		kingRect  &= (pieces[br] | pieces[bq]);
+		kingDiags &= (pieces[bb] | pieces[bq]);
+	}
+	else {
+		kingRect  &= (pieces[wr] | pieces[wq]);
+		kingDiags &= (pieces[wb] | pieces[wq]);
+	}
+	BITLOOP(enemyPos, kingRect) {
+		if (!(CONNECTIONS[kingPos][enemyPos] & allPos)) return true;
+	}
+	BITLOOP(enemyPos, kingDiags) {
+		if (!(CONNECTIONS[kingPos][enemyPos] & allPos)) return true;
+	}
+	// King not under attack
+	return false;
 }
 
 int Board::evaluate(color side)
