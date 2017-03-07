@@ -59,8 +59,8 @@ void Board::setupBoard(string FEN)
 				}
 			}
 		}
-		BLACKLOOP(p) blackPos |= pieces[p];
-		WHITELOOP(p) whitePos |= pieces[p];
+		for_black(p) blackPos |= pieces[p];
+		for_white(p) whitePos |= pieces[p];
 		// Set castling rights
 		for (auto c : fenArgs[2]) {
 			switch (c) {
@@ -138,7 +138,7 @@ void Board::debug()
 	generateMoveList(movelist, debugPlayerColor);
 
 	cout << "Start hash " << hex << hashKey << endl;
-	int count = 0;
+	//int count = 0;
 	//for (auto& m : movelist) {
 	//	cout << moveString(m) << (count % 10 == 0 ? "\n" : "  ");
 	//	count++;
@@ -169,7 +169,7 @@ void Board::debug()
 void Board::updateAllAttacks()
 {
 	whiteAtt = blackAtt = 0x0;
-	BLACKLOOP(i){
+	for_black(i){
 		 // Generate only if bitboard not empty
 		if(pieces[i])
 			updateAttack((piece)i);
@@ -178,7 +178,7 @@ void Board::updateAllAttacks()
 		attacks[i] &= ~blackPos;
 		blackAtt   |= attacks[i];
 	}
-	WHITELOOP(i) {
+	for_white(i) {
 		 // Generate only if bitboard not empty
 		if(pieces[i])
 			updateAttack((piece)i);
@@ -285,6 +285,56 @@ void Board::pawnFill(color side)
 	}
 }
 
+void inline Board::knightMoves(MoveList& moveList, u64 attackingPieces, color side, piece p) const
+{
+	u64 attackMask = 0x0, pieceAttacks = 0x0;
+
+	BITLOOP(pos, attackingPieces) {
+		attackMask = KNIGHT_ATTACKS[pos] & attacks[p] & (side == black ? whitePos : blackPos);
+		if (attackMask) {
+			for_color(candidate, !side) {
+				pieceAttacks = pieces[candidate] & attackMask;
+				if (pieceAttacks) {
+					BITLOOP(target, pieceAttacks) {
+						moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(p, candidate)));
+					}
+				}
+			}
+		}
+		attackMask ^= KNIGHT_ATTACKS[pos] & attacks[p];
+		BITLOOP(target, attackMask) {
+			moveList.push_back(Move(pos, target, MOVE, p));
+		}
+	}
+}
+
+void inline Board::queen_and_bishopMoves(MoveList& moveList, u64 attackingPieces, const vector<u64>& pattern, color side, piece p) const
+{
+	u64 attackMask = 0x0, pieceAttacks = 0x0;
+
+	BITLOOP(pos, attackingPieces) {
+		attackMask = pattern[pos] & attacks[p] & (side == black ? whitePos : blackPos);
+		if (attackMask) {
+			for_color(candidate, !side) {
+				pieceAttacks = pieces[candidate] & attackMask;
+				if (pieceAttacks) {
+					BITLOOP(target, pieceAttacks) {
+						if (!(CONNECTIONS[pos][target] & allPos)) {
+							moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(p, candidate)));
+						}
+					}
+				}
+			}
+		}
+		attackMask ^= pattern[pos] & attacks[p];
+		BITLOOP(target, attackMask) {
+			if (!(CONNECTIONS[pos][target] & allPos)) {
+				moveList.push_back(Move(pos, target, MOVE, p));
+			}
+		}
+	}
+}
+
 void Board::generateMoveList(MoveList& moveList, color side) const
 {
 	/*
@@ -297,7 +347,7 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 	u64 pieceAttacks = 0x0, attackingPieces = 0x0;
 	// Generate all capturing and normal moves
 	if (side == black){ ////////////////////////////////////////////////BLACK MOVE GENERATION///////////////////////////////////////////////////
-		BLACKLOOP(b) { // Loop through black pieces
+		for_black(b) { // Loop through black pieces
 			attackingPieces = pieces[b];
 			if (attackingPieces) { // Only consider non-empty boards
 				switch (b) {
@@ -307,7 +357,7 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 						attackMask = ((bit_at(pos) >> 9) & ~_left)  & whitePos;
 						attackMask |= ((bit_at(pos) >> 7) & ~_right) & whitePos;
 						if (attackMask)                                              // If pieces are targeted
-							WHITELOOP(candidate) {                                    // Find targeted piece
+							for_white(candidate) {                                    // Find targeted piece
 							pieceAttacks = pieces[candidate] & attackMask;           // Set specific attacks
 							if (pieceAttacks) {
 								BITLOOP(target, pieceAttacks) {                       // Add moves
@@ -361,7 +411,7 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 					BITLOOP(pos, attackingPieces) {                                   // Loop through all positions of pieces of kind br
 						attackMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[br] & whitePos; // Intersections with opponent pieces
 						if (attackMask) {                                                // If pieces are targeted
-							WHITELOOP(candidate) {                                        // Find targeted piece
+							for_white(candidate) {                                        // Find targeted piece
 								pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
 								if (pieceAttacks) {
 									BITLOOP(target, pieceAttacks) {                                    // Add moves
@@ -397,79 +447,15 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 						}
 					}
 					break;
-				case bn: //// BLACK KNIGHT
-
-					// Calculate attacked pieces
-					BITLOOP(pos, attackingPieces) {                                   // Loop through all positions of pieces of kind bn
-						attackMask = KNIGHT_ATTACKS[pos] & attacks[bn] & whitePos; // Intersections with opponent pieces
-						if (attackMask) {                                                // If pieces are targeted
-							WHITELOOP(candidate) {                                    // Find targeted piece
-								pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
-								if (pieceAttacks) {
-									BITLOOP(target, pieceAttacks) {                                    // Add moves
-										moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(bn, candidate)));
-									}
-								}
-							}
-						}
-						attackMask ^= KNIGHT_ATTACKS[pos] & attacks[bn]; // Non capturing moves
-						BITLOOP(target, attackMask) {                        // Add moves
-							moveList.push_back(Move(pos, target, MOVE, bn));
-						}
-					}
-					break;
-				case bb: // BLACK BISHOP
-					BITLOOP(pos, attackingPieces) {                                   // Loop through all positions of pieces of kind bb
-						attackMask = BISHOP_ATTACKS[pos] & attacks[bb] & whitePos; // Intersections with opponent pieces
-						if (attackMask) {                                                // If pieces are targeted
-							WHITELOOP(candidate) {                                    // Find targeted piece
-								pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
-								if (pieceAttacks) {
-									BITLOOP(target, pieceAttacks) {                                    // Add moves
-										if (!(CONNECTIONS[pos][target] & allPos)) {   // ..if no piece is in the way
-											moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(bb, candidate)));
-										}
-									}
-								}
-							}
-						}
-						attackMask ^= BISHOP_ATTACKS[pos] & attacks[bb]; // Non capturing moves
-						BITLOOP(target, attackMask) {                        // Add moves
-							if (!(CONNECTIONS[pos][target] & allPos)) {   // ..if no piece is in the way
-								moveList.push_back(Move(pos, target, MOVE, bb));
-							}
-						}
-					}
-					break;
-				case bq: // BLACK QUEEN
-					BITLOOP(pos, attackingPieces) {                                   // Loop through all positions of pieces of kind bq
-						attackMask = QUEEN_ATTACKS[pos] & attacks[bq] & whitePos; // Intersections with opponent pieces
-						if (attackMask) {                                                // If pieces are targeted
-							WHITELOOP(candidate) {                                    // Find targeted piece
-								pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
-								if (pieceAttacks) {
-									BITLOOP(target, pieceAttacks) {                                    // Add moves
-										if (!(CONNECTIONS[pos][target] & allPos)) {   // ..if no piece is in the way
-											moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(bq, candidate)));
-										}
-									}
-								}
-							}
-						}
-						attackMask ^= QUEEN_ATTACKS[pos] & attacks[bq]; // Non capturing moves
-						BITLOOP(target, attackMask) {                        // Add moves
-							if (!(CONNECTIONS[pos][target] & allPos)) {   // ..if no piece is in the way
-								moveList.push_back(Move(pos, target, MOVE, bq));
-							}
-						}
-					}
-					break;
+				case bn: knightMoves(moveList, pieces[bn], black, bn); break;
+				case bb: queen_and_bishopMoves(moveList, pieces[bb], BISHOP_ATTACKS, black, bb); break;
+				case bq: queen_and_bishopMoves(moveList, pieces[bq], QUEEN_ATTACKS,  black, bq); break;
 				case bk: // BLACK KING
 					// Calculate attacked pieces
 					BITLOOP(pos, attackingPieces) {                             // Loop through all positions of pieces of kind bk
 						attackMask = ((KING_ATTACKS[pos] & attacks[bk] & whitePos) & ~whiteAtt); // Intersections with opponent pieces that would not place king in check
 						if (attackMask) {                                                // If pieces are targeted
-							WHITELOOP(candidate) {                                    // Find targeted piece
+							for_white(candidate) {                                    // Find targeted piece
 								pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
 								if (pieceAttacks) {
 									BITLOOP(target, pieceAttacks) {                                 // Add moves
@@ -500,7 +486,7 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 	}
  else{////////////////////////////////////////////////WHITE MOVE GENERATION///////////////////////////////////////////////////
 	  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	 WHITELOOP(w) { // Loop through white pieces
+	 for_white(w) { // Loop through white pieces
 		 attackingPieces = pieces[w];
 		 if (attackingPieces){
 			 switch (w) {
@@ -512,7 +498,7 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 					 attackMask |= (bit_at(pos) << 7 & ~_left)  & blackPos;
 
 					 if (attackMask) {                                              // If pieces are targeted
-						 BLACKLOOP(candidate) {                                    // Find targeted piece
+						 for_black(candidate) {                                    // Find targeted piece
 							 pieceAttacks = pieces[candidate] & attackMask;           // Set specific attacks
 							 if (pieceAttacks) {
 								 BITLOOP(target, pieceAttacks) {                       // Add moves
@@ -564,7 +550,7 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 				 BITLOOP(pos, attackingPieces) {                                                          // Loop through all positions of pieces of kind br
 					 attackMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[wr] & blackPos; // Intersections with opponent pieces
 					 if (attackMask) {                                                    // If pieces are targeted
-						 BLACKLOOP(candidate) {                                        // Find targeted piece
+						 for_black(candidate) {                                        // Find targeted piece
 							 pieceAttacks = pieces[candidate] & attackMask;                        // Set specific attacks
 							 if (pieceAttacks) {
 								 BITLOOP(target, pieceAttacks) {                                        // Add moves..
@@ -599,78 +585,15 @@ void Board::generateMoveList(MoveList& moveList, color side) const
 					 }
 				 }
 				 break;
-			 case wn: //// WHITE KNIGHT
-				 // Calculate attacked pieces
-				 BITLOOP(pos, attackingPieces) {                                   // Loop through all positions of pieces of kind bn
-					 attackMask = KNIGHT_ATTACKS[pos] & attacks[wn] & blackPos;     // Intersections with opponent pieces
-					 if (attackMask) {                                                // If pieces are targeted
-						 BLACKLOOP(candidate) {                                    // Find targeted piece
-							 pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
-							 if (pieceAttacks) {
-								 BITLOOP(target, pieceAttacks) {                                    // Add moves
-									 moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(wn, candidate)));
-								 }
-							 }
-						 }
-					 }
-					 attackMask ^= KNIGHT_ATTACKS[pos] & attacks[wn]; // Non capturing moves
-					 BITLOOP(target, attackMask) {                        // Add moves
-						 moveList.push_back(Move(pos, target, MOVE, wn));
-					 }
-				 }
-				 break;
-			 case wb: // WHITE BISHOP
-				 BITLOOP(pos, attackingPieces) {                                   // Loop through all positions of pieces of kind bb
-					 attackMask = BISHOP_ATTACKS[pos] & attacks[wb] & blackPos;     // Intersections with opponent pieces
-					 if (attackMask) {                                                // If pieces are targeted
-						 BLACKLOOP(candidate) {                                    // Find targeted piece
-							 pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
-							 if (pieceAttacks) {
-								 BITLOOP(target, pieceAttacks) {                                    // Add moves
-									 if (!(CONNECTIONS[pos][target] & allPos)) {   // ..if no piece is in the way
-										 moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(wb, candidate)));
-									 }
-								 }
-							 }
-						 }
-					 }
-					 attackMask ^= BISHOP_ATTACKS[pos] & attacks[wb]; // Non capturing moves
-					 BITLOOP(target, attackMask) {                        // Add moves
-						 if (!(CONNECTIONS[pos][target] & allPos)) {   // ..if no piece is in the way
-							 moveList.push_back(Move(pos, target, MOVE, wb));
-						 }
-					 }
-				 }
-				 break;
-			 case wq: // WHITE QUEEN
-				 BITLOOP(pos, attackingPieces) {                                   // Loop through all positions of pieces of kind bq
-					 attackMask = QUEEN_ATTACKS[pos] & attacks[wq] & blackPos; // Intersections with opponent pieces
-					 if (attackMask) {                                                // If pieces are targeted
-						 BLACKLOOP(candidate) {                                    // Find targeted piece
-							 pieceAttacks = pieces[candidate] & attackMask;                    // Set specific attacks
-							 if (pieceAttacks) {
-								 BITLOOP(target, pieceAttacks) {                                    // Add moves
-									 if (!(CONNECTIONS[pos][target] & allPos)) {   // ..if no piece is in the way
-										 moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(wq, candidate)));
-									 }
-								 }
-							 }
-						 }
-					 }
-					 attackMask ^= QUEEN_ATTACKS[pos] & attacks[wq]; // Non capturing moves
-					 BITLOOP(target, attackMask) {                        // Add moves
-						 if (!(CONNECTIONS[pos][target] & allPos)) {   // ..if no piece is in the way
-							 moveList.push_back(Move(pos, target, MOVE, wq));
-						 }
-					 }
-				 }
-				 break;
+			 case wn: knightMoves(moveList, pieces[wn], white, wn); break;
+			 case wb: queen_and_bishopMoves(moveList, pieces[wb], BISHOP_ATTACKS, white, wb); break;
+			 case wq: queen_and_bishopMoves(moveList, pieces[wq], QUEEN_ATTACKS,  white, wq); break;
 			 case wk: // WHITE KING
 				 // Calculate attacked pieces
 				 BITLOOP(pos, attackingPieces) {                                               // Loop through all positions of pieces of kind wk
 					 attackMask = ((KING_ATTACKS[pos] & attacks[wk] & blackPos) & ~blackAtt); // Captures of opponent pieces that would not place king in check
 					 if (attackMask) {                                                          // If pieces are targeted
-						 BLACKLOOP(candidate) {                                                // Find targeted piece
+						 for_black(candidate) {                                                // Find targeted piece
 							 pieceAttacks = pieces[candidate] & attackMask;                       // Set specific attacks
 							 if (pieceAttacks) {
 								 BITLOOP(target, pieceAttacks) {                                    // Add moves
@@ -1195,13 +1118,13 @@ int Board::evaluate(color side)
 	// *************************** MOBILITY ***************************
 	// Determines how many squares are accessible, worth 10 cp each
 	int mobility = 0;
-	WHITELOOP(i) mobility += popcount(attacks[i] ^ blackPos);
-	BLACKLOOP(i) mobility -= popcount(attacks[i] ^ whitePos);
+	for_white(i) mobility += popcount(attacks[i] ^ blackPos);
+	for_black(i) mobility -= popcount(attacks[i] ^ whitePos);
 	total_boardValue += mobility * 10;
 	mobility = 0;
 	// Measure "hostiliy" = number of attacked pieces of opponent. 15cp each
-	WHITELOOP(i) mobility += popcount(attacks[i] & blackPos);
-	BLACKLOOP(i) mobility += popcount(attacks[i] & whitePos);
+	for_white(i) mobility += popcount(attacks[i] & blackPos);
+	for_black(i) mobility += popcount(attacks[i] & whitePos);
 	total_boardValue += mobility * 15;
 	// ~~~ Blocked Pawns ~~~
 	// Determines how many pawns are blocked per player color, penalty of 4 cp for each

@@ -35,9 +35,9 @@ byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 		if (!_BitScanReverse64(&index, mask)){
 			index = 0;
 		}
-		return index;
+		return (byte)index;
 	} // Reverse Bitscan
-	byte inline msb(u64 x) { ulong index; index = !_BitScanReverse64(&index, x) ? -1 : index; return index; }
+	byte inline msb(u64 x) { ulong index; index = !_BitScanReverse64(&index, x) ? -1 : index; return (byte)index; }
 	u64  inline rotate_l64(u64 mask, int amount) { return _rotl64(mask, amount); } // Rotate left  (64Bit)
 	u64  inline rotate_r64(u64 mask, int amount) { return _rotr64(mask, amount); } // Rotate right (64Bit)
 
@@ -70,8 +70,9 @@ byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 
 // For increasing readability:
 
-#define BLACKLOOP(x) for (int x = 0; x < 6;  ++x)
-#define WHITELOOP(x) for (int x = 6; x < 12; ++x)
+#define for_black(x) for (int x = 0; x < 6;  ++x)
+#define for_white(x) for (int x = 6; x < 12; ++x)
+#define for_color(x, color) for(int x = 6 * color; x < 6 + 6 * color; ++x)
 
 #define BLACKLOOP_IT(x) for (auto& x = pieces.begin(); x != pieces.end() - 5; x++)
 #define WHITELOOP_IT(x) for (auto& x = pieces.begin() + 6; x != pieces.end(); x++)

@@ -112,7 +112,7 @@ public:
 	void performAllbenchmarks();
 	void summarize();
 
-	void testPerft(int maxdepth, bool countMoveTypes);
+	void testPerft(int maxdepth);
 	void perftTestSuite();
 	void benchmarkMoveGeneration();
 	void benchmarkMovemaking();
@@ -135,6 +135,17 @@ private:
 	long perftCheckmateCount;
 
 	long totalPerftMoveCount;
+};
+
+class Timer
+{
+public:
+	Timer();
+	void start();
+	void stop();
+	double getTime(); // return microseconds
+private:
+	chrono::high_resolution_clock::time_point t1, t2;
 };
 
 #endif

@@ -42,6 +42,8 @@ public:
 
 	// Move making
 	void generateMoveList(MoveList&, color) const;
+	void inline knightMoves(MoveList&, u64 pieces, color, piece) const;
+	void inline queen_and_bishopMoves(MoveList&, u64 pieces, const vector<u64>& pattern, color, piece) const;
 
 	void makeMove(const Move&, color side);
 	void unMakeMove(const Move&, color side);

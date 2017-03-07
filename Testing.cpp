@@ -652,7 +652,7 @@ Benchmark::Benchmark() : performingAll(false)
 	genChessData data;
 	data.gen(); // Generates bitboards needed for move generation
 
-	testBoard = Board("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq – 1 0");
+	testBoard = Board("7k/b1B2B2/3b4/5B1b/Bb6/8/2B2b2/BK5b w - - 1 0");
 
 	testBoard.print();
 
@@ -783,7 +783,7 @@ void Benchmark::summarize()
 	clog << "\t::: END OF SUMMARY :::\n" << string(80, '~') << '\n';
 }
 
-void Benchmark::testPerft(int maxdepth, bool countMoveTypes)
+void Benchmark::testPerft(int maxdepth)
 {
 	if (maxdepth == -1) {
 		// Check perft numbers
@@ -797,7 +797,7 @@ void Benchmark::testPerft(int maxdepth, bool countMoveTypes)
 			//printBitboard(testBoard.blackAtt);
 			//testBoard.print();
 			chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-			double microseconds = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
+			double microseconds = (double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 			cout << string(40, '=') << endl;
 			cout << "Depth " << d << " summary:\n";
 			cout << "\tExecution time " << microseconds * 1e-3 << "ms\n";
@@ -859,12 +859,12 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 	if (checkmate && depth == 1) perftCheckmateCount++;
 }
 
-// Scoreboard:
+// Scoreboard: AMD Phenom(tm) II X4 945
 // commit 226506b6038d0991f0b10a4998adaea203f2af50
 //		  Perft computation time: 85.6962 s (depth 5)
 // commit 6e3edae2423852e0dd8c246825501630df8c1c2d:
 //		  Perft computation time: 39.49 s (depth 5)
-// commit 556fc9955912c19b8fbdcdb388108af72416b076:
+// commit 4abe35e1513ba6962cf6462e5192fe2e6c00817c:
 //		  Perft computation time: ~31 s (depth 5)
 
 
@@ -878,7 +878,6 @@ void Benchmark::perftTestSuite()
 	}
 	vector<vector<string>> perftTestData = vector<vector<string>>(125, vector<string>(7, ""));
 	string read;
-	int i = 0;
 	for (int i = 0; i < 125; ++i) {
 		for (int j = 0; j < 12; ++j) {
 			testFile >> read;
@@ -895,7 +894,8 @@ void Benchmark::perftTestSuite()
 	// Start perft
 	int errorCount = 0;
 	int c = 1;
-	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
+	Timer timer;
+	timer.start();
 	for (auto& testNum : perftTestData) {
 		c = 1;
 		testBoard.setupBoard(testNum[0]);
@@ -918,10 +918,31 @@ void Benchmark::perftTestSuite()
 			totalPerftMoveCount = 0;
 		}
 	}
-	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-	double microseconds = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
+	timer.stop();
 	cout << "Correct percentage: " << 100*((float)(perftTestData.size() - errorCount) / (float)perftTestData.size()) << "%\n";
-	cout << "Computation time: " << microseconds*1e-6 << " s" << endl;
+	cout << "Computation time: " << timer.getTime()*1e-6 << " s" << endl;
 
 	cin.ignore();
 }
+
+Timer::Timer()
+{
+	t1 = chrono::high_resolution_clock::now();
+	t2 = t1;
+}
+
+void Timer::start()
+{
+	t1 = chrono::high_resolution_clock::now();
+}
+
+void Timer::stop()
+{
+	t2 = chrono::high_resolution_clock::now();
+}
+
+double Timer::getTime()
+{
+	return (double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
+}
+

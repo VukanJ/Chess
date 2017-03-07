@@ -185,6 +185,4 @@ namespace {
 	const int shift[8] = { 8, -1, -8, 1, 7, -9, -7, 9 };
 }
 
-
-
 #endif
