@@ -463,21 +463,16 @@ void UnitTest::testProm()
 
 void UnitTest::specialTest()
 {
-	AI ai("8/b1b5/1P2n1b1/1P3P11/8 w - 1 0", black, 10);
-	ai.chessBoard.print();
-	vector<Move> moveList;
-	ai.chessBoard.generateMoveList(moveList, white);
+	u64 blockers = bit_at(g5) | bit_at(a5) | bit_at(b5) | bit_at(e2) | bit_at(e7) | bit_at(e8);
+	u64 slider   = bit_at(e5);
+	u64 slider2  = bit_at(b1) | slider;
+	
+	printBitboard(blockers);
+	printBitboard(slider2);
 
-	Move move(34, 42, MOVE, wp);
-	ai.chessBoard.makeMove(move, black);
-	printBitboard(ai.chessBoard.pieces[bp]);
-	printBitboard(ai.chessBoard.pieces[wp]);
+	printBitboard(blockers^(blockers - slider2));
 
-	moveList.clear();
-	ai.chessBoard.generateMoveList(moveList, white);
-
-	ai.chessBoard.print();
-
+	cin.ignore();
 	exit(0);
 }
 
@@ -657,7 +652,7 @@ Benchmark::Benchmark() : performingAll(false)
 	genChessData data;
 	data.gen(); // Generates bitboards needed for move generation
 
-	testBoard = Board("k7/8/8/7p/6P1/8/8/K7 w - - 0 1");
+	testBoard = Board("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq – 1 0");
 
 	testBoard.print();
 
@@ -835,6 +830,7 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 	// Builds a tree to benchmark move generation
 	if (depth == 0) return;
 	MoveList movelist;
+	movelist.reserve(20);
 	testBoard.updateAllAttacks();
 	testBoard.generateMoveList(movelist, side);
 	// Store pairs of root moves and number of possible moves after them
@@ -866,8 +862,11 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 // Scoreboard:
 // commit 226506b6038d0991f0b10a4998adaea203f2af50
 //		  Perft computation time: 85.6962 s (depth 5)
-// most recent commit:
+// commit 6e3edae2423852e0dd8c246825501630df8c1c2d:
 //		  Perft computation time: 39.49 s (depth 5)
+// commit 556fc9955912c19b8fbdcdb388108af72416b076:
+//		  Perft computation time: ~31 s (depth 5)
+
 
 void Benchmark::perftTestSuite()
 {
