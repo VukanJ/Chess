@@ -94,6 +94,7 @@ int main()
 }
 
 void testing(){
+
 	Benchmark benchmark;
 	UnitTest test;
 	//test.specialTest();
@@ -107,12 +108,12 @@ void testing(){
 	//test.testHashing();
 	//test.testMinimalTree();
 
-	//benchmark.testPerft(-1, false);
+	//benchmark.testPerft(-1);
 	benchmark.perftTestSuite();
 
 	cout << "EOP\n";
-	//cin.ignore();
-	//exit(0);
+	cin.ignore();
+	exit(0);
 }
 
 void benchmark()

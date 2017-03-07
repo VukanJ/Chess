@@ -14,7 +14,6 @@ const string names = "prnbkqPRNBKQ";
 
 static void printBits(byte num)
 {
-	int c = 0;
 	for (byte p = 0x1ull << 7; p ; p >>= 1)
 		cout << (p & num ? '1' : '0');
 	cout << endl;
