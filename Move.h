@@ -26,7 +26,7 @@ struct Move
 	Move(byte _from, byte _to, byte _flags, byte _pieces);
 	Move(ulong _from, ulong _to, byte _flags, byte _pieces);
 	Move(int _from, int _to, byte _flags, byte _pieces);
-	byte from, to, flags, Pieces;
+	byte from, to, flags, pieces;
 	// Flagbits: 1-4: castlingRuleReset?[k,K,w,W]; 5-8: Movetype
 };
 
@@ -37,15 +37,15 @@ static string moveString(Move m)
 		return "O-O";
 	}
 	else if (m.flags == PROMOTION) {
-		return string(1, squareNames[m.to][0]) + "8=" + string(1, toupper(names[target_piece(m.Pieces)]));
+		return string(1, squareNames[m.to][0]) + "8=" + string(1, toupper(names[target_piece(m.pieces)]));
 	}
 	else if (m.flags == C_PROMOTION) {
-		return string(1, squareNames[m.to][0]) + "x" + squareNames[m.to] + "=" + string(1, toupper(names[target_piece(m.Pieces)]));
+		return string(1, squareNames[m.to][0]) + "x" + squareNames[m.to] + "=" + string(1, toupper(names[target_piece(m.pieces)]));
 	}
-	else if (m.flags == BCASTLE_2 || m.flags == BCASTLE_2) {
+	else if (m.flags == BCASTLE_2 || m.flags == WCASTLE_2) {
 		return "O-O-O";
 	}
-	string s(1, toupper(names[move_piece(m.Pieces)]));
+	string s(1, toupper(names[move_piece(m.pieces)]));
 	if (m.flags == CAPTURE) {
 		if (s[0] == 'P') 
 			s = squareNames[m.to][0];

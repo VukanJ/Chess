@@ -135,6 +135,7 @@ private:
 	long perftCheckmateCount;
 
 	long totalPerftMoveCount;
+	long totalTotalPerftMoveCount;
 };
 
 class Timer

@@ -31,7 +31,7 @@ private:
 
 	// Flooding algorithm
 	enum dir {n, e, s, w, ne, se, sw, nw};
-	u64 floodFill(u64 propagator, u64 empty, dir);
+	u64 floodFill(u64 propagator, u64 empty, dir) const;
 	void pawnFill(color side);
 public:
 	Board();
@@ -42,6 +42,7 @@ public:
 
 	// Move making
 	void generateMoveList(MoveList&, color) const;
+	
 	void inline pawnMoves(MoveList&, u64 pieces, color, piece) const;
 	void inline knightMoves(MoveList&, u64 pieces, color, piece) const;
 	void inline queen_and_bishopMoves(MoveList&, u64 pieces, const vector<u64>& pattern, color, piece) const;

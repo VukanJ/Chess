@@ -335,7 +335,7 @@ void UnitTest::testEnpassent()
 		ai.chessBoard.generateMoveList(movelist, black);
 		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
 		assert(ep != movelist.end());
-		assert(ep->from == h4 + pos && ep->to == 15 + pos && ep->Pieces == bp);
+		assert(ep->from == h4 + pos && ep->to == 15 + pos && ep->pieces == bp);
 		ai.chessBoard.makeMove(*ep, black);
 		ai.chessBoard.unMakeMove(*ep, black);
 
@@ -357,7 +357,7 @@ void UnitTest::testEnpassent()
 		ai.chessBoard.generateMoveList(movelist, black);
 		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
 		assert(ep != movelist.end());
-		assert(ep->from == h4 + pos && ep->to == 17+pos && ep->Pieces == bp);
+		assert(ep->from == h4 + pos && ep->to == 17+pos && ep->pieces == bp);
 
 		ai.chessBoard.makeMove(*ep, black);
 		ai.chessBoard.unMakeMove(*ep, black);
@@ -381,7 +381,7 @@ void UnitTest::testEnpassent()
 		ai.chessBoard.generateMoveList(movelist, white);
 		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
 		assert(ep != movelist.end());
-		assert(ep->from == h5 + pos && ep->to == g6 + pos && ep->Pieces == wp);
+		assert(ep->from == h5 + pos && ep->to == g6 + pos && ep->pieces == wp);
 		ai.chessBoard.makeMove(*ep,   white);
 		ai.chessBoard.unMakeMove(*ep, white);
 
@@ -403,7 +403,7 @@ void UnitTest::testEnpassent()
 		ai.chessBoard.generateMoveList(movelist, white);
 		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
 		assert(ep != movelist.end());
-		assert(ep->from == h5 + pos && ep->to == a5 + pos && ep->Pieces == wp);
+		assert(ep->from == h5 + pos && ep->to == a5 + pos && ep->pieces == wp);
 		ai.chessBoard.makeMove(*ep,   white);
 		ai.chessBoard.unMakeMove(*ep, white);
 
@@ -463,14 +463,21 @@ void UnitTest::testProm()
 
 void UnitTest::specialTest()
 {
-	u64 blockers = bit_at(g5) | bit_at(a5) | bit_at(b5) | bit_at(e2) | bit_at(e7) | bit_at(e8);
-	u64 slider   = bit_at(e5);
-	u64 slider2  = bit_at(b1) | slider;
-	
-	printBitboard(blockers);
-	printBitboard(slider2);
+	//u64 s = assembleBits({ d7, b6, c5, b3, a2, h1, b8 });
+	//u64 o = s | assembleBits({ h7, h6, g6, g5, f5, h8, e8 });
 
-	printBitboard(blockers^(blockers - slider2));
+	//u64 s = assembleBits({ b6, b5, b3 });
+	//u64 o = s | bit_at(g5)|bit_at( b6);
+
+	u64 s = assembleBits({ c5,d4,g3,a2 });
+	u64 o = s | assembleBits({c8,f4, d7,e6,g8,c2,d1,g2,a5,a7});
+
+	printBitboard(s);
+	printBitboard(o);
+
+	u64 leftattacks = (o ^ ((o | _right) - 2 * s)) & ~_right;
+
+
 
 	cin.ignore();
 	exit(0);
@@ -851,8 +858,9 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 		perft(depth - 1, targetDepth, static_cast<color>(!side));
 		testBoard.unMakeMove(move, static_cast<color>(side));
 		if (depth == targetDepth) {
-			cout << (char)('h' - (move.from % 8)) << (char)('1' + (move.from / 8)) << (char)('h' - (move.to % 8)) << (char)('1' + (move.to / 8)) << ": " << perftMoveCount << endl;
+			///cout << (char)('h' - (move.from % 8)) << (char)('1' + (move.from / 8)) << (char)('h' - (move.to % 8)) << (char)('1' + (move.to / 8)) << ": " << perftMoveCount << endl;
 			totalPerftMoveCount += perftMoveCount;
+			totalTotalPerftMoveCount += perftMoveCount;
 			perftMoveCount = 0;
 		}
 	}
@@ -866,11 +874,14 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 //		  Perft computation time: 39.49 s (depth 5)
 // commit 4abe35e1513ba6962cf6462e5192fe2e6c00817c:
 //		  Perft computation time: ~31 s (depth 5)
+// most recent commit 
+//        Perft computation time: ~24.1 s (depth 5)
 
 
 void Benchmark::perftTestSuite()
 {
 	// Loading perft data and fens from file
+	totalTotalPerftMoveCount = 0;
 	ifstream testFile("perftsuite.txt", ios::in);
 	if (!testFile.is_open()) {
 		cout << "Error: Perft testsuite not found in project dir!\n";
@@ -902,8 +913,8 @@ void Benchmark::perftTestSuite()
 		//testBoard.print();
 
 		for (auto moveCount = testNum.begin() + 1; moveCount != testNum.end(); ++moveCount) {
-			if (c == 6) continue;
-			cout << "Depth " << c << " start...\n";
+			//if (c == 6) continue;
+			//cout << "Depth " << c << " start...\n";
 			perft(c, c, any_of(testNum[0].begin(), testNum[0].end(), [](char c) {return c == 'w'; }) ? white : black);
 			c++;
 			if (totalPerftMoveCount != stol(*moveCount)) {
@@ -921,7 +932,8 @@ void Benchmark::perftTestSuite()
 	timer.stop();
 	cout << "Correct percentage: " << 100*((float)(perftTestData.size() - errorCount) / (float)perftTestData.size()) << "%\n";
 	cout << "Computation time: " << timer.getTime()*1e-6 << " s" << endl;
-
+	cout << "Total moves examined: " << totalTotalPerftMoveCount << endl;
+	cout << "Average moves per second: " << ((float)totalTotalPerftMoveCount) / (timer.getTime()*1e-6)*1e-6 << " M\n";
 	cin.ignore();
 }
 

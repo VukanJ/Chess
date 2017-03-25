@@ -132,7 +132,7 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				user_GUI_Move.from   = userInput.from;
 				user_GUI_Move.to     = selectedSquare;
 				user_GUI_Move.flags  = MOVE;
-				user_GUI_Move.Pieces = userInput.movePiece;
+				user_GUI_Move.pieces = userInput.movePiece;
 				if (!isUserMoveValid_completeMoveInfo(user_GUI_Move)) {
 					cerr << "Invalid move!\n";
 					showMessage("Invalid move!", sf::Color::White);
@@ -153,7 +153,7 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				user_GUI_Move.from   = userInput.from;
 				user_GUI_Move.to     = selectedSquare;
 				user_GUI_Move.flags  = CAPTURE; // some kind of capture
-				user_GUI_Move.Pieces = piece_pair(userInput.movePiece, pieceClicked);
+				user_GUI_Move.pieces = piece_pair(userInput.movePiece, pieceClicked);
 				if (!isUserMoveValid_completeMoveInfo(user_GUI_Move)) {
 					cerr << "Invalid move!\n";
 					showMessage("Invalid move!", sf::Color::White);
@@ -218,20 +218,20 @@ bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
 			else if (pflags == CAPTURE && inputMove.flags == CAPTURE) {
 				return true;
 			}
-			else if (inputMove.flags == MOVE && (target_piece(pmove.Pieces) == bq || target_piece(pmove.Pieces) == wq)) {
+			else if (inputMove.flags == MOVE && (target_piece(pmove.pieces) == bq || target_piece(pmove.pieces) == wq)) {
 				// Promotion ?
 				if (pflags & PROMOTION) {
 					return true;
 				}
 			}
-			else if (inputMove.flags == CAPTURE && (target_piece(pmove.Pieces) == bq || target_piece(pmove.Pieces) == wq)) {
+			else if (inputMove.flags == CAPTURE && (target_piece(pmove.pieces) == bq || target_piece(pmove.pieces) == wq)) {
 				// Promotion ?
 				if (pflags & C_PROMOTION) {
 					return true;
 				}
 			}
 			else {
-				if (inputMove.Pieces == pmove.Pieces) {
+				if (inputMove.pieces == pmove.pieces) {
 					// Move allowed. WIP for Enpassent
 					return true;
 				}
