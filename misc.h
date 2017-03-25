@@ -5,12 +5,20 @@
 #include <vector>
 #include <typeinfo>
 #include <string>
+#include <initializer_list>
 
 #include "defines.h"
 
 using namespace std;
 
 const string names = "prnbkqPRNBKQ";
+
+static u64 assembleBits(initializer_list<uint> I)
+{
+	u64 m = 0x0;
+	for (auto& i : I) m |= (0x1ull << i);
+	return m;
+}
 
 static void printBits(byte num)
 {
