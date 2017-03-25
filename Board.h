@@ -40,14 +40,14 @@ public:
 	void debug();
 	void setupBoard(string FEN);
 
-	// Move making
-	void generateMoveList(MoveList&, color) const;
+	// Move making and move generation
+	void generateMoveList(MoveList&, color, bool addQuietMoves) const;
 	
-	void inline pawnMoves(MoveList&, u64 pieces, color, piece) const;
-	void inline knightMoves(MoveList&, u64 pieces, color, piece) const;
-	void inline queen_and_bishopMoves(MoveList&, u64 pieces, const vector<u64>& pattern, color, piece) const;
-	void inline kingMoves(MoveList&, u64 pieces, color, piece king) const;
-	void inline rookMoves(MoveList&, u64 pieces, color, piece) const;
+	void inline pawnMoves(MoveList&, u64 pieces, color, piece, bool addQuietMoves) const;
+	void inline knightMoves(MoveList&, u64 pieces, color, piece, bool addQuietMoves) const;
+	void inline queen_and_bishopMoves(MoveList&, u64 pieces, const vector<u64>& pattern, color, piece, bool addQuietMoves) const;
+	void inline kingMoves(MoveList&, u64 pieces, color, piece king, bool addQuietMoves) const;
+	void inline rookMoves(MoveList&, u64 pieces, color, piece, bool addQuietMoves) const;
 
 	void makeMove(const Move&, color side);
 	void unMakeMove(const Move&, color side);

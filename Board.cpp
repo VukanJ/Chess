@@ -135,7 +135,7 @@ void Board::debug()
 
 	color debugPlayerColor = black;
 
-	generateMoveList(movelist, debugPlayerColor);
+	generateMoveList(movelist, debugPlayerColor, true);
 
 	cout << "Start hash " << hex << hashKey << endl;
 	//int count = 0;
@@ -287,7 +287,7 @@ void Board::pawnFill(color side)
 	}
 }
 
-void inline Board::pawnMoves(MoveList& moveList, u64 attackingPieces, color side, piece pawn) const
+void inline Board::pawnMoves(MoveList& moveList, u64 attackingPieces, color side, piece pawn, bool addQuietMoves) const
 {
 	u64 attackMask = 0x0, pieceAttacks = 0x0;
 	if(side == black){
@@ -313,6 +313,19 @@ void inline Board::pawnMoves(MoveList& moveList, u64 attackingPieces, color side
 
 			}
 		}
+		// Enpassent
+		if (b_enpassent) {
+			// There surely exists an enpassent move
+			if ((bit_at(24 + b_enpassent) & pieces[bp]) & (_row << 24)) {
+				// black pawn right of ep square
+				moveList.push_back(Move(24 + b_enpassent, 15 + b_enpassent, ENPASSENT, bp));
+			}
+			if (bit_at(22 + b_enpassent) & pieces[bp] & (_row << 24)) {
+				// black pawn left of ep square
+				moveList.push_back(Move(22 + b_enpassent, 15 + b_enpassent, ENPASSENT, bp));
+			}
+		}
+		if (!addQuietMoves) return;
 		// Find normal upwards moves and double pawn steps:
 		attackingPieces = (pieces[bp] >> 8) & bpMove;
 		BITLOOP(pos, attackingPieces) {
@@ -330,19 +343,6 @@ void inline Board::pawnMoves(MoveList& moveList, u64 attackingPieces, color side
 		attackingPieces = ((((0x00FF000000000000 & pieces[bp]) >> 8) & bpMove) >> 8) & bpMove;
 		BITLOOP(pos, attackingPieces) {
 			moveList.push_back(Move(pos + 16, pos, PAWN2, bp));
-		}
-		// Enpassent
-
-		if (b_enpassent) {
-			// There surely exists an enpassent move
-			if ((bit_at(24 + b_enpassent) & pieces[bp]) & (_row << 24)) {
-				// black pawn right of ep square
-				moveList.push_back(Move(24 + b_enpassent, 15 + b_enpassent, ENPASSENT, bp));
-			}
-			if (bit_at(22 + b_enpassent) & pieces[bp] & (_row << 24)) {
-				// black pawn left of ep square
-				moveList.push_back(Move(22 + b_enpassent, 15 + b_enpassent, ENPASSENT, bp));
-			}
 		}
 	}
 	else {
@@ -367,6 +367,18 @@ void inline Board::pawnMoves(MoveList& moveList, u64 attackingPieces, color side
 				}
 			}
 		}
+		if (w_enpassent) { 
+			// There surely exists an enpassent move
+			if ((bit_at(30 + w_enpassent) & pieces[wp]) & (_row << 32)) {
+				// white pawn right of ep square
+				moveList.push_back(Move(30 + w_enpassent, 39 + w_enpassent, ENPASSENT, wp));
+			 }
+			 if (bit_at(32 + w_enpassent) & pieces[wp] & (_row << 32)) {
+				// white pawn left of ep square
+				moveList.push_back(Move(32 + w_enpassent, 39 + w_enpassent, ENPASSENT, wp));
+			}
+		}
+		if (!addQuietMoves) return;
 		// Find normal upwards moves and double pawn steps:
 		attackingPieces = (pieces[wp] << 8) & wpMove;
 		BITLOOP(pos, attackingPieces) {
@@ -384,21 +396,10 @@ void inline Board::pawnMoves(MoveList& moveList, u64 attackingPieces, color side
 		BITLOOP(pos, attackingPieces) {
 			moveList.push_back(Move(pos - 16, pos, PAWN2, wp));
 		}
-		if (w_enpassent) { 
-			// There surely exists an enpassent move
-			if ((bit_at(30 + w_enpassent) & pieces[wp]) & (_row << 32)) {
-				// white pawn right of ep square
-				moveList.push_back(Move(30 + w_enpassent, 39 + w_enpassent, ENPASSENT, wp));
-			 }
-			 if (bit_at(32 + w_enpassent) & pieces[wp] & (_row << 32)) {
-				// white pawn left of ep square
-				moveList.push_back(Move(32 + w_enpassent, 39 + w_enpassent, ENPASSENT, wp));
-			}
-		}
 	}
 }
 
-void inline Board::knightMoves(MoveList& moveList, u64 attackingPieces, color side, piece p) const
+void inline Board::knightMoves(MoveList& moveList, u64 attackingPieces, color side, piece p, bool addQuietMoves) const
 {
 	u64 attackMask = 0x0, pieceAttacks = 0x0;
 
@@ -413,15 +414,16 @@ void inline Board::knightMoves(MoveList& moveList, u64 attackingPieces, color si
 				}
 			}
 		}
-
-		attackMask ^= KNIGHT_ATTACKS[pos] & attacks[p];
-		BITLOOP(target, attackMask) {
-			moveList.push_back(Move(pos, target, MOVE, p));
+		if (addQuietMoves) {
+			attackMask ^= KNIGHT_ATTACKS[pos] & attacks[p];
+			BITLOOP(target, attackMask) {
+				moveList.push_back(Move(pos, target, MOVE, p));
+			}
 		}
 	}
 }
 
-void inline Board::queen_and_bishopMoves(MoveList& moveList, u64 attackingPieces, const vector<u64>& pattern, color side, piece p) const
+void inline Board::queen_and_bishopMoves(MoveList& moveList, u64 attackingPieces, const vector<u64>& pattern, color side, piece p, bool addQuietMoves) const
 {
 	u64 attackMask = 0x0, pieceAttacks = 0x0;
 
@@ -438,17 +440,18 @@ void inline Board::queen_and_bishopMoves(MoveList& moveList, u64 attackingPieces
 				}
 			}
 		}
-
-		attackMask ^= pattern[pos] & attacks[p];
-		BITLOOP(target, attackMask) {
-			if (!(CONNECTIONS[pos][target] & allPos)) {
-				moveList.push_back(Move(pos, target, MOVE, p));
+		if(addQuietMoves){
+			attackMask ^= pattern[pos] & attacks[p];
+			BITLOOP(target, attackMask) {
+				if (!(CONNECTIONS[pos][target] & allPos)) {
+					moveList.push_back(Move(pos, target, MOVE, p));
+				}
 			}
 		}
 	}
 }
 
-void inline Board::kingMoves(MoveList& moveList, u64 attackingPieces, color side, piece king) const
+void inline Board::kingMoves(MoveList& moveList, u64 attackingPieces, color side, piece king, bool addQuietMoves) const
 {
 	u64 attackMask = 0x0, pieceAttacks = 0x0;
 	ulong pos = msb(pieces[king]);
@@ -462,14 +465,15 @@ void inline Board::kingMoves(MoveList& moveList, u64 attackingPieces, color side
 			}
 		}
 	}
-
-	attackMask ^= (KING_ATTACKS[pos] & attacks[king]) & ~(side == black ? whiteAtt : blackAtt);
-	BITLOOP(target, attackMask) {
-		moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & (side == black ? 0x3 : 0xC)), king));
+	if (addQuietMoves) {
+		attackMask ^= (KING_ATTACKS[pos] & attacks[king]) & ~(side == black ? whiteAtt : blackAtt);
+		BITLOOP(target, attackMask) {
+			moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & (side == black ? 0x3 : 0xC)), king));
+		}
 	}
 }
 
-void inline Board::rookMoves(MoveList& moveList, u64 attackingPieces, color side, piece rook) const
+void inline Board::rookMoves(MoveList& moveList, u64 attackingPieces, color side, piece rook, bool addQuietMoves) const
 {
 	u64 attackMask = 0x0, pieceAttacks = 0x0;
 	ulong a_square, h_square, qCastRight, kCastRight;
@@ -508,25 +512,26 @@ void inline Board::rookMoves(MoveList& moveList, u64 attackingPieces, color side
 				}
 			}
 		}
-
-		attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[rook];
-		BITLOOP(target, attackMask) {
-			if (!(CONNECTIONS[pos][target] & allPos)) {
-				if (pos == a_square) {
-					moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & qCastRight), rook));
-				}
-				else if (pos == h_square) {
-					moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & kCastRight), rook));
-				}
-				else {
-					moveList.push_back(Move(pos, target, MOVE, rook));
+		if (addQuietMoves) {
+			attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[rook];
+			BITLOOP(target, attackMask) {
+				if (!(CONNECTIONS[pos][target] & allPos)) {
+					if (pos == a_square) {
+						moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & qCastRight), rook));
+					}
+					else if (pos == h_square) {
+						moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & kCastRight), rook));
+					}
+					else {
+						moveList.push_back(Move(pos, target, MOVE, rook));
+					}
 				}
 			}
 		}
 	}
 }
 
-void Board::generateMoveList(MoveList & moveList, color side) const
+void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves) const
 {
 	/*
 	This method generates a list of all possible moves for a player.
@@ -548,12 +553,12 @@ void Board::generateMoveList(MoveList & moveList, color side) const
 			attackingPieces = pieces[b];
 			if (attackingPieces) { // Only consider non-empty boards
 				switch (b) {
-				case bp: pawnMoves(moveList, pieces[bp], black, bp); break;
-				case br: rookMoves(moveList, pieces[br], black, br); break;
-				case bn: knightMoves(moveList, pieces[bn], black, bn); break;
-				case bb: queen_and_bishopMoves(moveList, pieces[bb], BISHOP_ATTACKS, black, bb); break;
-				case bq: queen_and_bishopMoves(moveList, pieces[bq], QUEEN_ATTACKS,  black, bq); break;
-				case bk: kingMoves(moveList, pieces[bk], black, bk); break;
+				case bp: pawnMoves(moveList, pieces[bp], black, bp, addQuietMoves); break;
+				case br: rookMoves(moveList, pieces[br], black, br, addQuietMoves); break;
+				case bn: knightMoves(moveList, pieces[bn], black, bn, addQuietMoves); break;
+				case bb: queen_and_bishopMoves(moveList, pieces[bb], BISHOP_ATTACKS, black, bb, addQuietMoves); break;
+				case bq: queen_and_bishopMoves(moveList, pieces[bq], QUEEN_ATTACKS,  black, bq, addQuietMoves); break;
+				case bk: kingMoves(moveList, pieces[bk], black, bk, addQuietMoves); break;
 				}
 			}
 		}
@@ -577,12 +582,12 @@ void Board::generateMoveList(MoveList & moveList, color side) const
 			attackingPieces = pieces[w];
 			if (attackingPieces){
 				switch (w) {
-				case wp: pawnMoves(moveList, pieces[wp], white, wp); break;
-				case wr: rookMoves(moveList, pieces[wr], white, wr); break;
-				case wn: knightMoves(moveList, pieces[wn], white, wn); break;
-				case wb: queen_and_bishopMoves(moveList, pieces[wb], BISHOP_ATTACKS, white, wb); break;
-				case wq: queen_and_bishopMoves(moveList, pieces[wq], QUEEN_ATTACKS,  white, wq); break;
-				case wk: kingMoves(moveList, pieces[wk], white, wk); break;
+				case wp: pawnMoves(moveList, pieces[wp], white, wp, addQuietMoves); break;
+				case wr: rookMoves(moveList, pieces[wr], white, wr, addQuietMoves); break;
+				case wn: knightMoves(moveList, pieces[wn], white, wn, addQuietMoves); break;
+				case wb: queen_and_bishopMoves(moveList, pieces[wb], BISHOP_ATTACKS, white, wb, addQuietMoves); break;
+				case wq: queen_and_bishopMoves(moveList, pieces[wq], QUEEN_ATTACKS,  white, wq, addQuietMoves); break;
+				case wk: kingMoves(moveList, pieces[wk], white, wk, addQuietMoves); break;
 				}
 			}
 		}
@@ -596,6 +601,7 @@ void Board::generateMoveList(MoveList & moveList, color side) const
 	}
 	// If opponent rook has been captured, he looses castling rights.
 	// TODO: Needs nicer solution
+
 	for_each(moveList.begin(), moveList.end(), [this](Move& move) {
 		if (target_piece(move.pieces) == wr) {
 			if (move_type(move.flags) == CAPTURE || move_type(move.flags) == C_PROMOTION) {
@@ -614,6 +620,7 @@ void Board::generateMoveList(MoveList & moveList, color side) const
 			}
 		}
 	});
+	
 }
 
 void Board::makeMove(const Move& move, color side)
@@ -958,38 +965,44 @@ bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove)
 	piece king = kingColor == white ? wk : bk;
 	byte kingPos = msb(pieces[king]);
 	u64 kingRect = 0x0, kingDiags = 0x0;
-	if (move_type(lastMove.flags) > 5) return false;      // Castling does not put king in check
+	if (move_type(lastMove.flags) > 5) return false; // Castling does not put king in check
 	
-	if (KNIGHT_ATTACKS[kingPos] & pieces[kingColor == white ? bn : wn]) return true; // King attacked by opponent knight
-	if (KING_ATTACKS[kingPos] & pieces[kingColor == white ? bk : wk]) return true;   // King attacked by opponent king
-
-	if ((0x5ull << ((kingPos - 1) + (kingColor == white ? 8 : -8))) 
-		& (_row << 8*((kingPos/8)+(kingColor==white ? +1 : -1))) 
-		& pieces[kingColor == white ? bp : wp]) return true; // King attacked by opponent pawns
-
-	// Check if enemy attack was uncovered by lastMove
-
-	kingRect |= floodFill(pieces[king], ~allPos, n);
-	kingDiags |= floodFill(pieces[king], ~allPos, ne);
-	kingRect |= floodFill(pieces[king], ~allPos, e);
-	kingDiags |= floodFill(pieces[king], ~allPos, se);
-	kingRect |= floodFill(pieces[king], ~allPos, s);
-	kingDiags |= floodFill(pieces[king], ~allPos, sw);
-
-	kingRect |= (allPos ^ (((allPos|_right) - 2 * pieces[king]))) & ~_right;
-	kingDiags |= floodFill(pieces[king], ~allPos, nw);
-
-
-	kingRect  &= ~(kingColor == white ? whitePos : blackPos);
-	kingDiags &= ~(kingColor == white ? whitePos : blackPos);
-
 	if (kingColor == white) {
-		kingRect  &= (pieces[br] | pieces[bq]);
-		kingDiags &= (pieces[bb] | pieces[bq]);
+		if (KNIGHT_ATTACKS[kingPos] & pieces[bn]) return true; // King attacked by opponent knight
+		if (KING_ATTACKS[kingPos]   & pieces[bk]) return true; // King attacked by opponent king
+
+		if ((0x5ull << ((kingPos - 1) + 8))
+			& (_row << 8 * ((kingPos / 8) + 1))
+			& pieces[bp]) return true; // King attacked by opponent pawns
 	}
 	else {
-		kingRect  &= (pieces[wr] | pieces[wq]);
-		kingDiags &= (pieces[wb] | pieces[wq]);
+		if (KNIGHT_ATTACKS[kingPos] & pieces[wn]) return true; // King attacked by opponent knight
+		if (KING_ATTACKS[kingPos]   & pieces[wk]) return true; // King attacked by opponent king
+
+		if ((0x5ull << ((kingPos - 1) + -8))
+			& (_row << 8 * ((kingPos / 8)  -1))
+			& pieces[wp]) return true; // King attacked by opponent pawns
+	}
+	
+	// Check if enemy attack was uncovered by lastMove
+
+	kingRect  |= floodFill(pieces[king], ~allPos, n);
+	kingDiags |= floodFill(pieces[king], ~allPos, ne);
+	kingRect  |= floodFill(pieces[king], ~allPos, e);
+	kingDiags |= floodFill(pieces[king], ~allPos, se);
+	kingRect  |= floodFill(pieces[king], ~allPos, s);
+	kingDiags |= floodFill(pieces[king], ~allPos, sw);
+
+	kingRect  |= (allPos ^ (((allPos | _right) - 2 * pieces[king]))) & ~_right;
+	kingDiags |= floodFill(pieces[king], ~allPos, nw);
+
+	if (kingColor == white) {
+		kingRect  &= ~whitePos & (pieces[br] | pieces[bq]);
+		kingDiags &= ~whitePos & (pieces[bb] | pieces[bq]);
+	}
+	else {
+		kingRect  &= ~blackPos & (pieces[wr] | pieces[wq]);
+		kingDiags &= ~blackPos & (pieces[wb] | pieces[wq]);
 	}
 	BITLOOP(enemyPos, kingRect) {
 		if (!(CONNECTIONS[kingPos][enemyPos] & allPos)) return true;
@@ -997,7 +1010,9 @@ bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove)
 	BITLOOP(enemyPos, kingDiags) {
 		if (!(CONNECTIONS[kingPos][enemyPos] & allPos)) return true;
 	}
-	// King not under attack
+	
+	
+	// King not under attack => move was legal
 	return false;
 }
 
