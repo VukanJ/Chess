@@ -118,7 +118,7 @@ pair<Move, int> AI::distributeNegaMax()
 	if (!(Root->nodeFlags & Node::Flags::explored)) {
 		// Generate moves for computer player
 		// The computer is the maximizing player
-		chessBoard.generateMoveList(Root->moveList, aiColor);
+		chessBoard.generateMoveList(Root->moveList, aiColor, true);
 
 		// Clean initial move list at Root
 		for (auto move = Root->moveList.begin(); move != Root->moveList.end();) {
@@ -213,7 +213,7 @@ int AI::NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side
 		// Node already exists in memory and has children
 		sortMoves(node, side);
 	else 
-		chessBoard.generateMoveList(node->moveList, side);
+		chessBoard.generateMoveList(node->moveList, side, true);
 
 	for (auto move = node->moveList.begin(); move != node->moveList.end();) {
 		chessBoard.makeMove(*move, side);
