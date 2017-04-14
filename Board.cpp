@@ -1004,21 +1004,14 @@ bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove)
 	kingRect  |= rookAttacks(kingPos, allPos);
 	kingDiags |= bishopAttacks(kingPos, allPos);
 
-	if (kingColor == white) {
-		kingRect  &= ~whitePos & (pieces[br] | pieces[bq]);
-		kingDiags &= ~whitePos & (pieces[bb] | pieces[bq]);
+	if (kingColor == white){
+		if ((kingRect) & (pieces[br] | pieces[bq])) return true;
+		else if ((kingDiags) & (pieces[bq] | pieces[bb])) return true;
 	}
 	else {
-		kingRect  &= ~blackPos & (pieces[wr] | pieces[wq]);
-		kingDiags &= ~blackPos & (pieces[wb] | pieces[wq]);
+		if ((kingRect) & (pieces[wr] | pieces[wq])) return true;
+		else if ((kingDiags) & (pieces[wq] | pieces[wb])) return true;
 	}
-	BITLOOP(enemyPos, kingRect) {
-		if (!(CONNECTIONS[kingPos][enemyPos] & allPos)) return true;
-	}
-	BITLOOP(enemyPos, kingDiags) {
-		if (!(CONNECTIONS[kingPos][enemyPos] & allPos)) return true;
-	}
-	
 	
 	// King not under attack => move was legal
 	return false;
