@@ -14,11 +14,11 @@ void genChessData::genMoveData()
 void genChessData::genMagicDatabases()
 {
 	// Generate variations
-	auto rookOccVariations   = genOccupancyVariations(vector<U64>(rookAttackMasks.begin(), rookAttackMasks.end()));
-	auto bishopOccVariations = genOccupancyVariations(vector<U64>(bishopAttackMasks.begin(), bishopAttackMasks.end()));
+	auto rookOccVariations   = genOccupancyVariations(rookAttackMasks);
+	auto bishopOccVariations = genOccupancyVariations(bishopAttackMasks);
 	auto rookAttackSets      = genCorrectAttackSets(rookOccVariations, true);
 	auto bishAttackSets      = genCorrectAttackSets(bishopOccVariations, false);
-	
+
 	// Initialize databases
 	for (int m = 0; m < 64; ++m) {
 		magicRookMoveDatabase[m]   = vector<U64>(rookOccVariations[m].size(), 0x0);
@@ -40,7 +40,7 @@ void genChessData::genMagicDatabases()
 		}
 	}
 }
-	
+
 void genChessData::genConnections()
 {
   cout << "Generating Bitboards...\n";
@@ -174,7 +174,7 @@ void genChessData::genMagic()
 	for (auto& r : localBishopAttackMask) {
 		cout << dec << (int)(64 - popcount(r)) << endl;
 	}
-	
+
 	cin.ignore();
 }
 
@@ -188,7 +188,7 @@ vector<vector<U64>> genChessData::genCorrectAttackSets(vector<vector<U64>>& vars
 		for (int sq = 0; sq < 64; ++sq) {
 			for (int i = 0; i < vars[sq].size(); ++i) {
 				temp = 0;
-				temp |= floodFill(bit_at(sq), ~vars[sq][i], 0); 
+				temp |= floodFill(bit_at(sq), ~vars[sq][i], 0);
 				temp |= floodFill(bit_at(sq), ~vars[sq][i], 1);
 				temp |= floodFill(bit_at(sq), ~vars[sq][i], 2);
 				temp |= floodFill(bit_at(sq), ~vars[sq][i], 3);
@@ -265,7 +265,7 @@ vector<U64> genChessData::generateMagicBitboards(vector<vector<U64>>& vars, vect
 	}
 }
 
-vector<vector<U64>> genChessData::genOccupancyVariations(vector<U64>& occupancy)
+vector<vector<U64>> genChessData::genOccupancyVariations(vector<U64> occupancy)
 {
 	// The following code is never executed at runtime
 	vector<vector<U64>> variations = vector<vector<U64>>(64, vector<U64>(1, 0x0));
