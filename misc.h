@@ -6,6 +6,7 @@
 #include <typeinfo>
 #include <string>
 #include <initializer_list>
+#include <random>
 
 #include "defines.h"
 
@@ -20,9 +21,9 @@ static u64 assembleBits(initializer_list<uint> I)
 	return m;
 }
 
-static void printBits(byte num)
+template<typename T> static void printBits(T num)
 {
-	for (byte p = 0x1ull << 7; p ; p >>= 1)
+	for (T p = 0x1ull << ((sizeof(num)*8) - 1); p ; p >>= 1)
 		cout << (p & num ? '1' : '0');
 	cout << endl;
 }

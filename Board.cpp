@@ -244,7 +244,7 @@ void Board::updateAttack(piece p)
 	}
 }
 
-u64 Board::floodFill(u64 propagator, u64 empty, dir direction) const
+u64 inline Board::floodFill(u64 propagator, u64 empty, dir direction) const
 {
 	// Calculates all attacks including attacked pieces for sliding pieces
 	// (Queen, Rook, bishop)(s)
@@ -985,7 +985,7 @@ bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove)
 	}
 	
 	// Check if enemy attack was uncovered by lastMove
-
+	
 	kingRect  |= floodFill(pieces[king], ~allPos, n);
 	kingDiags |= floodFill(pieces[king], ~allPos, ne);
 	kingRect  |= floodFill(pieces[king], ~allPos, e);

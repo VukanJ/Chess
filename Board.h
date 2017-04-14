@@ -31,7 +31,8 @@ private:
 
 	// Flooding algorithm
 	enum dir {n, e, s, w, ne, se, sw, nw};
-	u64 floodFill(u64 propagator, u64 empty, dir) const;
+	u64 inline floodFill(u64 propagator, u64 empty, dir) const;
+	
 	void pawnFill(color side);
 public:
 	Board();
