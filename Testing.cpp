@@ -641,6 +641,7 @@ void UnitTest::testHashing()
 
 void UnitTest::testMagic()
 {
+	/*
 	cout << "Testing magic numbers...\n";
 	U64 rook = bit_at(c3);
 	U64 blocker = assembleBits({0});
@@ -738,6 +739,7 @@ void UnitTest::testMagic()
 			cout << "MagicAttacks = \n"; printBitboard(MagicAttacks);
 		}
 	}
+	*/
 }
 
 Benchmark::Benchmark() : performingAll(false)
@@ -962,7 +964,8 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 //		  Perft computation time: ~31 s (depth 5)
 // commit 7036cb32404d2365972fb87247fdf50589d0b8a1
 //        Perft computation time: ~24.1 s (depth 5)
-//
+// most recent commit 
+//        Perft computation time: ~18.75 s (depth 5)
 
 void Benchmark::perftTestSuite()
 {

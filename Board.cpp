@@ -206,8 +206,9 @@ void Board::updateAttack(piece p)
 			break;
 		case br: case wr:
 			attacks[p] = 0x0;
-			for (int i = 0; i < 4; ++i)
-				attacks[p] |= floodFill(pieces[p], ~allPos, (dir)i);
+			mask = pieces[p];
+			BITLOOP(pos, mask) attacks[p] |= rookAttacks(pos, allPos);
+
 			break;
 		case bn:
 			mask = pieces[bn];
@@ -221,8 +222,8 @@ void Board::updateAttack(piece p)
 			break;
 		case bb: case wb:
 			attacks[p] = 0x0;
-			for (int i = 4; i < 8; ++i)
-				attacks[p] |= floodFill(pieces[p], ~allPos, (dir)i);
+			mask = pieces[p];
+			BITLOOP(pos, mask) attacks[p] |= bishopAttacks(pos, allPos);
 			break;
 		case bk:
 			mask = pieces[bk];
@@ -238,8 +239,8 @@ void Board::updateAttack(piece p)
 			break;
 		case bq: case wq:
 			attacks[p] = 0x0;
-			for (int i = 0; i < 8; ++i)
-				attacks[p] |= floodFill(pieces[p], ~allPos, (dir)i);
+			mask = pieces[p];
+			BITLOOP(pos, mask) attacks[p] |= (rookAttacks(pos, allPos) | bishopAttacks(pos, allPos));
 			break;
 	}
 }
@@ -623,6 +624,20 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 	
 }
 
+U64 inline Board::rookAttacks(long pos, U64 blockers) const
+{
+	// Calculate attack set with magic database
+	U64 index = ((rookAttackMasks[pos] & blockers) * rookMagics[pos]) >> rookMagicShifts[pos];
+	return magicRookMoveDatabase[pos][index];
+}
+
+U64 inline Board::bishopAttacks(long pos, U64 blockers) const
+{
+	// Calculate attack set with magic database
+	U64 index = ((bishopAttackMasks[pos] & blockers) * bishopMagics[pos]) >> bishopMagicShifts[pos];
+	return magicBishopMoveDatabase[pos][index];
+}
+
 void Board::makeMove(const Move& move, color side)
 {
 	switch (move_type(move.flags)){
@@ -986,15 +1001,8 @@ bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove)
 	
 	// Check if enemy attack was uncovered by lastMove
 	
-	kingRect  |= floodFill(pieces[king], ~allPos, n);
-	kingDiags |= floodFill(pieces[king], ~allPos, ne);
-	kingRect  |= floodFill(pieces[king], ~allPos, e);
-	kingDiags |= floodFill(pieces[king], ~allPos, se);
-	kingRect  |= floodFill(pieces[king], ~allPos, s);
-	kingDiags |= floodFill(pieces[king], ~allPos, sw);
-
-	kingRect  |= (allPos ^ (((allPos | _right) - 2 * pieces[king]))) & ~_right;
-	kingDiags |= floodFill(pieces[king], ~allPos, nw);
+	kingRect  |= rookAttacks(kingPos, allPos);
+	kingDiags |= bishopAttacks(kingPos, allPos);
 
 	if (kingColor == white) {
 		kingRect  &= ~whitePos & (pieces[br] | pieces[bq]);
@@ -1109,10 +1117,11 @@ int Board::evaluate(color side)
 	if (endGameValue > 0.5) {
 		//cout << "OK\n";
 		mask = pieces[wk];
-		for (int i = 0; i < 8; ++i) mask |= floodFill(mask, ~allPos, (dir)i);
+		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
+
 		total_boardValue += 10 * popcount(mask & ~blackAtt);
 		mask = pieces[bk];
-		for (int i = 0; i < 8; ++i) mask |= floodFill(mask, ~allPos, (dir)i);
+		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
 		total_boardValue -= 10 * popcount(mask & ~whiteAtt);
 	}
 
