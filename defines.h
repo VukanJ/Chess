@@ -47,19 +47,19 @@ byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 #elif __linux__
 	// Compiler intrinsics compatible with gcc
 
-	u64 inline popcount(u64 x){ return __builtin_popcountll(x); }
-	u64 inline bitScan_rev64(ulong& index, u64 mask){
+	U64 inline popcount(U64 x){ return __builtin_popcountll(x); }
+	U64 inline bitScan_rev64(ulong& index, U64 mask){
 		index = mask == 0x0ull ? 0 : 63 - __builtin_clzll(mask);
 		 return index;
 	}
 
-	byte inline msb(u64 x) { ulong index; bitScan_rev64(index, x); return index; }
+	byte inline msb(U64 x) { ulong index; bitScan_rev64(index, x); return index; }
 
-	u64 inline rotate_l64(u64& x, uint n){
+	U64 inline rotate_l64(U64& x, uint n){
 		return (x << n) | (x >> (64 - n));
 	}
 
-	u64 inline rotate_r64(u64& x, uint n){
+	U64 inline rotate_r64(U64& x, uint n){
 		return (x >> n) | (x << (64 - n));
 	}
 
