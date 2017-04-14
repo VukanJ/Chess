@@ -14,9 +14,9 @@ using namespace std;
 
 const string names = "prnbkqPRNBKQ";
 
-static u64 assembleBits(initializer_list<uint> I)
+static U64 assembleBits(initializer_list<uint> I)
 {
-	u64 m = 0x0;
+	U64 m = 0x0;
 	for (auto& i : I) m |= (0x1ull << i);
 	return m;
 }
@@ -28,22 +28,22 @@ template<typename T> static void printBits(T num)
 	cout << endl;
 }
 
-static void printBitboard(u64 board)
+static void printBitboard(U64 board)
 {
 	// Prints Bitboard and occupied pieces
 	int c = 0;
-	for (u64 p = 1ull << 63; p; p >>= 1){
+	for (U64 p = 1ull << 63; p; p >>= 1){
 		cout << (p & board ? '@' : '.');
 		if (++c % 8 == 0) cout << endl;
 	}
 	cout << endl;
 }
 
-static void printBitboardFigAttack(u64 board, u64 att, char piece)
+static void printBitboardFigAttack(U64 board, U64 att, char piece)
 {
 	// Print Bitboard for specific figure and attackes squares
 	int c = 0;
-	for (u64 p = 1ull << 63; p; p >>= 1){
+	for (U64 p = 1ull << 63; p; p >>= 1){
 		if (board & p) cout << piece;
 		else if (att & p) cout << '#';
 		else cout << '.';

@@ -71,10 +71,10 @@ private:
 	} userInput;
 
 	bool isUserMoveValid_completeMoveInfo(Move& userMove);
-	void colorSquares(u64 pattern, sf::Color color, sf::RenderWindow& window);
+	void colorSquares(U64 pattern, sf::Color color, sf::RenderWindow& window);
 
 	enum options {drawAttB = 0x1, drawAttW = 0x2};
-	u32 drawOptions;
+	U32 drawOptions;
 
 	Board& chessBoard;
 

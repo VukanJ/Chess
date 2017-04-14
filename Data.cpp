@@ -1,8 +1,8 @@
 #include "Data.h"
 
-vector<vector<u64>> CONNECTIONS = vector<vector<u64>>(64, vector<u64>(64, 0x0));
-vector<vector<u64>> magicRookMoveDatabase   = vector<vector<u64>>(64, vector<u64>());
-vector<vector<u64>> magicBishopMoveDatabase = vector<vector<u64>>(64, vector<u64>());
+vector<vector<U64>> CONNECTIONS = vector<vector<U64>>(64, vector<U64>(64, 0x0));
+vector<vector<U64>> magicRookMoveDatabase   = vector<vector<U64>>(64, vector<U64>());
+vector<vector<U64>> magicBishopMoveDatabase = vector<vector<U64>>(64, vector<U64>());
 
 
 void genChessData::genMoveData()
@@ -14,18 +14,18 @@ void genChessData::genMoveData()
 void genChessData::genMagicDatabases()
 {
 	// Generate variations
-	auto rookOccVariations   = genOccupancyVariations(vector<u64>(rookAttackMasks.begin(), rookAttackMasks.end()));
-	auto bishopOccVariations = genOccupancyVariations(vector<u64>(bishopAttackMasks.begin(), bishopAttackMasks.end()));
+	auto rookOccVariations   = genOccupancyVariations(vector<U64>(rookAttackMasks.begin(), rookAttackMasks.end()));
+	auto bishopOccVariations = genOccupancyVariations(vector<U64>(bishopAttackMasks.begin(), bishopAttackMasks.end()));
 	auto rookAttackSets      = genCorrectAttackSets(rookOccVariations, true);
 	auto bishAttackSets      = genCorrectAttackSets(bishopOccVariations, false);
 	
 	// Initialize databases
 	for (int m = 0; m < 64; ++m) {
-		magicRookMoveDatabase[m]   = vector<u64>(rookOccVariations[m].size(), 0x0);
-		magicBishopMoveDatabase[m] = vector<u64>(bishopOccVariations[m].size(), 0x0);
+		magicRookMoveDatabase[m]   = vector<U64>(rookOccVariations[m].size(), 0x0);
+		magicBishopMoveDatabase[m] = vector<U64>(bishopOccVariations[m].size(), 0x0);
 	}
 	// Calculate databases for rooks
-	u64 magicIndex = 0;
+	U64 magicIndex = 0;
 	for (int sq = 0; sq < 64; ++sq) {
 		for (int i = 0; i < rookOccVariations[sq].size(); ++i) {
 			magicIndex = (rookOccVariations[sq][i] * rookMagics[sq]) >> rookMagicShifts[sq];
@@ -45,11 +45,11 @@ void genChessData::genConnections()
 {
   cout << "Generating Bitboards...\n";
   // Generate rectangular rays
-  vector<u64> rects(64, 0x0);
+  vector<U64> rects(64, 0x0);
   for(int i = 0; i < 64; i++)
     rects[i] |= (col << (i % 8)) ^ (row << (i / 8) * 8);
   // Generate Diagnoal rays
-  vector<u64> diags(64, 0x0);
+  vector<U64> diags(64, 0x0);
   for(int i = 0; i < 64; i++){
     for(int j = 1; j < 8 - i % 8; j++)
       diags[i] |= (0x1ull << i) << j * 9;
@@ -60,7 +60,7 @@ void genChessData::genConnections()
     for(int j = 1; j < 8 - i % 8; j++)
       diags[i] |= (0x1ull << i) >> j * 7;
   }
-  u64 temp = 0x0;
+  U64 temp = 0x0;
   for(int i = 0; i < 64; i++){
     for(int j = 0; j < 64; j++){
       if(rects[j] & bit_at(i)){
@@ -113,10 +113,10 @@ void genChessData::genConnections()
   }
 }
 
-pair<vector<u64>, vector<u64>> genChessData::genEffectiveAttacks()
+pair<vector<U64>, vector<U64>> genChessData::genEffectiveAttacks()
 {
-	auto localRookAttackMask   = vector<u64>(64, 0);
-	auto localBishopAttackMask = vector<u64>(BISHOP_ATTACKS.begin(), BISHOP_ATTACKS.end());
+	auto localRookAttackMask   = vector<U64>(64, 0);
+	auto localBishopAttackMask = vector<U64>(BISHOP_ATTACKS.begin(), BISHOP_ATTACKS.end());
 
 	// Generate relevant bishop masks:
 	for (auto& ba : localBishopAttackMask) ba &= ~0xFF818181818181FFULL;
@@ -141,7 +141,7 @@ pair<vector<u64>, vector<u64>> genChessData::genEffectiveAttacks()
 		else if (i % 8 == 0) { localRookAttackMask[i] &= ~0xFF808080808080FFULL; }
 		else if (i % 8 == 7) { localRookAttackMask[i] &= ~0xFF010101010101FFULL; }
 	}
-	return pair<vector<u64>, vector<u64>>(localRookAttackMask, localBishopAttackMask);
+	return pair<vector<U64>, vector<U64>>(localRookAttackMask, localBishopAttackMask);
 }
 
 void genChessData::genMagic()
@@ -153,13 +153,13 @@ void genChessData::genMagic()
 
 	// Generate variations of occupancies since
 	// many occupation variants correspond to the same attack set
-	auto rookOccVariations   = genOccupancyVariations(vector<u64>(localRookAttackMask.begin(), localRookAttackMask.end()));
-	auto bishopOccVariations = genOccupancyVariations(vector<u64>(localBishopAttackMask.begin(), localBishopAttackMask.end()));
+	auto rookOccVariations   = genOccupancyVariations(vector<U64>(localRookAttackMask.begin(), localRookAttackMask.end()));
+	auto bishopOccVariations = genOccupancyVariations(vector<U64>(localBishopAttackMask.begin(), localBishopAttackMask.end()));
 	auto rookAttackSets      = genCorrectAttackSets(rookOccVariations, true);
 	auto bishAttackSets      = genCorrectAttackSets(bishopOccVariations, false);
 
-	auto rookShifts = vector<u64>();
-	auto bishShifts = vector<u64>();
+	auto rookShifts = vector<U64>();
+	auto bishShifts = vector<U64>();
 
 	// Determine magic numbers by brute force:
 	cout << "Rook Magics:\n" << string(80,'~') << endl;
@@ -178,11 +178,11 @@ void genChessData::genMagic()
 	cin.ignore();
 }
 
-vector<vector<u64>> genChessData::genCorrectAttackSets(vector<vector<u64>>& vars, bool isrook)
+vector<vector<U64>> genChessData::genCorrectAttackSets(vector<vector<U64>>& vars, bool isrook)
 {
 	// The following code is never executed at runtime
-	u64 temp = 0;
-	auto correctAttackSets = vector<vector<u64>>(64, vector<u64>());
+	U64 temp = 0;
+	auto correctAttackSets = vector<vector<U64>>(64, vector<U64>());
 
 	if (isrook) {
 		for (int sq = 0; sq < 64; ++sq) {
@@ -212,12 +212,12 @@ vector<vector<u64>> genChessData::genCorrectAttackSets(vector<vector<u64>>& vars
 	return correctAttackSets;
 }
 
-u64 genChessData::floodFill(u64 propagator, u64 empty, int direction) const
+U64 genChessData::floodFill(U64 propagator, U64 empty, int direction) const
 {
 	// The following code is never executed at runtime
 
-	u64 flood = propagator;
-	u64 wrap = noWrap[direction];
+	U64 flood = propagator;
+	U64 wrap = noWrap[direction];
 	empty &= wrap;
 	auto r_shift = shift[direction];
 	flood |= propagator = rotate_l64(propagator, r_shift) & empty;
@@ -229,29 +229,29 @@ u64 genChessData::floodFill(u64 propagator, u64 empty, int direction) const
 	return rotate_l64(flood, r_shift) & wrap;
 }
 
-vector<u64> genChessData::generateMagicBitboards(vector<vector<u64>>& vars, vector<vector<u64>>& correctAttacks, vector<u64>& masks)
+vector<U64> genChessData::generateMagicBitboards(vector<vector<U64>>& vars, vector<vector<U64>>& correctAttacks, vector<U64>& masks)
 {
 	// The following code is never executed at runtime
 	// Generates Magic numbers
 	random_device r_device;
 	mt19937_64 generator(r_device());
 	generator.seed(42);
-	uniform_int_distribution<u64> distr;
+	uniform_int_distribution<U64> distr;
 
-	vector<u64> finalMagicNumbers;
+	vector<U64> finalMagicNumbers;
 
 	bool fail = true;
-	u64 magicNumber = 0x0;
+	U64 magicNumber = 0x0;
 
-	vector<u64> testHash; // For testing the mapping of the calculated magic numbers
+	vector<U64> testHash; // For testing the mapping of the calculated magic numbers
 	for (int sq = 0; sq < 64; sq++) {
 		while(fail){
 			// Generate random number with few set bits
 			magicNumber = distr(generator) & distr(generator) & distr(generator);
-			testHash = vector<u64>(correctAttacks[sq].size(), 0x0);
+			testHash = vector<U64>(correctAttacks[sq].size(), 0x0);
 			fail = false;
 			for (int i = 0; i < vars[sq].size() && !fail; ++i) {
-				u64 magicIndex = (vars[sq][i] * magicNumber) >> (64 - popcount(masks[sq]));
+				U64 magicIndex = (vars[sq][i] * magicNumber) >> (64 - popcount(masks[sq]));
 				//printBitboard(magicIndex);
 				// Check if magicIndex maps to wrong attack set
 				fail = testHash[magicIndex] != 0 && testHash[magicIndex] != correctAttacks[sq][i];
@@ -265,15 +265,15 @@ vector<u64> genChessData::generateMagicBitboards(vector<vector<u64>>& vars, vect
 	}
 }
 
-vector<vector<u64>> genChessData::genOccupancyVariations(vector<u64>& occupancy)
+vector<vector<U64>> genChessData::genOccupancyVariations(vector<U64>& occupancy)
 {
 	// The following code is never executed at runtime
-	vector<vector<u64>> variations = vector<vector<u64>>(64, vector<u64>(1, 0x0));
+	vector<vector<U64>> variations = vector<vector<U64>>(64, vector<U64>(1, 0x0));
 	vector<int> bitIndex;
 
 	uint counter = 0;
 	uint squareCount = 0;
-	u64 temp = 0;
+	U64 temp = 0;
 
 	for (auto& occ : occupancy){
 		// Generate bit indexing

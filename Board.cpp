@@ -4,8 +4,8 @@ Board::Board()
 	: whitePos(0x0), blackPos(0x0), whiteAtt(0x0), blackAtt(0x0), hashKey(0x0),
 	castlingRights(0x0), b_enpassent(0x0), w_enpassent(0x0)
 {
-	pieces    = vector<u64>(12, 0x0);
-	attacks   = vector<u64>(12, 0x0);
+	pieces    = vector<U64>(12, 0x0);
+	attacks   = vector<U64>(12, 0x0);
 }
 
 Board::Board(string fen) : Board()
@@ -83,13 +83,13 @@ void Board::initHash()
 	random_device r_device;
 	mt19937_64 generator(r_device());
 	//generator.seed(42);
-	uniform_int_distribution<u64> distr;
-	randomSet = vector<vector<u64>>(14, vector<u64>(64, 0));
+	uniform_int_distribution<U64> distr;
+	randomSet = vector<vector<U64>>(14, vector<U64>(64, 0));
 	// Index 0-11: Piece type
 	for (auto& r1 : randomSet)
 		for (auto& r2 : r1)
 			r2 = distr(generator);
-	randomSet.push_back(vector<u64>(4, 0x0));
+	randomSet.push_back(vector<U64>(4, 0x0));
 
 	// The following calculations do not need to be repeated when castling in game
 	randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_k] = randomSet[bk][e8]
@@ -196,7 +196,7 @@ void Board::updateAttack(piece p)
 	// for non empty pieces
 
 	ulong pos = -1;
-	u64 mask = 0;
+	U64 mask = 0;
 	switch (p){
 		case bp:
 			pawnFill(black);
@@ -244,14 +244,14 @@ void Board::updateAttack(piece p)
 	}
 }
 
-u64 inline Board::floodFill(u64 propagator, u64 empty, dir direction) const
+U64 inline Board::floodFill(U64 propagator, U64 empty, dir direction) const
 {
 	// Calculates all attacks including attacked pieces for sliding pieces
 	// (Queen, Rook, bishop)(s)
 	// TODO: This method is very performance intensive. Rewrite!
 
-	u64 flood = propagator;
-	u64 wrap = noWrap[direction];
+	U64 flood = propagator;
+	U64 wrap = noWrap[direction];
 	empty &= wrap;
 	auto r_shift = shift[direction];
 	flood |= propagator = rotate_l64(propagator, r_shift) & empty;
@@ -287,9 +287,9 @@ void Board::pawnFill(color side)
 	}
 }
 
-void inline Board::pawnMoves(MoveList& moveList, u64 attackingPieces, color side, piece pawn, bool addQuietMoves) const
+void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side, piece pawn, bool addQuietMoves) const
 {
-	u64 attackMask = 0x0, pieceAttacks = 0x0;
+	U64 attackMask = 0x0, pieceAttacks = 0x0;
 	if(side == black){
 		// Find normal captures:
 		BITLOOP(pos, attackingPieces) {
@@ -399,9 +399,9 @@ void inline Board::pawnMoves(MoveList& moveList, u64 attackingPieces, color side
 	}
 }
 
-void inline Board::knightMoves(MoveList& moveList, u64 attackingPieces, color side, piece p, bool addQuietMoves) const
+void inline Board::knightMoves(MoveList& moveList, U64 attackingPieces, color side, piece p, bool addQuietMoves) const
 {
-	u64 attackMask = 0x0, pieceAttacks = 0x0;
+	U64 attackMask = 0x0, pieceAttacks = 0x0;
 
 	BITLOOP(pos, attackingPieces) {
 		attackMask = KNIGHT_ATTACKS[pos] & attacks[p] & (side == black ? whitePos : blackPos);
@@ -423,9 +423,9 @@ void inline Board::knightMoves(MoveList& moveList, u64 attackingPieces, color si
 	}
 }
 
-void inline Board::queen_and_bishopMoves(MoveList& moveList, u64 attackingPieces, const vector<u64>& pattern, color side, piece p, bool addQuietMoves) const
+void inline Board::queen_and_bishopMoves(MoveList& moveList, U64 attackingPieces, const vector<U64>& pattern, color side, piece p, bool addQuietMoves) const
 {
-	u64 attackMask = 0x0, pieceAttacks = 0x0;
+	U64 attackMask = 0x0, pieceAttacks = 0x0;
 
 	BITLOOP(pos, attackingPieces) {
 		attackMask = pattern[pos] & attacks[p] & (side == black ? whitePos : blackPos);
@@ -451,9 +451,9 @@ void inline Board::queen_and_bishopMoves(MoveList& moveList, u64 attackingPieces
 	}
 }
 
-void inline Board::kingMoves(MoveList& moveList, u64 attackingPieces, color side, piece king, bool addQuietMoves) const
+void inline Board::kingMoves(MoveList& moveList, U64 attackingPieces, color side, piece king, bool addQuietMoves) const
 {
-	u64 attackMask = 0x0, pieceAttacks = 0x0;
+	U64 attackMask = 0x0, pieceAttacks = 0x0;
 	ulong pos = msb(pieces[king]);
 	attackMask = ((attacks[king] & (side == black ? whitePos : blackPos)) & ~(side == black ? whiteAtt : blackAtt));
 
@@ -473,9 +473,9 @@ void inline Board::kingMoves(MoveList& moveList, u64 attackingPieces, color side
 	}
 }
 
-void inline Board::rookMoves(MoveList& moveList, u64 attackingPieces, color side, piece rook, bool addQuietMoves) const
+void inline Board::rookMoves(MoveList& moveList, U64 attackingPieces, color side, piece rook, bool addQuietMoves) const
 {
-	u64 attackMask = 0x0, pieceAttacks = 0x0;
+	U64 attackMask = 0x0, pieceAttacks = 0x0;
 	ulong a_square, h_square, qCastRight, kCastRight;
 	if (side == black) {
 		a_square = a8;
@@ -539,8 +539,8 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 	at the front of the movelist
 	*/
 	ulong pos = nullSquare;
-	u64 attackMask = 0x0;
-	u64 pieceAttacks = 0x0, attackingPieces = 0x0;
+	U64 attackMask = 0x0;
+	U64 pieceAttacks = 0x0, attackingPieces = 0x0;
 	// Generate all capturing and normal moves
 
 	if (side == black){ 
@@ -964,7 +964,7 @@ bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove)
 	// Returns true if last played move leaves king in check. 
 	piece king = kingColor == white ? wk : bk;
 	byte kingPos = msb(pieces[king]);
-	u64 kingRect = 0x0, kingDiags = 0x0;
+	U64 kingRect = 0x0, kingDiags = 0x0;
 	if (move_type(lastMove.flags) > 5) return false; // Castling does not put king in check
 	
 	if (kingColor == white) {
@@ -1045,7 +1045,7 @@ int Board::evaluate(color side)
 	// Rewards points, if positions are similar to piece-square-heuristics
 	// Pawns:
 	int psh = 0;
-	u64 mask = pieces[wp];
+	U64 mask = pieces[wp];
 	BITLOOP(pos, mask)
 		psh += pieceSquareTable[0][63 - pos];
 	mask = pieces[bp];
@@ -1141,7 +1141,7 @@ void Board::print() const
 	for (int p = 0; p < 12; p++) {
 		auto temp = pieces[p];
 		auto count = -1;
-		for (u64 b = _msb; b != 0; b >>= 1) {
+		for (U64 b = _msb; b != 0; b >>= 1) {
 			count++;
 			if (b & temp) asciiBoard[count / 8][count % 8] = names[p];
 		}

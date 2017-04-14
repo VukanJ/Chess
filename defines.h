@@ -8,15 +8,15 @@
 
 typedef unsigned uint;
 typedef unsigned long ulong;
-typedef uint64_t u64;
-typedef uint32_t u32;
-typedef uint16_t u16;
+typedef uint64_t U64;
+typedef uint32_t U32;
+typedef uint16_t U16;
 typedef uint8_t  byte;
 
 constexpr int oo = INT_MAX; // Alpha-Beta infinity
 
-u64  inline bit_at(uint x)     { return 0x1ull << x; }        // Sets nth bit in number counting from least significant bit
-u64  inline bit_at_rev(uint x) { return 0x1ull << (63 - x); } // Sets nth bit in number counting from most significant bit
+U64  inline bit_at(uint x)     { return 0x1ull << x; }        // Sets nth bit in number counting from least significant bit
+U64  inline bit_at_rev(uint x) { return 0x1ull << (63 - x); } // Sets nth bit in number counting from most significant bit
 byte inline piece_pair(byte X, byte Y) { return X | (Y << 4); } // Pairs up 4-bit piece information
 
 // Move formatting macros:
@@ -30,16 +30,16 @@ byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 		#pragma message ("X64 ARCHITECTURE RECOMMENDED!\n COMPILATION MAY FAIL")
 	#endif
 	// Compiler intrinsics compatible with WIN32
-	int  inline popcount(u64 x) { return (int)__popcnt64(x); } // Population count, implicit conversion to int
-	byte inline bitScan_rev64(ulong& index, u64 const mask) {
+	int  inline popcount(U64 x) { return (int)__popcnt64(x); } // Population count, implicit conversion to int
+	byte inline bitScan_rev64(ulong& index, U64 const mask) {
 		if (!_BitScanReverse64(&index, mask)){
 			index = 0;
 		}
 		return (byte)index;
 	} // Reverse Bitscan
-	byte inline msb(u64 x) { ulong index; index = !_BitScanReverse64(&index, x) ? -1 : index; return (byte)index; }
-	u64  inline rotate_l64(u64 mask, int amount) { return _rotl64(mask, amount); } // Rotate left  (64Bit)
-	u64  inline rotate_r64(u64 mask, int amount) { return _rotr64(mask, amount); } // Rotate right (64Bit)
+	byte inline msb(U64 x) { ulong index; index = !_BitScanReverse64(&index, x) ? -1 : index; return (byte)index; }
+	U64  inline rotate_l64(U64 mask, int amount) { return _rotl64(mask, amount); } // Rotate left  (64Bit)
+	U64  inline rotate_r64(U64 mask, int amount) { return _rotr64(mask, amount); } // Rotate right (64Bit)
 
 	#define BITLOOP(__pos, mask) for (ulong __pos = msb(mask); \
 															mask; \

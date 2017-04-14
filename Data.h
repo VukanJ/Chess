@@ -3,16 +3,16 @@
 
 #include "misc.h"
 
-constexpr u64 col        = 0x101010101010101ull;
-constexpr u64 row        = 0xFFull;
-constexpr u64 _right     = 0x0101010101010101ull;
-constexpr u64 _left      = 0x8080808080808080ull;
-constexpr u64 _col       = 0x101010101010101ull;
-constexpr u64 _row       = 0xFFull;
-constexpr u64 _noSides   = 0x7E7E7E7E7E7E7E7Eull;
-constexpr u64 _sidesOnly = 0x8181818181818181ull;
+constexpr U64 col        = 0x101010101010101ull;
+constexpr U64 row        = 0xFFull;
+constexpr U64 _right     = 0x0101010101010101ull;
+constexpr U64 _left      = 0x8080808080808080ull;
+constexpr U64 _col       = 0x101010101010101ull;
+constexpr U64 _row       = 0xFFull;
+constexpr U64 _noSides   = 0x7E7E7E7E7E7E7E7Eull;
+constexpr U64 _sidesOnly = 0x8181818181818181ull;
 
-constexpr u64 _msb       = 0x1ull << 63; // Most significant bit
+constexpr U64 _msb       = 0x1ull << 63; // Most significant bit
 
 class genChessData final
 {
@@ -21,32 +21,32 @@ public:
 	void genMagic();
 	void genMagicDatabases();
 private:
-	vector<u64> generateMagicBitboards(vector<vector<u64>>& vars, vector<vector<u64>>& correctAttacks, vector<u64>& masks); // brute force
+	vector<U64> generateMagicBitboards(vector<vector<U64>>& vars, vector<vector<U64>>& correctAttacks, vector<U64>& masks); // brute force
 	void genConnections();
-	pair<vector<u64>,vector<u64>> genEffectiveAttacks(); // [rook, bishop]
-	u64 floodFill(u64 propagator, u64 empty, int direction) const;
-	vector<vector<u64>> genOccupancyVariations(vector<u64>& occ);
-	vector<u64> generateMagicShifts(vector<u64>& mask);
-	vector<vector<u64>> genCorrectAttackSets(vector<vector<u64>>& vars, bool isrook);
+	pair<vector<U64>,vector<U64>> genEffectiveAttacks(); // [rook, bishop]
+	U64 floodFill(U64 propagator, U64 empty, int direction) const;
+	vector<vector<U64>> genOccupancyVariations(vector<U64>& occ);
+	vector<U64> generateMagicShifts(vector<U64>& mask);
+	vector<vector<U64>> genCorrectAttackSets(vector<vector<U64>>& vars, bool isrook);
 };
 
 struct MagicBit
 {
-	u64 *ptr, mask, magic;
+	U64 *ptr, mask, magic;
 	byte shift;
 };
 
-extern vector<vector<u64>> CONNECTIONS;
+extern vector<vector<U64>> CONNECTIONS;
 
-extern vector<vector<u64>> magicRookMoveDatabase;
-extern vector<vector<u64>> magicBishopMoveDatabase;
+extern vector<vector<U64>> magicRookMoveDatabase;
+extern vector<vector<U64>> magicBishopMoveDatabase;
 
 
 namespace {
 
 	// Attack patterns
 
-	const vector<u64> KNIGHT_ATTACKS = {
+	const vector<U64> KNIGHT_ATTACKS = {
 		0x20400, 0x50800, 0xa1100, 0x142200, 0x284400, 0x508800, 0xa01000, 0x402000,
 		0x2040004, 0x5080008, 0xa110011, 0x14220022, 0x28440044, 0x50880088,
 		0xa0100010, 0x40200020, 0x204000402, 0x508000805, 0xa1100110a, 0x1422002214,
@@ -63,7 +63,7 @@ namespace {
 		0x10a00000000000, 0x20400000000000
 	};
 
-	const vector<u64> BISHOP_ATTACKS = {
+	const vector<U64> BISHOP_ATTACKS = {
 		0x8040201008040200, 0x80402010080500, 0x804020110a00, 0x8041221400,
 		0x182442800, 0x10204885000, 0x102040810a000, 0x102040810204000,
 		0x4020100804020002, 0x8040201008050005, 0x804020110a000a, 0x804122140014,
@@ -82,7 +82,7 @@ namespace {
 		0x28448201000000, 0x50880402010000, 0xa0100804020100, 0x40201008040201
 	};
 
-	const vector<u64> QUEEN_ATTACKS = {
+	const vector<U64> QUEEN_ATTACKS = {
 		0x81412111090503fe, 0x2824222120a07fd, 0x404844424150efb, 0x8080888492a1cf7,
 		0x10101011925438ef, 0x2020212224a870df, 0x404142444850e0bf, 0x8182848890a0c07f,
 		0x412111090503fe03, 0x824222120a07fd07, 0x4844424150efb0e, 0x80888492a1cf71c,
@@ -101,7 +101,7 @@ namespace {
 		0xef38549211101010, 0xdf70a82422212020, 0xbfe0504844424140, 0x7fc0a09088848281
 	};
 
-	const vector<u64> KING_ATTACKS = {
+	const vector<U64> KING_ATTACKS = {
 		0x302, 0x705, 0xe0a, 0x1c14, 0x3828, 0x7050, 0xe0a0, 0xc040, 0x30203, 0x70507,
 		0xe0a0e, 0x1c141c, 0x382838, 0x705070, 0xe0a0e0, 0xc040c0, 0x3020300,
 		0x7050700, 0xe0a0e00, 0x1c141c00, 0x38283800, 0x70507000, 0xe0a0e000,
@@ -119,7 +119,7 @@ namespace {
 
 	// Magic Bitboards
 
-	const vector<u64> rookAttackMasks = {
+	const vector<U64> rookAttackMasks = {
 		0x101010101017e,
 		0x202020202027c,
 		0x404040404047a,
@@ -186,7 +186,7 @@ namespace {
 		0x7e80808080808000
 	};
 
-	const vector<u64> bishopAttackMasks = {
+	const vector<U64> bishopAttackMasks = {
 		0x40201008040200,
 		0x402010080400,
 		0x4020100a00,
@@ -255,7 +255,7 @@ namespace {
 
 	// Misc
 
-	const vector<u64> rookMagics = {
+	const vector<U64> rookMagics = {
 		0x1480004000201080,
 		0x40002000c81000,
 		0x2100084411002000,
@@ -322,7 +322,7 @@ namespace {
 		0x8200240082c102
 	};
 
-	const vector<u64> bishopMagics = {
+	const vector<U64> bishopMagics = {
 		0x8c431014048280,
 		0x2280301020002,
 		0xd044041086040008,
@@ -389,7 +389,7 @@ namespace {
 		0x445600200420080
 	};
 
-	const vector<u64> rookMagicShifts = {
+	const vector<U64> rookMagicShifts = {
 		52,53,53,53,53,53,53,52,
 		53,54,54,54,54,54,54,53,
 		53,54,54,54,54,54,54,53,
@@ -400,7 +400,7 @@ namespace {
 		52,53,53,53,53,53,53,52
 	};
 
-	const vector<u64> bishopMagicShifts = {
+	const vector<U64> bishopMagicShifts = {
 		58,59,59,59,59,59,59,58,
 		59,59,59,59,59,59,59,59,
 		59,59,57,57,57,57,59,59,
@@ -411,7 +411,7 @@ namespace {
 		58,59,59,59,59,59,59,58
 	};
 
-	const vector<u64> noWrap = {
+	const vector<U64> noWrap = {
 		0xffffffffffffff00, // down
 		0x7f7f7f7f7f7f7f7f, // left
 		0x00ffffffffffffff, // up
@@ -423,7 +423,7 @@ namespace {
 		0xfefefefefefefe00  // right down
 	};
 
-	const vector<u64> standardPosition = {
+	const vector<U64> standardPosition = {
 		0xFF000000000000, 0x8100000000000000,
 		0x4200000000000000, 0x2400000000000000, 0x800000000000000, 0x1000000000000000,
 		0xFF00, 0x81, 0x42, 0x24, 0x8, 0x10
