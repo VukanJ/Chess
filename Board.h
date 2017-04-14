@@ -31,7 +31,7 @@ private:
 
 	// Flooding algorithm
 	enum dir {n, e, s, w, ne, se, sw, nw};
-	u64 inline floodFill(u64 propagator, u64 empty, dir) const;
+	U64 inline floodFill(U64 propagator, U64 empty, dir) const;
 	
 	void pawnFill(color side);
 public:
@@ -44,11 +44,11 @@ public:
 	// Move making and move generation
 	void generateMoveList(MoveList&, color, bool addQuietMoves) const;
 	
-	void inline pawnMoves(MoveList&, u64 pieces, color, piece, bool addQuietMoves) const;
-	void inline knightMoves(MoveList&, u64 pieces, color, piece, bool addQuietMoves) const;
-	void inline queen_and_bishopMoves(MoveList&, u64 pieces, const vector<u64>& pattern, color, piece, bool addQuietMoves) const;
-	void inline kingMoves(MoveList&, u64 pieces, color, piece king, bool addQuietMoves) const;
-	void inline rookMoves(MoveList&, u64 pieces, color, piece, bool addQuietMoves) const;
+	void inline pawnMoves(MoveList&, U64 pieces, color, piece, bool addQuietMoves) const;
+	void inline knightMoves(MoveList&, U64 pieces, color, piece, bool addQuietMoves) const;
+	void inline queen_and_bishopMoves(MoveList&, U64 pieces, const vector<U64>& pattern, color, piece, bool addQuietMoves) const;
+	void inline kingMoves(MoveList&, U64 pieces, color, piece king, bool addQuietMoves) const;
+	void inline rookMoves(MoveList&, U64 pieces, color, piece, bool addQuietMoves) const;
 
 	void makeMove(const Move&, color side);
 	void unMakeMove(const Move&, color side);
@@ -63,11 +63,11 @@ public:
 	void print() const;
 
 	// Raw data: public for easy access
-	vector<u64> pieces, attacks;
+	vector<U64> pieces, attacks;
 	byte castlingRights, b_enpassent, w_enpassent;
-	u64 wpMove, bpMove, whitePos, blackPos, allPos, whiteAtt, blackAtt, hashKey;
+	U64 wpMove, bpMove, whitePos, blackPos, allPos, whiteAtt, blackAtt, hashKey;
 	ZobristHash hash;
-	vector<vector<u64>> randomSet;
+	vector<vector<U64>> randomSet;
 };
 
 #endif

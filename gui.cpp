@@ -266,7 +266,7 @@ void Gui::UserInput::reset()
 	movePiece = nullPiece;
 }
 
-void Gui::colorSquares(u64 pattern, sf::Color color, sf::RenderWindow& window)
+void Gui::colorSquares(U64 pattern, sf::Color color, sf::RenderWindow& window)
 {
 	// Colors specific squares
 	sf::RectangleShape colorRect(sf::Vector2f(HEIGHT / 8, HEIGHT / 8));

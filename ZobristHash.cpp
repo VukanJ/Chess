@@ -9,12 +9,12 @@ ZobristHash::ZobristHash()
 
 ZobristHash::ZobristHash(size_t _hashSize)
 {
-	entries.reserve(static_cast<u64>(_hashSize));
+	entries.reserve(static_cast<U64>(_hashSize));
 	entries.resize(_hashSize);
 	hashSize = _hashSize;
 }
 
-ZobristHash::entry* const ZobristHash::addEntry(const u64 key, int value, int depth)
+ZobristHash::entry* const ZobristHash::addEntry(const U64 key, int value, int depth)
 {
 	auto index = key % hashSize;
 	if (entries[index].search_depth < depth){
@@ -24,20 +24,20 @@ ZobristHash::entry* const ZobristHash::addEntry(const u64 key, int value, int de
 	return &entries[index];
 }
 
-ZobristHash::entry& ZobristHash::getEntry(const u64 key)
+ZobristHash::entry& ZobristHash::getEntry(const U64 key)
 {
 	auto index = key % hashSize;
 	return entries[index];
 }
 
-int ZobristHash::getValue(const u64 key) const
+int ZobristHash::getValue(const U64 key) const
 {
 	auto index = key % hashSize;
 	return entries[index].value;
 }
 
 // Probably not needed:
-void inline ZobristHash::setBoundFlags(const u64 key, valueType vt) 
+void inline ZobristHash::setBoundFlags(const U64 key, valueType vt) 
 {
 	auto index = key % hashSize;
 	entries[index].flags = vt;

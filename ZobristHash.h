@@ -36,11 +36,11 @@ private:
 public:
 	ZobristHash();
 	ZobristHash(size_t hashSize);
-	entry* const addEntry(const u64 Key, int  value, int depth);
-	entry& getEntry(const u64 Key);
-	int getValue(const u64 key) const;
+	entry* const addEntry(const U64 Key, int  value, int depth);
+	entry& getEntry(const U64 Key);
+	int getValue(const U64 key) const;
 
-	void inline setBoundFlags(const u64 key, valueType);
+	void inline setBoundFlags(const U64 key, valueType);
 };
 
 #endif

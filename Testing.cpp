@@ -36,8 +36,8 @@ void UnitTest::testIntrinsics() const
 		ROTR64
 		BITLOOP
 	*/
-	const u64 randomCheckNum = 0xc69a3d1858e52a13;
-	const u64 rotatedR[65] = {
+	const U64 randomCheckNum = 0xc69a3d1858e52a13;
+	const U64 rotatedR[65] = {
 		0xc69a3d1858e52a13, 0xe34d1e8c2c729509, 0xf1a68f4616394a84,
 		0x78d347a30b1ca542, 0x3c69a3d1858e52a1, 0x9e34d1e8c2c72950,
 		0x4f1a68f4616394a8, 0x278d347a30b1ca54, 0x13c69a3d1858e52a,
@@ -73,8 +73,8 @@ void UnitTest::testIntrinsics() const
 	ulong index;
 	clog << string(8, '~') << "::: Testing intrinsics :::" << string(8, '~') << '\n';
 	int i = 0;
-	assert(popcount(static_cast<u64>(0x0)) == 0);
-	for (u64 p = 0x1; i < 64; p |= p << 1, ++i)
+	assert(popcount(static_cast<U64>(0x0)) == 0);
+	for (U64 p = 0x1; i < 64; p |= p << 1, ++i)
 		assert(popcount(p) == i + 1);
 	assert(popcount(0xFFull << 56) == 8); // Check if popcnt is really 64 bit
 	clog << "bitscan...\n";
@@ -88,7 +88,7 @@ void UnitTest::testIntrinsics() const
 	assert(index == 63);
 	clog << "rotr...\n";
 
-	u64 testNum = randomCheckNum;
+	U64 testNum = randomCheckNum;
 	for (int i = 0; i < 64; ++i) {
 		testNum = rotate_r64(testNum, 1);
 		//cout << hex << rotatedR[i+1] << ' ' << testNum << endl;
@@ -628,9 +628,9 @@ void UnitTest::testHashing()
 	ZobristHash Hash(size_t(1e3));
 	random_device r_device;
 	mt19937_64 generator(r_device());
-	uniform_int_distribution<u64> distr;
+	uniform_int_distribution<U64> distr;
 
-	auto boards = vector<u64>(100);
+	auto boards = vector<U64>(100);
 	for (auto& b : boards) {
 		b = distr(generator);
 		Hash.addEntry(b, (rand() % 1000) - 500, rand() % 6);
