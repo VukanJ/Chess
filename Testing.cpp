@@ -463,23 +463,9 @@ void UnitTest::testProm()
 
 void UnitTest::specialTest()
 {
-	//u64 s = assembleBits({ d7, b6, c5, b3, a2, h1, b8 });
-	//u64 o = s | assembleBits({ h7, h6, g6, g5, f5, h8, e8 });
-
-	//u64 s = assembleBits({ b6, b5, b3 });
-	//u64 o = s | bit_at(g5)|bit_at( b6);
-
-	u64 s = assembleBits({ c5,d4,g3,a2 });
-	u64 o = s | assembleBits({c8,f4, d7,e6,g8,c2,d1,g2,a5,a7});
-
-	printBitboard(s);
-	printBitboard(o);
-
-	u64 leftattacks = (o ^ ((o | _right) - 2 * s)) & ~_right;
-
-
-
-	cin.ignore();
+	genChessData gcd;
+	gcd.genMagic();
+	
 	exit(0);
 }
 
@@ -657,11 +643,11 @@ void UnitTest::testHashing()
 Benchmark::Benchmark() : performingAll(false)
 {
 	genChessData data;
-	data.gen(); // Generates bitboards needed for move generation
+	data.genMoveData(); // Generates bitboards needed for move generation
 
 	testBoard = Board("r3k3/1K6/8/8/8/8/8/8 w q - 0 1");
 
-	testBoard.print();
+	//testBoard.print();
 
 	testBoard.updateAllAttacks();
 	MoveList moves;
@@ -858,7 +844,7 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 		perft(depth - 1, targetDepth, static_cast<color>(!side));
 		testBoard.unMakeMove(move, static_cast<color>(side));
 		if (depth == targetDepth) {
-			cout << (char)('h' - (move.from % 8)) << (char)('1' + (move.from / 8)) << (char)('h' - (move.to % 8)) << (char)('1' + (move.to / 8)) << ": " << perftMoveCount << endl;
+			//cout << (char)('h' - (move.from % 8)) << (char)('1' + (move.from / 8)) << (char)('h' - (move.to % 8)) << (char)('1' + (move.to / 8)) << ": " << perftMoveCount << endl;
 			totalPerftMoveCount += perftMoveCount;
 			totalTotalPerftMoveCount += perftMoveCount;
 			perftMoveCount = 0;
@@ -874,9 +860,9 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 //		  Perft computation time: 39.49 s (depth 5)
 // commit 4abe35e1513ba6962cf6462e5192fe2e6c00817c:
 //		  Perft computation time: ~31 s (depth 5)
-// most recent commit 
+// commit 7036cb32404d2365972fb87247fdf50589d0b8a1
 //        Perft computation time: ~24.1 s (depth 5)
-
+//
 
 void Benchmark::perftTestSuite()
 {

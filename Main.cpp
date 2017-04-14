@@ -8,8 +8,6 @@
 #include "ZobristHash.h"
 #include "Testing.h"
 
-
-// TODO: Write Testing function for Cprom
 // TODO: Track definite move history
 // TODO: The transposition table needs to store the best move for move ordering
 // TODO: 50 Move rule
@@ -109,7 +107,7 @@ void testing(){
 	//test.testMinimalTree();
 
 	//benchmark.testPerft(-1);
-	benchmark.perftTestSuite();
+	//benchmark.perftTestSuite();
 
 	cout << "EOP\n";
 	cin.ignore();

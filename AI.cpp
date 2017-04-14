@@ -4,7 +4,7 @@ AI::AI(string FEN, color computerColor)
 	: aiColor(computerColor)
 {
 	genChessData data;
-	data.gen(); // Generates bitboards needed for move generation
+	data.genMoveData(); // Generates bitboards needed for move generation
 	chessBoard = Board(FEN);
 	transposition_hash = ZobristHash(static_cast<size_t>(1e7));
 	//debug();
@@ -14,7 +14,7 @@ AI::AI(string FEN, color computerColor, unsigned int hashSize)
 	: aiColor(computerColor)
 {
 	genChessData data;
-	data.gen(); // Generates bitboards needed for move generation
+	data.genMoveData(); // Generates bitboards needed for move generation
 	chessBoard = Board(FEN);
 	transposition_hash = ZobristHash(hashSize);
 	//debug();
