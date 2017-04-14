@@ -45,6 +45,9 @@ public:
 	// Move making and move generation
 	void generateMoveList(MoveList&, color, bool addQuietMoves) const;
 	
+	U64 inline   rookAttacks(long pos, const U64 blockers) const;
+	U64 inline bishopAttacks(long pos, const U64 blockers) const;
+
 	void inline pawnMoves(MoveList&, U64 pieces, color, piece, bool addQuietMoves) const;
 	void inline knightMoves(MoveList&, U64 pieces, color, piece, bool addQuietMoves) const;
 	void inline queen_and_bishopMoves(MoveList&, U64 pieces, const vector<U64>& pattern, color, piece, bool addQuietMoves) const;

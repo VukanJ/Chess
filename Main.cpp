@@ -95,7 +95,7 @@ void testing(){
 
 	Benchmark benchmark;
 	UnitTest test;
-	test.testMagic();
+	//test.testMagic();
 	//test.specialTest();
 	//test.testDefines();
 	//test.testIntrinsics();
@@ -108,7 +108,7 @@ void testing(){
 	//test.testMinimalTree();
 
 	//benchmark.testPerft(-1);
-	//benchmark.perftTestSuite();
+	benchmark.perftTestSuite();
 
 	cout << "EOP\n";
 	cin.ignore();
