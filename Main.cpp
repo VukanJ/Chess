@@ -95,6 +95,7 @@ void testing(){
 
 	Benchmark benchmark;
 	UnitTest test;
+	test.testMagic();
 	//test.specialTest();
 	//test.testDefines();
 	//test.testIntrinsics();

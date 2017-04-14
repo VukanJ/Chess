@@ -19,6 +19,7 @@ typedef vector<Move> MoveList;
 
 class Board
 {
+	friend class UnitTest;
 private:
 	// Move making
 	void updateAttack(piece p);

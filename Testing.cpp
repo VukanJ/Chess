@@ -639,6 +639,106 @@ void UnitTest::testHashing()
 	//assert(Hash.hasEntry(boards[55]));
 }
 
+void UnitTest::testMagic()
+{
+	cout << "Testing magic numbers...\n";
+	U64 rook = bit_at(c3);
+	U64 blocker = assembleBits({0});
+
+	U64 mindex = blocker & rookAttackMasks[c3];
+	mindex *= rookMagics[c3];
+	mindex >>= rookMagicShifts[c3];
+	printBitboard(magicRookMoveDatabase[c3][mindex]);
+
+	// Start testing
+	random_device r_device;
+	mt19937_64 generator(r_device());
+	generator.seed(time(0));
+	uniform_int_distribution<U64> distr;
+
+	Board board; // dummy board
+
+	// Test rooks
+	for (int i = 0; i < 1000000; ++i) {
+		U64 randomBlockers = distr(generator) & distr(generator) & distr(generator);
+		U64 rook = 0;
+
+		int rookPos = rand() % popcount(~randomBlockers);
+		int rookBoardPosition = 0;
+		for (U64 pos = 1, c = -1; c != 64; pos <<= 1) {
+			if (pos & (~randomBlockers)) {
+				c++;
+				if (c == rookPos) {
+					rook = pos;
+					rookBoardPosition = msb(pos);
+					break;
+				}
+			}
+		}
+		if (rook & randomBlockers) {
+			printBitboard(rook);
+			printBitboard(randomBlockers);
+			cout << "Generator failed\n";
+		}
+
+		mindex = randomBlockers & rookAttackMasks[rookBoardPosition];
+		mindex = (mindex * rookMagics[rookBoardPosition]) >> rookMagicShifts[rookBoardPosition];
+		U64 MagicAttacks = magicRookMoveDatabase[rookBoardPosition][mindex];
+
+		U64 Truth = 0;
+		Truth |= board.floodFill(rook, ~randomBlockers, Board::dir::n);
+		Truth |= board.floodFill(rook, ~randomBlockers, Board::dir::e);
+		Truth |= board.floodFill(rook, ~randomBlockers, Board::dir::s);
+		Truth |= board.floodFill(rook, ~randomBlockers, Board::dir::w);
+		if (Truth != MagicAttacks) {
+			cout << "Magic failed! :(\n";
+			cout << "Blockers = \n"; printBitboard(randomBlockers);
+			cout << "Rook = \n"; printBitboard(rook);
+			cout << "Truth = \n"; printBitboard(Truth);
+			cout << "MagicAttacks = \n"; printBitboard(MagicAttacks);
+		}
+	}
+	// Test Bishops
+	for (int i = 0; i < 1000000; ++i) {
+		U64 randomBlockers = distr(generator) & distr(generator) & distr(generator);
+		U64 bish = 0;
+
+		int bishPos = rand() % popcount(~randomBlockers);
+		int bishBoardPosition = 0;
+		for (U64 pos = 1, c = -1; c != 64; pos <<= 1) {
+			if (pos & (~randomBlockers)) {
+				c++;
+				if (c == bishPos) {
+					bish = pos;
+					bishBoardPosition = msb(pos);
+					break;
+				}
+			}
+		}
+		if (bish & randomBlockers) {
+			printBitboard(bish);
+			printBitboard(randomBlockers);
+			cout << "Generator failed\n";
+		}
+
+		mindex = randomBlockers & bishopAttackMasks[bishBoardPosition];
+		mindex = (mindex * bishopMagics[bishBoardPosition]) >> bishopMagicShifts[bishBoardPosition];
+		U64 MagicAttacks = magicBishopMoveDatabase[bishBoardPosition][mindex];
+
+		U64 Truth = 0;
+		Truth |= board.floodFill(bish, ~randomBlockers, Board::dir::ne);
+		Truth |= board.floodFill(bish, ~randomBlockers, Board::dir::se);
+		Truth |= board.floodFill(bish, ~randomBlockers, Board::dir::sw);
+		Truth |= board.floodFill(bish, ~randomBlockers, Board::dir::nw);
+		if (Truth != MagicAttacks) {
+			cout << "Magic failed! :(\n";
+			cout << "Blockers = \n"; printBitboard(randomBlockers);
+			cout << "Bishop = \n"; printBitboard(bish);
+			cout << "Truth = \n"; printBitboard(Truth);
+			cout << "MagicAttacks = \n"; printBitboard(MagicAttacks);
+		}
+	}
+}
 
 Benchmark::Benchmark() : performingAll(false)
 {

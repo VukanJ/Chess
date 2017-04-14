@@ -153,8 +153,8 @@ void genChessData::genMagic()
 
 	// Generate variations of occupancies since
 	// many occupation variants correspond to the same attack set
-	auto rookOccVariations   = genOccupancyVariations(vector<U64>(localRookAttackMask.begin(), localRookAttackMask.end()));
-	auto bishopOccVariations = genOccupancyVariations(vector<U64>(localBishopAttackMask.begin(), localBishopAttackMask.end()));
+	auto rookOccVariations   = genOccupancyVariations(localRookAttackMask);
+	auto bishopOccVariations = genOccupancyVariations(localBishopAttackMask);
 	auto rookAttackSets      = genCorrectAttackSets(rookOccVariations, true);
 	auto bishAttackSets      = genCorrectAttackSets(bishopOccVariations, false);
 
