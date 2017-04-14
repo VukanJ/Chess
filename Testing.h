@@ -94,6 +94,7 @@ public:
 	void specialTest(); // unspecified custom test
 	void testEvaluation();
 	void testHashing();
+	void testMagic();
 
 private:
 	void testPawnFill();
