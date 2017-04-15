@@ -934,11 +934,11 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 		testBoard.makeMove(move, side);
 
 		if(depth == 1) perftMoveCount++;
-		if (testBoard.isKingLeftInCheck(side, move)) {
-			testBoard.unMakeMove(move, side);
-			if (depth == 1) perftMoveCount--;
-			continue;
-		}
+		//if (testBoard.isKingLeftInCheck(side, move)) {
+		//	testBoard.unMakeMove(move, side);
+		//	if (depth == 1) perftMoveCount--;
+		//	continue;
+		//}
 
 		if (move.flags == ENPASSENT && depth == 1) perftEPCount++;
 
