@@ -43,8 +43,8 @@ public:
 	void setupBoard(string FEN);
 
 	// Move making and move generation
-	void generateMoveList(MoveList&, color, bool addQuietMoves) const;
-	
+	void generateMoveList(MoveList&, color, bool addQuietMoves);
+
 	U64 inline   rookAttacks(long pos, const U64 blockers) const;
 	U64 inline bishopAttacks(long pos, const U64 blockers) const;
 
@@ -57,6 +57,7 @@ public:
 	void makeMove(const Move&, color side);
 	void unMakeMove(const Move&, color side);
 	void updateAllAttacks();
+	void updatePinnedPieces(color side);
 	bool isKingInCheck(color kingColor) const;
 	bool isKingLeftInCheck(color KingColor, const Move& lastMove);
 
@@ -66,10 +67,19 @@ public:
 	// Misc
 	void print() const;
 
-	// Raw data: public for easy access
+	// Raw data: (public for easy access)
 	vector<U64> pieces, attacks;
-	byte castlingRights, b_enpassent, w_enpassent;
-	U64 wpMove, bpMove, whitePos, blackPos, allPos, whiteAtt, blackAtt, hashKey;
+	byte castlingRights, // Castling rights
+		b_enpassent,     // Possible e.p. squares for black
+		w_enpassent;     // Possible e.p. squares for white
+
+	U64 wpMove, bpMove,             // Squares pawns can move to (quietly)
+		wpDanger, bpDanger,         // Empty squares, that are attacked by pawns
+		whitePos, blackPos, allPos, // Collective positional information
+		whiteAtt, blackAtt,         // Collective attack information
+		hashKey,                    // Hashkey representing current board
+		pinned;                     // Squares containing absolute pinned pieces
+
 	ZobristHash hash;
 	vector<vector<U64>> randomSet;
 };

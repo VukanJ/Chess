@@ -72,6 +72,7 @@ void Board::setupBoard(string FEN)
 		}
 		allPos = blackPos | whitePos;
 	}
+	bpDanger = wpDanger = pinned = 0x0;
 	updateAllAttacks();
 	initHash();
 }
@@ -208,7 +209,6 @@ void Board::updateAttack(piece p)
 			attacks[p] = 0x0;
 			mask = pieces[p];
 			BITLOOP(pos, mask) attacks[p] |= rookAttacks(pos, allPos);
-
 			break;
 		case bn:
 			mask = pieces[bn];
@@ -249,7 +249,6 @@ U64 inline Board::floodFill(U64 propagator, U64 empty, dir direction) const
 {
 	// Calculates all attacks including attacked pieces for sliding pieces
 	// (Queen, Rook, bishop)(s)
-	// TODO: This method is very performance intensive. Rewrite!
 
 	U64 flood = propagator;
 	U64 wrap = noWrap[direction];
@@ -273,8 +272,9 @@ void Board::pawnFill(color side)
 		// Double step
 		bpMove |= ((((pieces[bp] & 0xFF000000000000ull) >> 8) & ~allPos) >> 8) & ~allPos;
 		// Side Attacks
-		attacks[bp] |= whitePos & ((pieces[bp] & ~_right) >> 9);
-		attacks[bp] |= whitePos & ((pieces[bp] & ~_left)  >> 7);
+		bpDanger  = ((pieces[bp] & ~_right) >> 9) | ((pieces[bp] & ~_left) >> 7);
+		attacks[bp] |= whitePos & bpDanger;
+		bpDanger &= ~whitePos;
 	}
 	else{
 		attacks[wp] = wpMove = 0x0;
@@ -283,8 +283,9 @@ void Board::pawnFill(color side)
 		// Double step
 		wpMove |= ((((pieces[wp] & 0xFF00ull) << 8) & ~allPos) << 8) & ~allPos;
 		// Side Attacks
-		attacks[wp] |= blackPos & ((pieces[wp] & ~_left)  << 9);
-		attacks[wp] |= blackPos & ((pieces[wp] & ~_right) << 7);
+		wpDanger = ((pieces[wp] & ~_left) << 9) | ((pieces[wp] & ~_right) << 7);
+		attacks[wp] |= blackPos & wpDanger;
+		wpDanger &= ~blackPos;
 	}
 }
 
@@ -457,7 +458,7 @@ void inline Board::kingMoves(MoveList& moveList, U64 attackingPieces, color side
 	U64 attackMask = 0x0, pieceAttacks = 0x0;
 	ulong pos = msb(pieces[king]);
 	attackMask = ((attacks[king] & (side == black ? whitePos : blackPos)) & ~(side == black ? whiteAtt : blackAtt));
-
+	//printBitboard(attackMask);
 	for_color(candidate, !side) {
 		pieceAttacks = pieces[candidate] & attackMask;
 		if (pieceAttacks) {
@@ -468,6 +469,8 @@ void inline Board::kingMoves(MoveList& moveList, U64 attackingPieces, color side
 	}
 	if (addQuietMoves) {
 		attackMask ^= (KING_ATTACKS[pos] & attacks[king]) & ~(side == black ? whiteAtt : blackAtt);
+		//printBitboard(attackMask);
+		//printBitboard(attacks[br]);
 		BITLOOP(target, attackMask) {
 			moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & (side == black ? 0x3 : 0xC)), king));
 		}
@@ -532,18 +535,58 @@ void inline Board::rookMoves(MoveList& moveList, U64 attackingPieces, color side
 	}
 }
 
-void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves) const
+void Board::updatePinnedPieces(color side)
+{
+	// Calculates absolute pinned pieces. 
+	// These are considered when checking move legality
+
+	U64 kingXray = 0x0, kingRects = 0x0;
+	U64 xray = 0x0;
+	pinned = 0x0;
+	//print();
+	int kingPosition;
+	if (side == white) {
+		kingPosition = msb(pieces[wk]);
+		kingXray = BISHOP_ATTACKS[kingPosition] & (pieces[bq] | pieces[bb]);
+		kingXray |= ((_col << kingPosition % 8) ^ (_row << (kingPosition / 8) * 8)) & (pieces[bq] | pieces[br]);
+		//printBitboard(kingXray);
+		// Find positions of pieces, that must not be moved
+		BITLOOP(enemyPos, kingXray) {
+			xray = CONNECTIONS[enemyPos][kingPosition] & allPos;
+			if (popcount(xray) == 1 && popcount(xray & whitePos) == 1) {
+				pinned |= xray & whitePos;
+			}
+		}
+	}
+	else {
+		kingPosition = msb(pieces[bk]);
+		kingXray = BISHOP_ATTACKS[kingPosition] & (pieces[wq] | pieces[wb]);
+		kingXray |= ((_col << kingPosition % 8) ^ (_row << (kingPosition / 8) * 8)) & (pieces[wq] | pieces[wr]);
+		//printBitboard(kingXray);
+		// Find positions of pieces, that must not be moved
+		BITLOOP(enemyPos, kingXray) {
+			xray = CONNECTIONS[enemyPos][kingPosition] & allPos;
+			if (popcount(xray) == 1 && popcount(xray & blackPos) == 1) {
+				pinned |= xray & blackPos;
+			}
+		}
+	}
+	//printBitboard(pinned);
+}
+
+void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves)
 {
 	/*
 	This method generates a list of all possible moves for a player.
 	Aggressive and special moves are generated first and preferably stored
 	at the front of the movelist
 	*/
+
 	ulong pos = nullSquare;
 	U64 attackMask = 0x0;
 	U64 pieceAttacks = 0x0, attackingPieces = 0x0;
 	// Generate all capturing and normal moves
-
+	updatePinnedPieces(side);
 	if (side == black){ 
 		/* 
 		   ::::::::::::::::::::::::::::::::::
@@ -603,6 +646,9 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 	// If opponent rook has been captured, he looses castling rights.
 	// TODO: Needs nicer solution
 
+	//if (isKingInCheck(side)) 
+	//	reduceMoveList(moveList, side);
+
 	for_each(moveList.begin(), moveList.end(), [this](Move& move) {
 		if (target_piece(move.pieces) == wr) {
 			if (move_type(move.flags) == CAPTURE || move_type(move.flags) == C_PROMOTION) {
@@ -621,7 +667,6 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 			}
 		}
 	});
-	
 }
 
 U64 inline Board::rookAttacks(long pos, U64 blockers) const
@@ -976,6 +1021,23 @@ bool Board::isKingInCheck(color kingColor) const
 
 bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove)
 {
+	// Check if moving piece is not pinned
+	//if (!(pinned & bit_at(lastMove.from)))
+	//{
+	//	// Piece was not pinned, probably legal
+	//	if ((move_piece(lastMove.pieces) == bk || move_piece(lastMove.pieces) == wk ) 
+	//		&& (lastMove.flags < 2)) {
+	//		// King moves or captures
+	//		if (bit_at(lastMove.to) & (kingColor == white ? bpDanger : wpDanger)) {
+	//			// King walks into pawn attack
+	//			return true;
+	//		}
+	//	}
+	//	else {
+	//		return false;
+	//	}
+	//}
+
 	// Returns true if last played move leaves king in check.
 	// Only relies on positional information
 	piece king = kingColor == white ? wk : bk;
