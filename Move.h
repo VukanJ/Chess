@@ -56,4 +56,23 @@ static string moveString(Move m)
 	return s;
 }
 
+static string shortNotation(const Move& move)
+{
+	// returns string with mainly from to square information
+	if (move.flags == BCASTLE || move.flags == WCASTLE) {
+		return "O-O";
+	}
+	if (move.flags == BCASTLE_2 || move.flags == WCASTLE_2) {
+		return "O-O-O";
+	}
+	string moveStr = string(1,(char)('h' - (move.from % 8)))
+		           + string(1,(char)('1' + (move.from / 8)))
+		           + string(1,(char)('h' - (move.to % 8)))
+		           + string(1,(char)('1' + (move.to / 8)));
+	if (move.flags == PROMOTION || move.flags == C_PROMOTION) {
+		moveStr += names[target_piece(move.pieces)];
+	}
+	return moveStr;
+}
+
 #endif

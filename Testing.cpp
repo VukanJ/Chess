@@ -161,7 +161,7 @@ void UnitTest::testGenerationAlgorithms()
 	cout << "Testing castling...\n";
 	testCastling();
 	cout << "Testing pawn promotion...\n";
-	testProm();
+	//testProm();
 	cout << "Testing enpassent...\n";
 	testEnpassent();
 }
@@ -463,8 +463,13 @@ void UnitTest::testProm()
 
 void UnitTest::specialTest()
 {
-	genChessData gcd;
-	gcd.genMagic();
+	AI ai("k7/8/3K4/8/8/6q1/8/5N2 w - - 1 0", white);
+	
+	ai.chessBoard.updateAllAttacks();
+	ai.chessBoard.print();
+	MoveList movelist;
+
+	ai.chessBoard.generateMoveList(movelist, white, true);
 	
 	exit(0);
 }
@@ -747,13 +752,16 @@ Benchmark::Benchmark() : performingAll(false)
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
 
-	testBoard = Board("r3k3/1K6/8/8/8/8/8/8 w q - 0 1");
+	testBoard = Board("6kq/8/8/8/8/8/8/7K w - - 0 1");
 
-	//testBoard.print();
+	//Move b7c8b = Move(b7, c8, PROMOTION, piece_pair(wp, wb));
+	//testBoard.makeMove(b7c8b, white);
+
+	testBoard.print();
 
 	testBoard.updateAllAttacks();
 	MoveList moves;
-	testBoard.generateMoveList(moves, white, true);
+	//testBoard.generateMoveList(moves, white, true);
 
 	perftNodeCount = perftEPCount = perftMoveCount = perftCheckmateCount = totalPerftMoveCount = 0;
 }
@@ -934,11 +942,11 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 		testBoard.makeMove(move, side);
 
 		if(depth == 1) perftMoveCount++;
-		//if (testBoard.isKingLeftInCheck(side, move)) {
-		//	testBoard.unMakeMove(move, side);
-		//	if (depth == 1) perftMoveCount--;
-		//	continue;
-		//}
+		if (testBoard.isKingLeftInCheck(side, move)) {
+			testBoard.unMakeMove(move, side);
+			if (depth == 1) perftMoveCount--;
+			continue;
+		}
 
 		if (move.flags == ENPASSENT && depth == 1) perftEPCount++;
 
@@ -946,7 +954,7 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 		perft(depth - 1, targetDepth, static_cast<color>(!side));
 		testBoard.unMakeMove(move, static_cast<color>(side));
 		if (depth == targetDepth) {
-			//cout << (char)('h' - (move.from % 8)) << (char)('1' + (move.from / 8)) << (char)('h' - (move.to % 8)) << (char)('1' + (move.to / 8)) << ": " << perftMoveCount << endl;
+			//cout << shortNotation(move) << ": " << perftMoveCount << endl;
 			totalPerftMoveCount += perftMoveCount;
 			totalTotalPerftMoveCount += perftMoveCount;
 			perftMoveCount = 0;
