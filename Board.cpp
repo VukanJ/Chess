@@ -20,6 +20,7 @@ void Board::setupBoard(string FEN)
 	for (auto& a : attacks) a = 0x0;
 	blackPos = whitePos  
 		 = bpMove = wpMove = b_enpassent = w_enpassent = castlingRights = 0x0;
+	wasInCheck = false;
 
 	// Sets up Board according to FEN
 	// FEN = [position(white's perspective) sideToMove castlingrights enpassentSquares NofHalfMoves MoveNumber]
@@ -593,6 +594,7 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 		   ::     BLACK MOVE GENERATION    ::
 		   ::::::::::::::::::::::::::::::::::
 		*/
+		wasInCheck = pieces[bk] & whiteAtt;
 		for_black(b) { // Loop through black pieces
 			attackingPieces = pieces[b];
 			if (attackingPieces) { // Only consider non-empty boards
@@ -622,6 +624,7 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 			::     WHITE MOVE GENERATION    ::
 			::::::::::::::::::::::::::::::::::
 		*/
+		wasInCheck = pieces[wk] & blackAtt;
 		for_white(w) { // Loop through white pieces
 			attackingPieces = pieces[w];
 			if (attackingPieces){
@@ -1019,68 +1022,61 @@ bool Board::isKingInCheck(color kingColor) const
 	return kingColor == black ? (pieces[bk] & whiteAtt) != 0 : (pieces[wk] & blackAtt) != 0;
 }
 
-bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove)
+bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove, bool wasCheck, U64 currentlyPinned)
 {
-	// Check if moving piece is not pinned
-	//if (!(pinned & bit_at(lastMove.from)))
-	//{
-	//	// Piece was not pinned, probably legal
-	//	if ((move_piece(lastMove.pieces) == bk || move_piece(lastMove.pieces) == wk ) 
-	//		&& (lastMove.flags < 2)) {
-	//		// King moves or captures
-	//		if (bit_at(lastMove.to) & (kingColor == white ? bpDanger : wpDanger)) {
-	//			// King walks into pawn attack
-	//			return true;
-	//		}
-	//	}
-	//	else {
-	//		return false;
-	//	}
-	//}
-
 	// Returns true if last played move leaves king in check.
 	// Only relies on positional information
-	piece king = kingColor == white ? wk : bk;
-	byte kingPos = msb(pieces[king]);
-	U64 kingRect = 0x0, kingDiags = 0x0;
-	if (move_type(lastMove.flags) > 5) return false; // Castling does not put king in check
-	
 
-	if (kingColor == white) {
-		// Check if last move was quiet and from square did not lie on ray attack:
-		if (KNIGHT_ATTACKS[kingPos] & pieces[bn]) return true; // King attacked by opponent knight
-		if (KING_ATTACKS[kingPos]   & pieces[bk]) return true; // King attacked by opponent king
+	if (   wasCheck
+		|| move_piece(lastMove.pieces) == bk 
+		|| move_piece(lastMove.pieces) == wk 
+		|| (bit_at(lastMove.from) & currentlyPinned)) {
 
-		if ((0x5ull << ((kingPos - 1) + 8))
-			& (_row << 8 * ((kingPos / 8) + 1))
-			& pieces[bp]) return true; // King attacked by opponent pawns
-	}
-	else {
-		if (KNIGHT_ATTACKS[kingPos] & pieces[wn]) return true; // King attacked by opponent knight
-		if (KING_ATTACKS[kingPos]   & pieces[wk]) return true; // King attacked by opponent king
+		// King was in check before last move, or king was moved, or moved piece was pinned
+		// Check if king is in check now
 
-		if ((0x5ull << ((kingPos - 1) + -8))
-			& (_row << 8 * ((kingPos / 8)  -1))
-			& pieces[wp]) return true; // King attacked by opponent pawns
-	}
-	
-	// Check if enemy attack was uncovered by lastMove
-	
-	if (kingColor == white){
-		kingDiags |= bishopAttacks(kingPos, allPos);
-		if ((kingDiags) & (pieces[bq] | pieces[bb])) return true;
-		kingRect |= rookAttacks(kingPos, allPos);
-		if ((kingRect)  & (pieces[br] | pieces[bq])) return true;
-	}
-	else {
-		kingDiags |= bishopAttacks(kingPos, allPos);
-		if ((kingDiags) & (pieces[wq] | pieces[wb])) return true;
-		kingRect |= rookAttacks(kingPos, allPos);
-		if ((kingRect)  & (pieces[wr] | pieces[wq])) return true;
-	}
-	
-	// King not under attack => move was legal
-	return false;
+		piece king = kingColor == white ? wk : bk;
+		byte kingPos = msb(pieces[king]);
+		U64 kingRect = 0x0, kingDiags = 0x0;
+		if (move_type(lastMove.flags) > 5) {
+			return false; // Castling does not put king in check
+		}
+
+		if (kingColor == white) {
+			// Check if last move was quiet and from square did not lie on ray attack:
+			if (KNIGHT_ATTACKS[kingPos] & pieces[bn]) return true; // King attacked by opponent knight
+			if (KING_ATTACKS[kingPos] & pieces[bk]) return true; // King attacked by opponent king
+
+			if ((0x5ull << ((kingPos - 1) + 8))
+				& (_row << 8 * ((kingPos / 8) + 1))
+				& pieces[bp]) return true; // King attacked by opponent pawns
+		}
+		else {
+			if (KNIGHT_ATTACKS[kingPos] & pieces[wn]) return true; // King attacked by opponent knight
+			if (KING_ATTACKS[kingPos] & pieces[wk]) return true; // King attacked by opponent king
+
+			if ((0x5ull << ((kingPos - 1) + -8))
+				& (_row << 8 * ((kingPos / 8) - 1))
+				& pieces[wp]) return true; // King attacked by opponent pawns
+		}
+
+		// Check if enemy attack was uncovered by lastMove
+
+		if (kingColor == white) {
+			kingDiags |= bishopAttacks(kingPos, allPos);
+			if ((kingDiags) & (pieces[bq] | pieces[bb])) return true;
+			kingRect |= rookAttacks(kingPos, allPos);
+			if ((kingRect)  & (pieces[br] | pieces[bq])) return true;
+		}
+		else {
+			kingDiags |= bishopAttacks(kingPos, allPos);
+			if ((kingDiags) & (pieces[wq] | pieces[wb])) return true;
+			kingRect |= rookAttacks(kingPos, allPos);
+			if ((kingRect)  & (pieces[wr] | pieces[wq])) return true;
+		}
+		return false;  // Move is legal
+	} 
+	else return false; // Move is legal
 }
 
 int Board::evaluate(color side)

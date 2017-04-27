@@ -117,6 +117,7 @@ public:
 	void perftTestSuite();
 	void benchmarkMoveGeneration();
 	void benchmarkMovemaking();
+	void perft(int maxDepth, const int targetDepth, color startColor);
 private:
 	enum bType{MOVEGEN, MAKEMOVE};
 	bool performingAll;
@@ -128,7 +129,6 @@ private:
 	};
 	Board testBoard;
 	vector<result> results;
-	void perft(int maxDepth, const int targetDepth, color startColor);
 	// perft statistics
 	long perftNodeCount;
 	long perftEPCount;

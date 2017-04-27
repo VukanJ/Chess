@@ -752,11 +752,11 @@ Benchmark::Benchmark() : performingAll(false)
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
 
-	testBoard = Board("6kq/8/8/8/8/8/8/7K w - - 0 1");
-
-	//Move b7c8b = Move(b7, c8, PROMOTION, piece_pair(wp, wb));
-	//testBoard.makeMove(b7c8b, white);
-
+	testBoard = Board("K7/8/8/3Q4/4q3/8/8/7k w - - 0 1");
+	
+	//Move a8a4 = Move(a8, a4, MOVE, wr);
+	//testBoard.makeMove(a8a4, white);
+	// Now: 7r/8/8/2K5/R4k2/8/8/r6R b - - 1 0
 	testBoard.print();
 
 	testBoard.updateAllAttacks();
@@ -938,11 +938,13 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 	testBoard.generateMoveList(movelist, side, true);
 	// Store pairs of root moves and number of possible moves after them
 	bool checkmate = true;
+	bool checkOnThisDepth = testBoard.wasInCheck;
+	U64 pinnedOnThisDepth = testBoard.pinned;
 	for (auto& move : movelist) {
 		testBoard.makeMove(move, side);
 
 		if(depth == 1) perftMoveCount++;
-		if (testBoard.isKingLeftInCheck(side, move)) {
+		if (testBoard.isKingLeftInCheck(side, move, checkOnThisDepth, pinnedOnThisDepth)) {
 			testBoard.unMakeMove(move, side);
 			if (depth == 1) perftMoveCount--;
 			continue;
@@ -972,8 +974,10 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 //		  Perft computation time: ~31 s (depth 5)
 // commit 7036cb32404d2365972fb87247fdf50589d0b8a1
 //        Perft computation time: ~24.1 s (depth 5)
-// most recent commit 
+// commit 8db37125fadc7285670bc9f2a3f5b5c60da8fc0f
 //        Perft computation time: ~18.75 s (depth 5)
+// most recent commit
+//        Perft computation time: ~15.60 s (depth 5)
 
 void Benchmark::perftTestSuite()
 {
