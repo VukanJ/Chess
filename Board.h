@@ -59,7 +59,7 @@ public:
 	void updateAllAttacks();
 	void updatePinnedPieces(color side);
 	bool isKingInCheck(color kingColor) const;
-	bool isKingLeftInCheck(color KingColor, const Move& lastMove);
+	bool isKingLeftInCheck(color KingColor, const Move& lastMove, bool, U64 currentlyPinned);
 
 	// Evaluation
 	int evaluate(color side);
@@ -81,6 +81,7 @@ public:
 		pinned;                     // Squares containing absolute pinned pieces
 
 	ZobristHash hash;
+	bool wasInCheck;
 	vector<vector<U64>> randomSet;
 };
 
