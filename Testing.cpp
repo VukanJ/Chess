@@ -136,7 +136,7 @@ void UnitTest::testIntrinsics() const
 	assert(testNum == randomCheckNum);
 	clog << "bitloop...\n";
 	int j = 0;
-	BITLOOP(index, testNum) {
+	for_bits(index, testNum) {
 		assert(index == indices[j++]);
 		//printBitboard(testNum);
 		//printBitboard((randomCheckNum & ~(ULLONG_MAX << index) | BIT_AT(index)));
@@ -146,7 +146,7 @@ void UnitTest::testIntrinsics() const
 	cout << "Testing Bitloops" << endl;
 	auto mask = 0xFFFFFFFFFFFFFFFF;
 	j = 63;
-	BITLOOP(pos, mask) {
+	for_bits(pos, mask) {
 		assert(pos == j--);
 	}
 	assert(j == -1);

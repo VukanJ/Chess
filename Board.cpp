@@ -113,7 +113,7 @@ void Board::initHash()
 
 	auto pos = 0, i = 0;
 	for (auto p : pieces) {
-		BITLOOP(pos, p) {
+		for_bits(pos, p) {
 			hashKey ^= randomSet[i][pos];
 		}
 		i++;
@@ -209,22 +209,22 @@ void Board::updateAttack(piece p)
 		case br: case wr:
 			attacks[p] = 0x0;
 			mask = pieces[p];
-			BITLOOP(pos, mask) attacks[p] |= rookAttacks(pos, allPos);
+			for_bits(pos, mask) attacks[p] |= rookAttacks(pos, allPos);
 			break;
 		case bn:
 			mask = pieces[bn];
 			attacks[bn] = 0x0;
-			BITLOOP(pos,mask) attacks[bn] |= KNIGHT_ATTACKS[pos] & ~blackPos;
+			for_bits(pos,mask) attacks[bn] |= KNIGHT_ATTACKS[pos] & ~blackPos;
 			break;
 		case wn:
 			mask = pieces[wn];
 			attacks[wn] = 0x0;
-			BITLOOP(pos, mask) attacks[wn] |= KNIGHT_ATTACKS[pos] & ~whitePos;
+			for_bits(pos, mask) attacks[wn] |= KNIGHT_ATTACKS[pos] & ~whitePos;
 			break;
 		case bb: case wb:
 			attacks[p] = 0x0;
 			mask = pieces[p];
-			BITLOOP(pos, mask) attacks[p] |= bishopAttacks(pos, allPos);
+			for_bits(pos, mask) attacks[p] |= bishopAttacks(pos, allPos);
 			break;
 		case bk:
 			mask = pieces[bk];
@@ -241,7 +241,7 @@ void Board::updateAttack(piece p)
 		case bq: case wq:
 			attacks[p] = 0x0;
 			mask = pieces[p];
-			BITLOOP(pos, mask) attacks[p] |= (rookAttacks(pos, allPos) | bishopAttacks(pos, allPos));
+			for_bits(pos, mask) attacks[p] |= (rookAttacks(pos, allPos) | bishopAttacks(pos, allPos));
 			break;
 	}
 }
@@ -295,14 +295,14 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 	U64 attackMask = 0x0, pieceAttacks = 0x0;
 	if(side == black){
 		// Find normal captures:
-		BITLOOP(pos, attackingPieces) {
+		for_bits(pos, attackingPieces) {
 			attackMask = ((bit_at(pos) >> 9) & ~_left)  & whitePos;
 			attackMask |= ((bit_at(pos) >> 7) & ~_right) & whitePos;
 
 			for_white(candidate) {
 				pieceAttacks = pieces[candidate] & attackMask;
 
-				BITLOOP(target, pieceAttacks) {
+				for_bits(target, pieceAttacks) {
 					if (target < 8) {
 						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, bq)));
 						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, bn)));
@@ -331,7 +331,7 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 		if (!addQuietMoves) return;
 		// Find normal upwards moves and double pawn steps:
 		attackingPieces = (pieces[bp] >> 8) & bpMove;
-		BITLOOP(pos, attackingPieces) {
+		for_bits(pos, attackingPieces) {
 			if (pos > 7) {
 				moveList.push_back(Move(pos + 8, pos, MOVE, bp));
 			}
@@ -344,20 +344,20 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 		}
 		// Double pawn move
 		attackingPieces = ((((0x00FF000000000000 & pieces[bp]) >> 8) & bpMove) >> 8) & bpMove;
-		BITLOOP(pos, attackingPieces) {
+		for_bits(pos, attackingPieces) {
 			moveList.push_back(Move(pos + 16, pos, PAWN2, bp));
 		}
 	}
 	else {
 		// Find normal captures:
 		// attackingPieces stands for attacked squares in this case
-		BITLOOP(pos, attackingPieces) {
+		for_bits(pos, attackingPieces) {
 			attackMask = (bit_at(pos) << 9 & ~_right) & blackPos;
 			attackMask |= (bit_at(pos) << 7 & ~_left)  & blackPos;
 
 			for_black(candidate) {
 				pieceAttacks = pieces[candidate] & attackMask;
-				BITLOOP(target, pieceAttacks) {
+				for_bits(target, pieceAttacks) {
 					if (target > 55) {
 						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, wq)));
 						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, wn)));
@@ -384,7 +384,7 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 		if (!addQuietMoves) return;
 		// Find normal upwards moves and double pawn steps:
 		attackingPieces = (pieces[wp] << 8) & wpMove;
-		BITLOOP(pos, attackingPieces) {
+		for_bits(pos, attackingPieces) {
 			if (pos < 56) {
 				moveList.push_back(Move(pos - 8, pos, MOVE, wp));
 			}
@@ -396,7 +396,7 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 			}
 		}
 		attackingPieces = ((((0xFF00 & pieces[wp]) << 8) & wpMove) << 8) & wpMove;
-		BITLOOP(pos, attackingPieces) {
+		for_bits(pos, attackingPieces) {
 			moveList.push_back(Move(pos - 16, pos, PAWN2, wp));
 		}
 	}
@@ -406,20 +406,20 @@ void inline Board::knightMoves(MoveList& moveList, U64 attackingPieces, color si
 {
 	U64 attackMask = 0x0, pieceAttacks = 0x0;
 
-	BITLOOP(pos, attackingPieces) {
+	for_bits(pos, attackingPieces) {
 		attackMask = KNIGHT_ATTACKS[pos] & attacks[p] & (side == black ? whitePos : blackPos);
 
 		for_color(candidate, !side) {
 			pieceAttacks = pieces[candidate] & attackMask;
 			if (pieceAttacks) {
-				BITLOOP(target, pieceAttacks) {
+				for_bits(target, pieceAttacks) {
 					moveList.push_back(Move(pos, target, CAPTURE, piece_pair(p, candidate)));
 				}
 			}
 		}
 		if (addQuietMoves) {
 			attackMask ^= KNIGHT_ATTACKS[pos] & attacks[p];
-			BITLOOP(target, attackMask) {
+			for_bits(target, attackMask) {
 				moveList.push_back(Move(pos, target, MOVE, p));
 			}
 		}
@@ -430,13 +430,13 @@ void inline Board::queen_and_bishopMoves(MoveList& moveList, U64 attackingPieces
 {
 	U64 attackMask = 0x0, pieceAttacks = 0x0;
 
-	BITLOOP(pos, attackingPieces) {
+	for_bits(pos, attackingPieces) {
 		attackMask = pattern[pos] & attacks[p] & (side == black ? whitePos : blackPos);
 
 		for_color(candidate, !side) {
 			pieceAttacks = pieces[candidate] & attackMask;
 			if (pieceAttacks) {
-				BITLOOP(target, pieceAttacks) {
+				for_bits(target, pieceAttacks) {
 					if (!(CONNECTIONS[pos][target] & allPos)) {
 						moveList.push_back(Move(pos, target, CAPTURE, piece_pair(p, candidate)));
 					}
@@ -445,7 +445,7 @@ void inline Board::queen_and_bishopMoves(MoveList& moveList, U64 attackingPieces
 		}
 		if(addQuietMoves){
 			attackMask ^= pattern[pos] & attacks[p];
-			BITLOOP(target, attackMask) {
+			for_bits(target, attackMask) {
 				if (!(CONNECTIONS[pos][target] & allPos)) {
 					moveList.push_back(Move(pos, target, MOVE, p));
 				}
@@ -463,7 +463,7 @@ void inline Board::kingMoves(MoveList& moveList, U64 attackingPieces, color side
 	for_color(candidate, !side) {
 		pieceAttacks = pieces[candidate] & attackMask;
 		if (pieceAttacks) {
-			BITLOOP(target, pieceAttacks) {
+			for_bits(target, pieceAttacks) {
 				moveList.push_back(Move(pos, target, move_metadata(CAPTURE, castlingRights & (side == black ? 0x3 : 0xC)), piece_pair(king, candidate)));
 			}
 		}
@@ -472,7 +472,7 @@ void inline Board::kingMoves(MoveList& moveList, U64 attackingPieces, color side
 		attackMask ^= (KING_ATTACKS[pos] & attacks[king]) & ~(side == black ? whiteAtt : blackAtt);
 		//printBitboard(attackMask);
 		//printBitboard(attacks[br]);
-		BITLOOP(target, attackMask) {
+		for_bits(target, attackMask) {
 			moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & (side == black ? 0x3 : 0xC)), king));
 		}
 	}
@@ -495,14 +495,14 @@ void inline Board::rookMoves(MoveList& moveList, U64 attackingPieces, color side
 		kCastRight = castle_K;
 	}
 	// Calculate attacked pieces
-	BITLOOP(pos, attackingPieces) {
+	for_bits(pos, attackingPieces) {
 		attackMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[rook] & (side == black ? whitePos : blackPos);
 
 		if (attackMask) {
 			for_color(candidate, !side) {
 				pieceAttacks = pieces[candidate] & attackMask;
 
-				BITLOOP(target, pieceAttacks) {
+				for_bits(target, pieceAttacks) {
 					if (!(CONNECTIONS[pos][target] & allPos)) {
 						if (pos == a_square) {
 							moveList.push_back(Move(pos, target, move_metadata(CAPTURE, castlingRights & qCastRight), piece_pair(rook, candidate)));
@@ -519,7 +519,7 @@ void inline Board::rookMoves(MoveList& moveList, U64 attackingPieces, color side
 		}
 		if (addQuietMoves) {
 			attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[rook];
-			BITLOOP(target, attackMask) {
+			for_bits(target, attackMask) {
 				if (!(CONNECTIONS[pos][target] & allPos)) {
 					if (pos == a_square) {
 						moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & qCastRight), rook));
@@ -552,7 +552,7 @@ void Board::updatePinnedPieces(color side)
 		kingXray |= ((_col << kingPosition % 8) ^ (_row << (kingPosition / 8) * 8)) & (pieces[bq] | pieces[br]);
 		//printBitboard(kingXray);
 		// Find positions of pieces, that must not be moved
-		BITLOOP(enemyPos, kingXray) {
+		for_bits(enemyPos, kingXray) {
 			xray = CONNECTIONS[enemyPos][kingPosition] & allPos;
 			if (popcount(xray) == 1 && popcount(xray & whitePos) == 1) {
 				pinned |= xray & whitePos;
@@ -565,7 +565,7 @@ void Board::updatePinnedPieces(color side)
 		kingXray |= ((_col << kingPosition % 8) ^ (_row << (kingPosition / 8) * 8)) & (pieces[wq] | pieces[wr]);
 		//printBitboard(kingXray);
 		// Find positions of pieces, that must not be moved
-		BITLOOP(enemyPos, kingXray) {
+		for_bits(enemyPos, kingXray) {
 			xray = CONNECTIONS[enemyPos][kingPosition] & allPos;
 			if (popcount(xray) == 1 && popcount(xray & blackPos) == 1) {
 				pinned |= xray & blackPos;
@@ -1109,38 +1109,38 @@ int Board::evaluate(color side)
 	// Pawns:
 	int psh = 0;
 	U64 mask = pieces[wp];
-	BITLOOP(pos, mask)
+	for_bits(pos, mask)
 		psh += pieceSquareTable[0][63 - pos];
 	mask = pieces[bp];
-	BITLOOP(pos, mask)
+	for_bits(pos, mask)
 		psh -= pieceSquareTable[0][pos];
 	mask = pieces[wn];
-	BITLOOP(pos, mask)
+	for_bits(pos, mask)
 		psh += pieceSquareTable[1][63 - pos];
 	mask = pieces[bn];
-	BITLOOP(pos, mask)
+	for_bits(pos, mask)
 		psh -= pieceSquareTable[1][pos];
 	mask = pieces[wb];
-	BITLOOP(pos, mask)
+	for_bits(pos, mask)
 		psh += pieceSquareTable[2][63 - pos];
 	mask = pieces[bb];
-	BITLOOP(pos, mask)
+	for_bits(pos, mask)
 		psh -= pieceSquareTable[2][pos];
 
 	if (endGameValue > 0.8) {
 		mask = pieces[wk];
-		BITLOOP(pos, mask)
+		for_bits(pos, mask)
 			psh += pieceSquareTable[4][63 - pos];
 		mask = pieces[bk];
-		BITLOOP(pos, mask)
+		for_bits(pos, mask)
 			psh -= pieceSquareTable[4][pos];
 	}
 	else {
 		mask = pieces[wk];
-		BITLOOP(pos, mask)
+		for_bits(pos, mask)
 			psh += pieceSquareTable[3][63 - pos];
 		mask = pieces[bk];
-		BITLOOP(pos, mask)
+		for_bits(pos, mask)
 			psh -= pieceSquareTable[3][pos];
 	}
 	total_boardValue += psh / 10;

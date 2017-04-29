@@ -41,9 +41,8 @@ byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 	U64  inline rotate_l64(U64 mask, int amount) { return _rotl64(mask, amount); } // Rotate left  (64Bit)
 	U64  inline rotate_r64(U64 mask, int amount) { return _rotr64(mask, amount); } // Rotate right (64Bit)
 
-	#define BITLOOP(__pos, mask) for (ulong __pos = msb(mask); \
-															mask; \
-															(mask) ^= bit_at(bitScan_rev64(__pos, mask)), __pos = msb(mask))
+	#define for_bits(__pos, mask) for (ulong __pos = msb(mask); mask; \
+						              (mask) ^= bit_at(bitScan_rev64(__pos, mask)), __pos = msb(mask))
 #elif __linux__
 	// Compiler intrinsics compatible with gcc
 
