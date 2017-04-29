@@ -304,13 +304,13 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 
 				BITLOOP(target, pieceAttacks) {
 					if (target < 8) {
-						moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, bq)));
-						moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, bn)));
-						moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, br)));
-						moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, bb)));
+						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, bq)));
+						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, bn)));
+						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, br)));
+						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, bb)));
 					}
 					else {
-						moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(bp, candidate)));
+						moveList.push_back(Move(pos, target, CAPTURE, piece_pair(bp, candidate)));
 					}
 				}
 
@@ -336,10 +336,10 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 				moveList.push_back(Move(pos + 8, pos, MOVE, bp));
 			}
 			else {
-				moveList.insert(moveList.begin(), Move(pos + 8, pos, PROMOTION, piece_pair(bp, bq)));
-				moveList.insert(moveList.begin(), Move(pos + 8, pos, PROMOTION, piece_pair(bp, bn)));
-				moveList.insert(moveList.begin(), Move(pos + 8, pos, PROMOTION, piece_pair(bp, br)));
-				moveList.insert(moveList.begin(), Move(pos + 8, pos, PROMOTION, piece_pair(bp, bb)));
+				moveList.push_back(Move(pos + 8, pos, PROMOTION, piece_pair(bp, bq)));
+				moveList.push_back(Move(pos + 8, pos, PROMOTION, piece_pair(bp, bn)));
+				moveList.push_back(Move(pos + 8, pos, PROMOTION, piece_pair(bp, br)));
+				moveList.push_back(Move(pos + 8, pos, PROMOTION, piece_pair(bp, bb)));
 			}
 		}
 		// Double pawn move
@@ -359,13 +359,13 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 				pieceAttacks = pieces[candidate] & attackMask;
 				BITLOOP(target, pieceAttacks) {
 					if (target > 55) {
-						moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, wq)));
-						moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, wn)));
-						moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, wr)));
-						moveList.insert(moveList.begin(), Move(pos, target, C_PROMOTION, piece_pair(candidate, wb)));
+						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, wq)));
+						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, wn)));
+						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, wr)));
+						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, wb)));
 					}
 					else {
-						moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(wp, candidate)));
+						moveList.push_back(Move(pos, target, CAPTURE, piece_pair(wp, candidate)));
 					}
 				}
 			}
@@ -389,10 +389,10 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 				moveList.push_back(Move(pos - 8, pos, MOVE, wp));
 			}
 			else {
-				moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, piece_pair(wp, wq)));
-				moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, piece_pair(wp, wn)));
-				moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, piece_pair(wp, wr)));
-				moveList.insert(moveList.begin(), Move(pos - 8, pos, PROMOTION, piece_pair(wp, wb)));
+				moveList.push_back(Move(pos - 8, pos, PROMOTION, piece_pair(wp, wq)));
+				moveList.push_back(Move(pos - 8, pos, PROMOTION, piece_pair(wp, wn)));
+				moveList.push_back(Move(pos - 8, pos, PROMOTION, piece_pair(wp, wr)));
+				moveList.push_back(Move(pos - 8, pos, PROMOTION, piece_pair(wp, wb)));
 			}
 		}
 		attackingPieces = ((((0xFF00 & pieces[wp]) << 8) & wpMove) << 8) & wpMove;
@@ -413,7 +413,7 @@ void inline Board::knightMoves(MoveList& moveList, U64 attackingPieces, color si
 			pieceAttacks = pieces[candidate] & attackMask;
 			if (pieceAttacks) {
 				BITLOOP(target, pieceAttacks) {
-					moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(p, candidate)));
+					moveList.push_back(Move(pos, target, CAPTURE, piece_pair(p, candidate)));
 				}
 			}
 		}
@@ -438,7 +438,7 @@ void inline Board::queen_and_bishopMoves(MoveList& moveList, U64 attackingPieces
 			if (pieceAttacks) {
 				BITLOOP(target, pieceAttacks) {
 					if (!(CONNECTIONS[pos][target] & allPos)) {
-						moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(p, candidate)));
+						moveList.push_back(Move(pos, target, CAPTURE, piece_pair(p, candidate)));
 					}
 				}
 			}
@@ -464,7 +464,7 @@ void inline Board::kingMoves(MoveList& moveList, U64 attackingPieces, color side
 		pieceAttacks = pieces[candidate] & attackMask;
 		if (pieceAttacks) {
 			BITLOOP(target, pieceAttacks) {
-				moveList.insert(moveList.begin(), Move(pos, target, move_metadata(CAPTURE, castlingRights & (side == black ? 0x3 : 0xC)), piece_pair(king, candidate)));
+				moveList.push_back(Move(pos, target, move_metadata(CAPTURE, castlingRights & (side == black ? 0x3 : 0xC)), piece_pair(king, candidate)));
 			}
 		}
 	}
@@ -505,13 +505,13 @@ void inline Board::rookMoves(MoveList& moveList, U64 attackingPieces, color side
 				BITLOOP(target, pieceAttacks) {
 					if (!(CONNECTIONS[pos][target] & allPos)) {
 						if (pos == a_square) {
-							moveList.insert(moveList.begin(), Move(pos, target, move_metadata(CAPTURE, castlingRights & qCastRight), piece_pair(rook, candidate)));
+							moveList.push_back(Move(pos, target, move_metadata(CAPTURE, castlingRights & qCastRight), piece_pair(rook, candidate)));
 						}
 						else if (pos == h_square) {
-							moveList.insert(moveList.begin(), Move(pos, target, move_metadata(CAPTURE, castlingRights & kCastRight), piece_pair(rook, candidate)));
+							moveList.push_back(Move(pos, target, move_metadata(CAPTURE, castlingRights & kCastRight), piece_pair(rook, candidate)));
 						}
 						else {
-							moveList.insert(moveList.begin(), Move(pos, target, CAPTURE, piece_pair(rook, candidate)));
+							moveList.push_back(Move(pos, target, CAPTURE, piece_pair(rook, candidate)));
 						}
 					}
 				}
@@ -594,7 +594,7 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 		   ::     BLACK MOVE GENERATION    ::
 		   ::::::::::::::::::::::::::::::::::
 		*/
-		wasInCheck = pieces[bk] & whiteAtt;
+		wasInCheck = (pieces[bk] & whiteAtt) > 0;
 		for_black(b) { // Loop through black pieces
 			attackingPieces = pieces[b];
 			if (attackingPieces) { // Only consider non-empty boards
@@ -624,7 +624,7 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 			::     WHITE MOVE GENERATION    ::
 			::::::::::::::::::::::::::::::::::
 		*/
-		wasInCheck = pieces[wk] & blackAtt;
+		wasInCheck = (pieces[wk] & blackAtt) > 0;
 		for_white(w) { // Loop through white pieces
 			attackingPieces = pieces[w];
 			if (attackingPieces){
