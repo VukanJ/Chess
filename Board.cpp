@@ -296,7 +296,7 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 	if(side == black){
 		// Find normal captures:
 		for_bits(pos, attackingPieces) {
-			attackMask = ((bit_at(pos) >> 9) & ~_left)  & whitePos;
+			attackMask  = ((bit_at(pos) >> 9) & ~_left)  & whitePos;
 			attackMask |= ((bit_at(pos) >> 7) & ~_right) & whitePos;
 
 			for_white(candidate) {
@@ -352,7 +352,7 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 		// Find normal captures:
 		// attackingPieces stands for attacked squares in this case
 		for_bits(pos, attackingPieces) {
-			attackMask = (bit_at(pos) << 9 & ~_right) & blackPos;
+			attackMask  = (bit_at(pos) << 9 & ~_right) & blackPos;
 			attackMask |= (bit_at(pos) << 7 & ~_left)  & blackPos;
 
 			for_black(candidate) {
@@ -405,7 +405,6 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 void inline Board::knightMoves(MoveList& moveList, U64 attackingPieces, color side, piece p, bool addQuietMoves) const
 {
 	U64 attackMask = 0x0, pieceAttacks = 0x0;
-
 	for_bits(pos, attackingPieces) {
 		attackMask = KNIGHT_ATTACKS[pos] & attacks[p] & (side == black ? whitePos : blackPos);
 
@@ -432,7 +431,6 @@ void inline Board::queen_and_bishopMoves(MoveList& moveList, U64 attackingPieces
 
 	for_bits(pos, attackingPieces) {
 		attackMask = pattern[pos] & attacks[p] & (side == black ? whitePos : blackPos);
-
 		for_color(candidate, !side) {
 			pieceAttacks = pieces[candidate] & attackMask;
 			if (pieceAttacks) {
@@ -459,7 +457,6 @@ void inline Board::kingMoves(MoveList& moveList, U64 attackingPieces, color side
 	U64 attackMask = 0x0, pieceAttacks = 0x0;
 	ulong pos = msb(pieces[king]);
 	attackMask = ((attacks[king] & (side == black ? whitePos : blackPos)) & ~(side == black ? whiteAtt : blackAtt));
-	//printBitboard(attackMask);
 	for_color(candidate, !side) {
 		pieceAttacks = pieces[candidate] & attackMask;
 		if (pieceAttacks) {
@@ -470,8 +467,6 @@ void inline Board::kingMoves(MoveList& moveList, U64 attackingPieces, color side
 	}
 	if (addQuietMoves) {
 		attackMask ^= (KING_ATTACKS[pos] & attacks[king]) & ~(side == black ? whiteAtt : blackAtt);
-		//printBitboard(attackMask);
-		//printBitboard(attacks[br]);
 		for_bits(target, attackMask) {
 			moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & (side == black ? 0x3 : 0xC)), king));
 		}
@@ -691,7 +686,7 @@ void Board::makeMove(const Move& move, color side)
 	switch (move_type(move.flags)){
 		case MOVE:
 			// Piece disappears from from-square and appears at to-square:
-			pieces[move.pieces] ^= (bit_at(move.from) | bit_at(move.to));
+			pieces[move.pieces] ^= bit_at(move.from) | bit_at(move.to);
 			// Update Hashkey
 			hashKey ^= randomSet[move.pieces][move.from] ^ randomSet[move.pieces][move.to];
 			// update position mask

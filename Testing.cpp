@@ -805,7 +805,7 @@ void Benchmark::benchmarkMoveGeneration()
 	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
 	auto deltaT_inSeconds = (double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count()*1e-6;
 	
-	cout << (long long) ((double)testSize*43.0 / deltaT_inSeconds) << " Boards per second\n";
+	cout << (deltaT_inSeconds) << " Boards per second\n";
 
 	moves.clear();
 	
@@ -966,8 +966,10 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 //        Perft computation time: ~24.1 s (depth 5)
 // commit 8db37125fadc7285670bc9f2a3f5b5c60da8fc0f
 //        Perft computation time: ~18.75 s (depth 5)
-// most recent commit
-//        Perft computation time: ~15.60 s (depth 5)
+//  commit 10e7c92dcbe4fdede499cd761ab3e443c9f26e56
+//        Perft computation time: ~16.2 s (depth 5)
+// most recent commit 
+//        Perft computation time: ~15.5 s (depth 5)
 
 void Benchmark::perftTestSuite()
 {
