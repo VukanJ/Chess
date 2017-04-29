@@ -279,7 +279,7 @@ vector<vector<U64>> genChessData::genOccupancyVariations(vector<U64> occupancy)
 		// Generate bit indexing
 		//printBitboard(occ);
 		bitIndex.clear();
-		BITLOOP(pos, occ) { bitIndex.push_back(pos); }
+		for_bits(pos, occ) { bitIndex.push_back(pos); }
 		uint maxCount = (0xFFFFFF >> (24 - bitIndex.size())) + 1;
 
 		for (counter = 1; counter <= maxCount; ++counter) {

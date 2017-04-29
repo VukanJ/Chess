@@ -75,7 +75,7 @@ void Gui::render(sf::RenderWindow& window)
 	ulong pos = 0;
 	for (const auto& type : chessBoard.pieces){
 		auto mask = type;
-		BITLOOP(pos, mask) {
+		for_bits(pos, mask) {
 			if (pieceIndex > 5) {
 			    pieces[pieceIndex].setPosition(((63 - pos) % 8)*orig_size.y*scale.y, ((63 - pos) / 8)*orig_size.x*scale.x);
 			}
@@ -271,7 +271,7 @@ void Gui::colorSquares(U64 pattern, sf::Color color, sf::RenderWindow& window)
 	// Colors specific squares
 	sf::RectangleShape colorRect(sf::Vector2f(HEIGHT / 8, HEIGHT / 8));
 	colorRect.setFillColor(color);
-	BITLOOP(pos, pattern) {
+	for_bits(pos, pattern) {
 		colorRect.setPosition(((-(int)pos + 63) % 8)*HEIGHT / 8, ((-(int)pos + 63) / 8)*HEIGHT / 8);
 		window.draw(colorRect);
 	}

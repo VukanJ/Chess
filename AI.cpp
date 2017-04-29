@@ -40,7 +40,7 @@ string AI::boardToString() const
 	string board = string(64, '_');
 	int c = 0;
 	for (auto p : chessBoard.pieces) {
-		BITLOOP(pos, p) {
+		for_bits(pos, p) {
 			board[63 - pos] = names[c];
 		}
 		c++;
