@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstdint>
 #include <climits>
+#include <functional>
 #include <vector>
 
 typedef unsigned uint;
@@ -37,12 +38,18 @@ byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 		}
 		return (byte)index;
 	} // Reverse Bitscan
+	byte inline bitScan_fwd64(ulong& index, U64 const mask) {
+		if (!_BitScanForward64(&index, mask)) {
+			index = 0;
+		}
+		return (byte)index;
+	} // Reverse Bitscan
 	byte inline msb(U64 x) { ulong index; index = !_BitScanReverse64(&index, x) ? -1 : index; return (byte)index; }
 	U64  inline rotate_l64(U64 mask, int amount) { return _rotl64(mask, amount); } // Rotate left  (64Bit)
 	U64  inline rotate_r64(U64 mask, int amount) { return _rotr64(mask, amount); } // Rotate right (64Bit)
 
-	#define for_bits(__pos, mask) for (ulong __pos = msb(mask); mask; \
-						              (mask) ^= bit_at(bitScan_rev64(__pos, mask)), __pos = msb(mask))
+	#define for_bits(__pos, __mask) for (ulong __pos = msb(__mask); __mask; (__mask) ^= bit_at(__pos), __pos = msb(__mask))
+
 #elif __linux__
 	// Compiler intrinsics compatible with gcc
 
@@ -65,6 +72,7 @@ byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 	#define BITLOOP(__pos, mask) for(ulong __pos = bitScan_rev64(__pos, mask); \
 																	mask; mask ^= bit_at(bitScan_rev64(__pos, mask)), __pos = bitScan_rev64(__pos, mask))
 
+	#define for_bits(__pos, __mask) for (ulong __pos = msb(__mask); __mask; (__mask) ^= bit_at(__pos), __pos = msb(__mask))
 #endif
 
 // For increasing readability:

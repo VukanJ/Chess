@@ -109,8 +109,8 @@ void testing(){
 
 	//benchmark.benchmarkMovemaking();
 	//benchmark.benchmarkMoveGeneration();
-	benchmark.testPerft(-1);
-	//benchmark.perftTestSuite();
+	//benchmark.testPerft(-1);
+	benchmark.perftTestSuite();
 
 	cout << "EOP\n";
 	cin.ignore();
