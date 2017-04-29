@@ -107,8 +107,10 @@ void testing(){
 	//test.testHashing();
 	//test.testMinimalTree();
 
-	//benchmark.testPerft(-1);
-	benchmark.perftTestSuite();
+	//benchmark.benchmarkMovemaking();
+	//benchmark.benchmarkMoveGeneration();
+	benchmark.testPerft(-1);
+	//benchmark.perftTestSuite();
 
 	cout << "EOP\n";
 	cin.ignore();

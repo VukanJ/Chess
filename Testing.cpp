@@ -752,7 +752,7 @@ Benchmark::Benchmark() : performingAll(false)
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
 
-	testBoard = Board("K7/8/8/3Q4/4q3/8/8/7k w - - 0 1");
+	testBoard = Board("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5 w - - 1 0");
 	
 	//Move a8a4 = Move(a8, a4, MOVE, wr);
 	//testBoard.makeMove(a8a4, white);
@@ -791,12 +791,10 @@ void Benchmark::benchmarkMoveGeneration()
 		clog << "Started Benchmarking Board::generateMoveList(...)\n";
 	}
 	// Measure move generation time
-	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5 w kKqQ 1 0", black);
+	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5 w kKqQ - 1 0", black);
 	vector<Move> moves;
 
-	vector<double> measurement;
-	int testSize = (int)1e6;
-	measurement.reserve(testSize);
+	int testSize = (int)1e7;
 	moves.reserve(testSize);
 
 	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
@@ -805,21 +803,13 @@ void Benchmark::benchmarkMoveGeneration()
 		moves.clear();
 	}
 	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-	measurement.push_back((double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count());
-	moves.clear();
-	double sum = 0;
-	for (auto& m : measurement) sum += m;
-	double averageMoveGenTime = (sum / testSize) * 1e-6; // in seconds
+	auto deltaT_inSeconds = (double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count()*1e-6;
+	
+	cout << (long long) ((double)testSize*43.0 / deltaT_inSeconds) << " Boards per second\n";
 
-	if (performingAll) {
-		results.back().msg = "Number of million boards per second: ";
-		results.back().value = averageMoveGenTime;
-	}
-	else {
-		printf("Move generation takes approx. %f microseconds\n", averageMoveGenTime  * 1e6);
-		printf("Generates %f million boards per second\n", (1.0 / averageMoveGenTime) * 1e-6);
-		clog << "\t::: END OF BENCHMARK :::\n";
-	}
+	moves.clear();
+	
+
 }
 #pragma optimize( "", on )
 
@@ -835,12 +825,12 @@ void Benchmark::benchmarkMovemaking()
 		clog << "Started Benchmarking Board::makeMove/unMakeMove(...)\n";
 	}
 
-	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5", black);
+	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5 w - - 1 0", black);
 	vector<Move> moves;
 	samplePlayer.chessBoard.generateMoveList(moves, black, true);
 	auto& boardref = samplePlayer.chessBoard;
 	size_t numOfMoves = moves.size();
-	int testsize = (int)1e6;
+	int testsize = (int)6e6;
 	vector<double> measurement;
 	measurement.reserve(testsize);
 
