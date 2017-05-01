@@ -26,6 +26,7 @@ class AI
 friend class Benchmark;
 friend class UnitTest;
 friend class Gui;
+friend class DataBaseTest;
 class Node;
 
 typedef unique_ptr<AI::Node> nodePtr;

@@ -757,7 +757,7 @@ Benchmark::Benchmark() : performingAll(false)
 	//Move a8a4 = Move(a8, a4, MOVE, wr);
 	//testBoard.makeMove(a8a4, white);
 	// Now: 7r/8/8/2K5/R4k2/8/8/r6R b - - 1 0
-	testBoard.print();
+	//testBoard.print();
 
 	testBoard.updateAllAttacks();
 	MoveList moves;
@@ -1051,3 +1051,172 @@ double Timer::getTime()
 	return (double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 }
 
+DataBaseTest::DataBaseTest()
+{
+	targetDepth = 1;
+	transposition_hash = ZobristHash(1e7);
+}
+
+void DataBaseTest::start_Bratko_Kopec_Test()
+{
+	// Load and tokenize EPD position data
+	clog << "Loading Bratko-Kopec-Database...\n";
+	vector<vector<string>> dataBasepositions(24);
+	string read;
+	ifstream bct("TestDataBase/bratkoKopec.dat", ios::in);
+	if (!bct.is_open()) {
+		cerr << "Error: TestDataBase/bratkoKopec.dat missing!\n";
+		exit(1);
+	}
+	
+	int count = 0;
+	auto ignore = boost::escaped_list_separator<char>("\\", " ", "\"");
+	while (getline(bct, read)) {
+		boost::tokenizer<boost::escaped_list_separator<char>> tokenize(read, ignore);
+		for (auto token = tokenize.begin(); token != tokenize.end(); ++token) {
+			dataBasepositions[count].push_back(*token);
+		}
+		count++;
+	}
+	bct.close();
+
+	// start testing
+	
+	string boardStr;
+	Move bestmove;
+
+	int breakCount = 1;
+	for (auto& test : dataBasepositions) {
+		boardStr = test[0] + " " + test[1] + " " + test[2] + " " + test[3] + " 1 0";
+		testBoard.setupBoard(boardStr);
+		testBoard.updateAllAttacks();
+		transposition_hash.clear();
+		bestmove = getBestMove(test[1] == "b" ? black : white);
+		if (breakCount++ > 1) break;
+	}
+}
+
+Move DataBaseTest::getBestMove(color forPlayer)
+{
+	Move bestMove;
+	static int count = 1;
+	cout << "Board " << count++ << endl;
+	testBoard.print();
+	for (targetDepth = 1; targetDepth < 10; ++targetDepth) {
+		bestMove = distributeNegaMax(forPlayer);
+		cout << "Depth " << targetDepth << " best move = " << shortNotation(bestMove) << endl;
+	}
+	return bestMove;
+}
+
+Move DataBaseTest::distributeNegaMax(color forPlayer)
+{
+	typedef pair<Move, int> moveValue;
+	static vector<moveValue> RootMoveList;
+	MoveList moveList;
+	testBoard.updateAllAttacks();
+	printBitboard(testBoard.blackAtt);
+	bool checkOnThisDepth = testBoard.wasInCheck;
+	U64 pinnedOnThisDepth = testBoard.pinned;
+
+	if (targetDepth == 1) {
+		
+		testBoard.generateMoveList(moveList, forPlayer, true);
+
+		checkOnThisDepth = testBoard.wasInCheck;
+		pinnedOnThisDepth = testBoard.pinned;
+
+		for (auto move = moveList.begin(); move != moveList.end(); ) {
+			testBoard.makeMove(*move, forPlayer);
+			if (testBoard.isKingLeftInCheck(forPlayer, *move, checkOnThisDepth, pinnedOnThisDepth)) {
+				testBoard.unMakeMove(*move, forPlayer);
+				move = moveList.erase(move);
+				continue;
+			}
+			testBoard.unMakeMove(*move, forPlayer);
+			move++;
+		}
+		// Initialize 
+		RootMoveList.resize(moveList.size());
+		for (int i = 0; i < moveList.size(); ++i) 
+			RootMoveList[i] = pair<Move, int>(moveList[i], -oo);
+	}
+
+	for (auto& move_value : RootMoveList) {
+		//printBitboard(testBoard.blackAtt);
+		testBoard.makeMove(move_value.first, forPlayer);
+		auto entry = transposition_hash.getEntry(testBoard.hashKey);
+		if (entry.search_depth >= targetDepth) {
+			move_value.second = entry.value;
+		}
+		else {
+			move_value.second = -NegaMax(-oo, oo, targetDepth-1, forPlayer, forPlayer == white ? black : white);
+		}
+		testBoard.unMakeMove(move_value.first, forPlayer);
+	}
+
+	auto bestMove = max_element(RootMoveList.begin(), RootMoveList.end(),
+		[](const moveValue move1, const moveValue move2) {
+		return move1.second < move2.second;
+	});
+
+	return bestMove->first;
+}
+
+int DataBaseTest::NegaMax(int alpha, int beta, int depth, color aiColor, color side)
+{
+	int oldAlpha = alpha;
+
+	auto entry = transposition_hash.getEntry(testBoard.hashKey);
+	if (entry.search_depth >= targetDepth - depth) {
+		if (entry.flags & EXACT_VALUE)
+			return entry.value;
+		else if (entry.flags & LOWER_BOUND)
+			alpha = max(alpha, entry.value);
+		else if (entry.flags & UPPER_BOUND)
+			beta = min(beta, entry.value);
+		if (alpha >= beta)
+			return entry.value;
+	}
+
+	if (depth == 0) {
+		testBoard.updateAllAttacks();
+		//testBoard.print();
+		//printBitboard(testBoard.blackAtt);
+		return testBoard.evaluate(side);
+	}
+
+	int bestValue = -oo;
+	MoveList movelist;
+	testBoard.updateAllAttacks();
+	testBoard.generateMoveList(movelist, side, true);
+	bool checkOnThisDepth = testBoard.wasInCheck;
+	U64 pinnedOnThisDepth = testBoard.pinned;
+	// Move ordering here
+	for (auto move = movelist.begin(); move != movelist.end(); ){
+		testBoard.makeMove(*move, side);
+		if (testBoard.isKingLeftInCheck(side, *move, checkOnThisDepth, pinnedOnThisDepth)) {
+			testBoard.unMakeMove(*move, side);
+			move++;
+			continue;
+		}
+		else move++;
+		int currentValue = -NegaMax(-beta, -alpha, depth - 1, aiColor, side == white ? black : white);
+		bestValue = max(bestValue, currentValue);
+		alpha = max(alpha, currentValue);
+		if (alpha >= beta)
+			break; // Alpha beta cutoff
+	}
+
+	// Store board in transposition table
+	entry.value = bestValue;
+	if (bestValue <= oldAlpha)
+		entry.flags = UPPER_BOUND;
+	else if (bestValue >= beta)
+		entry.flags = LOWER_BOUND;
+	else
+		entry.flags = EXACT_VALUE;
+	entry.search_depth = targetDepth - depth;
+
+	return bestValue;
+}

@@ -39,6 +39,7 @@ public:
 	entry* const addEntry(const U64 Key, int  value, int depth);
 	entry& getEntry(const U64 Key);
 	int getValue(const U64 key) const;
+	void clear();
 
 	void inline setBoundFlags(const U64 key, valueType);
 };
