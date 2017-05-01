@@ -1100,45 +1100,45 @@ int Board::evaluate(color side)
 
 	// *************************** POSITION ***************************
 
-	// Rewards points, if positions are similar to piece-square-heuristics
-	// Pawns:
+	//// Rewards points, if positions are similar to piece-square-heuristics
+	//// Pawns:
 	int psh = 0;
 	U64 mask = pieces[wp];
-	for_bits(pos, mask)
-		psh += pieceSquareTable[0][63 - pos];
-	mask = pieces[bp];
-	for_bits(pos, mask)
-		psh -= pieceSquareTable[0][pos];
-	mask = pieces[wn];
-	for_bits(pos, mask)
-		psh += pieceSquareTable[1][63 - pos];
-	mask = pieces[bn];
-	for_bits(pos, mask)
-		psh -= pieceSquareTable[1][pos];
-	mask = pieces[wb];
-	for_bits(pos, mask)
-		psh += pieceSquareTable[2][63 - pos];
-	mask = pieces[bb];
-	for_bits(pos, mask)
-		psh -= pieceSquareTable[2][pos];
-
-	if (endGameValue > 0.8) {
-		mask = pieces[wk];
-		for_bits(pos, mask)
-			psh += pieceSquareTable[4][63 - pos];
-		mask = pieces[bk];
-		for_bits(pos, mask)
-			psh -= pieceSquareTable[4][pos];
-	}
-	else {
-		mask = pieces[wk];
-		for_bits(pos, mask)
-			psh += pieceSquareTable[3][63 - pos];
-		mask = pieces[bk];
-		for_bits(pos, mask)
-			psh -= pieceSquareTable[3][pos];
-	}
-	total_boardValue += psh / 10;
+	//for_bits(pos, mask)
+	//	psh += pieceSquareTable[0][63 - pos];
+	//mask = pieces[bp];
+	//for_bits(pos, mask)
+	//	psh -= pieceSquareTable[0][pos];
+	//mask = pieces[wn];
+	//for_bits(pos, mask)
+	//	psh += pieceSquareTable[1][63 - pos];
+	//mask = pieces[bn];
+	//for_bits(pos, mask)
+	//	psh -= pieceSquareTable[1][pos];
+	//mask = pieces[wb];
+	//for_bits(pos, mask)
+	//	psh += pieceSquareTable[2][63 - pos];
+	//mask = pieces[bb];
+	//for_bits(pos, mask)
+	//	psh -= pieceSquareTable[2][pos];
+	//
+	//if (endGameValue > 0.8) {
+	//	mask = pieces[wk];
+	//	for_bits(pos, mask)
+	//		psh += pieceSquareTable[4][63 - pos];
+	//	mask = pieces[bk];
+	//	for_bits(pos, mask)
+	//		psh -= pieceSquareTable[4][pos];
+	//}
+	//else {
+	//	mask = pieces[wk];
+	//	for_bits(pos, mask)
+	//		psh += pieceSquareTable[3][63 - pos];
+	//	mask = pieces[bk];
+	//	for_bits(pos, mask)
+	//		psh -= pieceSquareTable[3][pos];
+	//}
+	//total_boardValue += psh / 10;
 
 	// *************************** MOBILITY ***************************
 	// Determines how many squares are accessible, worth 10 cp each
@@ -1164,33 +1164,24 @@ int Board::evaluate(color side)
 	// ~~~ King freedom ~~~
 	// Measures number of fields the king can escape to. This should only be 
 	// active in the endgame -> Leads to a quicker checkmate and less transpositions
-	if (endGameValue > 0.5) {
-		//cout << "OK\n";
-		mask = pieces[wk];
-		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
-
-		total_boardValue += 10 * popcount(mask & ~blackAtt);
-		mask = pieces[bk];
-		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
-		total_boardValue -= 10 * popcount(mask & ~whiteAtt);
-	}
+	///if (endGameValue > 0.5) {
+	///	//cout << "OK\n";
+	///	mask = pieces[wk];
+	///	mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
+	///
+	///	total_boardValue += 10 * popcount(mask & ~blackAtt);
+	///	mask = pieces[bk];
+	///	mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
+	///	total_boardValue -= 10 * popcount(mask & ~whiteAtt);
+	///}
 
 	// Pawn shield. Count number of pawns in front of kings in a 2x3 area 0x707
 	// Kings on the edges are not being rewarded points
 
-	total_boardValue += popcount((0x707ull >> (msb(pieces[wk] & _noSides) - 3)) & pieces[wp]);
-	total_boardValue -= popcount((0x707ull << (msb(pieces[bk] & _noSides) + 3)) & pieces[bp]);
+	total_boardValue += 10*popcount((0x707ull >> (msb(pieces[wk] & _noSides) - 3)) & pieces[wp]);
+	total_boardValue -= 10*popcount((0x707ull << (msb(pieces[bk] & _noSides) + 3)) & pieces[bp]);
 
 	return (side == white ? 1 : -1) * total_boardValue;
-}
-
-unsigned inline Board::blockedPawn(color col)
-{
-	// Returns number of blocked pawns.
-	// Pawns can be blocked by pieces of any color
-	if (col == black)
-		 return (unsigned) popcount((pieces[bp] >> 8) & allPos);
-	else return (unsigned) popcount((pieces[wp] << 8) & allPos);
 }
 
 void Board::print() const

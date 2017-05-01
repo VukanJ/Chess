@@ -43,6 +43,14 @@ void inline ZobristHash::setBoundFlags(const U64 key, valueType vt)
 	entries[index].flags = vt;
 }
 
+void ZobristHash::clear()
+{
+	for (auto& entry : entries) {
+		// This invalidates an entry:
+		entry.search_depth = -1;
+	}
+}
+
 // struct entry
 
 ZobristHash::entry::entry() : value(-oo), search_depth(-1), flags(0x0) {}

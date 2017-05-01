@@ -9,6 +9,7 @@
 #include <climits>
 #include <string>
 #include <chrono>
+#include <boost/tokenizer.hpp>
 
 #include "misc.h"
 #include "Move.h"
@@ -148,6 +149,20 @@ public:
 	double getTime(); // return microseconds
 private:
 	chrono::high_resolution_clock::time_point t1, t2;
+};
+
+class DataBaseTest 
+{
+public:
+	DataBaseTest();
+	void start_Bratko_Kopec_Test();
+private:
+	int targetDepth;
+	Move getBestMove(color forPlayer);
+	Move distributeNegaMax(color forPlayer);
+	int NegaMax(int alpha, int beta, int depth, color aiColor, color side);
+	Board testBoard;
+	ZobristHash transposition_hash;
 };
 
 #endif

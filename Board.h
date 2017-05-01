@@ -26,9 +26,6 @@ private:
 	
 	// Init
 	void initHash(); // Used only for Init!, the hashkey is updated for each move
-	
-	// Evaluation
-	inline unsigned blockedPawn(color);
 
 	// Flooding algorithm
 	enum dir {n, e, s, w, ne, se, sw, nw};

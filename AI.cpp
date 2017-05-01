@@ -74,7 +74,7 @@ void AI::Play(sf::RenderWindow& window)
 	// Root == current board position with depth = 0
 
 	pair<Move, int> bestMove;
-	for (targetDepth = 1; targetDepth < 6; ++targetDepth) {
+	for (targetDepth = 1; targetDepth < 7; ++targetDepth) {
 		bestMove = distributeNegaMax();
 		if (targetDepth == 1 && bestMove.second == oo) {
 			cout << "*===========*\n| You Lose! |\n*===========*" << endl;
