@@ -1115,7 +1115,7 @@ Move DataBaseTest::distributeNegaMax(color forPlayer)
 	static vector<moveValue> RootMoveList;
 	MoveList moveList;
 	testBoard.updateAllAttacks();
-	printBitboard(testBoard.blackAtt);
+	//printBitboard(testBoard.blackAtt);
 	bool checkOnThisDepth = testBoard.wasInCheck;
 	U64 pinnedOnThisDepth = testBoard.pinned;
 
@@ -1180,7 +1180,7 @@ int DataBaseTest::NegaMax(int alpha, int beta, int depth, color aiColor, color s
 	}
 
 	if (depth == 0) {
-		testBoard.updateAllAttacks();
+		//testBoard.updateAllAttacks();
 		//testBoard.print();
 		//printBitboard(testBoard.blackAtt);
 		return testBoard.evaluate(side);
@@ -1194,18 +1194,22 @@ int DataBaseTest::NegaMax(int alpha, int beta, int depth, color aiColor, color s
 	U64 pinnedOnThisDepth = testBoard.pinned;
 	// Move ordering here
 	for (auto move = movelist.begin(); move != movelist.end(); ){
+		//testBoard.print();
 		testBoard.makeMove(*move, side);
 		if (testBoard.isKingLeftInCheck(side, *move, checkOnThisDepth, pinnedOnThisDepth)) {
 			testBoard.unMakeMove(*move, side);
 			move++;
 			continue;
 		}
-		else move++;
-		int currentValue = -NegaMax(-beta, -alpha, depth - 1, aiColor, side == white ? black : white);
-		bestValue = max(bestValue, currentValue);
-		alpha = max(alpha, currentValue);
-		if (alpha >= beta)
-			break; // Alpha beta cutoff
+		else {
+			int currentValue = -NegaMax(-beta, -alpha, depth - 1, aiColor, side == white ? black : white);
+			testBoard.unMakeMove(*move, side);
+			move++;
+			bestValue = max(bestValue, currentValue);
+			alpha = max(alpha, currentValue);
+			if (alpha >= beta)
+				break; // Alpha beta cutoff
+		}
 	}
 
 	// Store board in transposition table
