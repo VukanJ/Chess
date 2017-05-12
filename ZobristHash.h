@@ -28,7 +28,7 @@ private:
 		entry();
 		int value;
 		int search_depth;
-		Move move;
+		//Move move;
 		byte flags;
 	};
 	vector<entry> entries; // Hash table

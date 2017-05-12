@@ -74,7 +74,7 @@ void AI::Play(sf::RenderWindow& window)
 	// Root == current board position with depth = 0
 
 	pair<Move, int> bestMove;
-	for (targetDepth = 1; targetDepth < 7; ++targetDepth) {
+	for (targetDepth = 1; targetDepth < 10; ++targetDepth) {
 		bestMove = distributeNegaMax();
 		if (targetDepth == 1 && bestMove.second == oo) {
 			cout << "*===========*\n| You Lose! |\n*===========*" << endl;
@@ -182,7 +182,7 @@ pair<Move, int> AI::distributeNegaMax()
 
 int AI::NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side)
 {
-	auto hashEntry = transposition_hash.getEntry(chessBoard.hashKey);
+	auto &hashEntry = transposition_hash.getEntry(chessBoard.hashKey);
     int oldAlpha = alpha;
 
 	if (hashEntry.search_depth >= targetDepth - depth) { 

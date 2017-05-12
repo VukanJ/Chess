@@ -1055,6 +1055,12 @@ DataBaseTest::DataBaseTest()
 {
 	targetDepth = 1;
 	transposition_hash = ZobristHash(1e7);
+
+	evalcnt = 0;
+	negaMaxCnt = 0;
+	storedBoards = 0;
+	hashAccess = 0;
+	moveCnt = 0;
 }
 
 void DataBaseTest::start_Bratko_Kopec_Test()
@@ -1063,36 +1069,36 @@ void DataBaseTest::start_Bratko_Kopec_Test()
 	clog << "Loading Bratko-Kopec-Database...\n";
 	vector<vector<string>> dataBasepositions(24);
 	string read;
-	ifstream bct("TestDataBase/bratkoKopec.dat", ios::in);
-	if (!bct.is_open()) {
+	ifstream bkt("TestDataBase/bratkoKopec.dat", ios::in);
+	if (!bkt.is_open()) {
 		cerr << "Error: TestDataBase/bratkoKopec.dat missing!\n";
 		exit(1);
 	}
 	
 	int count = 0;
 	auto ignore = boost::escaped_list_separator<char>("\\", " ", "\"");
-	while (getline(bct, read)) {
+	while (getline(bkt, read)) {
 		boost::tokenizer<boost::escaped_list_separator<char>> tokenize(read, ignore);
 		for (auto token = tokenize.begin(); token != tokenize.end(); ++token) {
 			dataBasepositions[count].push_back(*token);
 		}
 		count++;
 	}
-	bct.close();
+	bkt.close();
 
 	// start testing
 	
 	string boardStr;
 	Move bestmove;
 
-	int breakCount = 1;
+	int breakCount = 0;
 	for (auto& test : dataBasepositions) {
 		boardStr = test[0] + " " + test[1] + " " + test[2] + " " + test[3] + " 1 0";
 		testBoard.setupBoard(boardStr);
 		testBoard.updateAllAttacks();
 		transposition_hash.clear();
 		bestmove = getBestMove(test[1] == "b" ? black : white);
-		if (breakCount++ > 1) break;
+		if (++breakCount > 0) break;
 	}
 }
 
@@ -1102,10 +1108,17 @@ Move DataBaseTest::getBestMove(color forPlayer)
 	static int count = 1;
 	cout << "Board " << count++ << endl;
 	testBoard.print();
-	for (targetDepth = 1; targetDepth < 10; ++targetDepth) {
+	auto oldHash = testBoard.hashKey;
+	for (targetDepth = 1; targetDepth < 10; targetDepth++) {
 		bestMove = distributeNegaMax(forPlayer);
+		cout << string(80, '~') << endl;
 		cout << "Depth " << targetDepth << " best move = " << shortNotation(bestMove) << endl;
+		cout << "Search Info: \n";
+		printf("\t%d\tEvaluations\n\t%d\tNegaMax Calls\n\t%d\tHashed boards\n\t%d\tHash Accesses\n\t%d\tPlayed Moves\n", 
+			evalcnt, negaMaxCnt, storedBoards, hashAccess, moveCnt);
+		evalcnt = negaMaxCnt = hashAccess = moveCnt = 0;
 	}
+	assert(oldHash == testBoard.hashKey);
 	return bestMove;
 }
 
@@ -1115,12 +1128,11 @@ Move DataBaseTest::distributeNegaMax(color forPlayer)
 	static vector<moveValue> RootMoveList;
 	MoveList moveList;
 	testBoard.updateAllAttacks();
-	//printBitboard(testBoard.blackAtt);
+
 	bool checkOnThisDepth = testBoard.wasInCheck;
 	U64 pinnedOnThisDepth = testBoard.pinned;
 
 	if (targetDepth == 1) {
-		
 		testBoard.generateMoveList(moveList, forPlayer, true);
 
 		checkOnThisDepth = testBoard.wasInCheck;
@@ -1128,6 +1140,7 @@ Move DataBaseTest::distributeNegaMax(color forPlayer)
 
 		for (auto move = moveList.begin(); move != moveList.end(); ) {
 			testBoard.makeMove(*move, forPlayer);
+			moveCnt++;
 			if (testBoard.isKingLeftInCheck(forPlayer, *move, checkOnThisDepth, pinnedOnThisDepth)) {
 				testBoard.unMakeMove(*move, forPlayer);
 				move = moveList.erase(move);
@@ -1143,7 +1156,7 @@ Move DataBaseTest::distributeNegaMax(color forPlayer)
 	}
 
 	for (auto& move_value : RootMoveList) {
-		//printBitboard(testBoard.blackAtt);
+
 		testBoard.makeMove(move_value.first, forPlayer);
 		auto entry = transposition_hash.getEntry(testBoard.hashKey);
 		if (entry.search_depth >= targetDepth) {
@@ -1166,9 +1179,11 @@ Move DataBaseTest::distributeNegaMax(color forPlayer)
 int DataBaseTest::NegaMax(int alpha, int beta, int depth, color aiColor, color side)
 {
 	int oldAlpha = alpha;
+	negaMaxCnt++;
+	hashAccess++;
+	auto &entry = transposition_hash.getEntry(testBoard.hashKey);
 
-	auto entry = transposition_hash.getEntry(testBoard.hashKey);
-	if (entry.search_depth >= targetDepth - depth) {
+	if (entry.search_depth >= targetDepth) {
 		if (entry.flags & EXACT_VALUE)
 			return entry.value;
 		else if (entry.flags & LOWER_BOUND)
@@ -1180,14 +1195,14 @@ int DataBaseTest::NegaMax(int alpha, int beta, int depth, color aiColor, color s
 	}
 
 	if (depth == 0) {
-		//testBoard.updateAllAttacks();
-		//testBoard.print();
-		//printBitboard(testBoard.blackAtt);
+		evalcnt++;
+		hashAccess--;
 		return testBoard.evaluate(side);
 	}
 
 	int bestValue = -oo;
 	MoveList movelist;
+	movelist.reserve(32);
 	testBoard.updateAllAttacks();
 	testBoard.generateMoveList(movelist, side, true);
 	bool checkOnThisDepth = testBoard.wasInCheck;
@@ -1196,25 +1211,35 @@ int DataBaseTest::NegaMax(int alpha, int beta, int depth, color aiColor, color s
 	for (auto move = movelist.begin(); move != movelist.end(); ){
 		//testBoard.print();
 		testBoard.makeMove(*move, side);
+		moveCnt++;
 		if (testBoard.isKingLeftInCheck(side, *move, checkOnThisDepth, pinnedOnThisDepth)) {
 			testBoard.unMakeMove(*move, side);
-			move++;
+			move = movelist.erase(move);
+			//move++;
 			continue;
 		}
-		else {
-			int currentValue = -NegaMax(-beta, -alpha, depth - 1, aiColor, side == white ? black : white);
-			testBoard.unMakeMove(*move, side);
-			move++;
-			bestValue = max(bestValue, currentValue);
-			alpha = max(alpha, currentValue);
-			if (alpha >= beta)
-				break; // Alpha beta cutoff
+		int currentValue = -NegaMax(-beta, -alpha, depth - 1, aiColor, side == white ? black : white);
+		testBoard.unMakeMove(*move, side);
+		move++;
+		bestValue = max(bestValue, currentValue);
+		alpha = max(alpha, currentValue);
+		if (alpha >= beta) {
+			break; // Alpha beta cutoff
 		}
 	}
 
+	if (movelist.empty()) {
+		// This player has no possible legal moves
+		testBoard.updateAllAttacks();
+		if (testBoard.isKingInCheck(side))
+			 return -oo;          // Checkmate
+		else return -oo + 100000; // Stalemate, slightly better than being checkmated
+	}
+
 	// Store board in transposition table
+	storedBoards++;
 	entry.value = bestValue;
-	if (bestValue <= oldAlpha)
+	if (bestValue < oldAlpha)
 		entry.flags = UPPER_BOUND;
 	else if (bestValue >= beta)
 		entry.flags = LOWER_BOUND;

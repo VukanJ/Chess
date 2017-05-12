@@ -304,13 +304,13 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 
 				for_bits(target, pieceAttacks) {
 					if (target < 8) {
-						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, bq)));
-						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, bn)));
-						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, br)));
-						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, bb)));
+						moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, bq));
+						moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, bn));
+						moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, br));
+						moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, bb));
 					}
 					else {
-						moveList.push_back(Move(pos, target, CAPTURE, piece_pair(bp, candidate)));
+						moveList.emplace_back(pos, target, CAPTURE, piece_pair(bp, candidate));
 					}
 				}
 
@@ -321,11 +321,11 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 			// There surely exists an enpassent move
 			if ((bit_at(24 + b_enpassent) & pieces[bp]) & (_row << 24)) {
 				// black pawn right of ep square
-				moveList.push_back(Move(24 + b_enpassent, 15 + b_enpassent, ENPASSENT, bp));
+				moveList.emplace_back(24 + b_enpassent, 15 + b_enpassent, ENPASSENT, bp);
 			}
 			if (bit_at(22 + b_enpassent) & pieces[bp] & (_row << 24)) {
 				// black pawn left of ep square
-				moveList.push_back(Move(22 + b_enpassent, 15 + b_enpassent, ENPASSENT, bp));
+				moveList.emplace_back(22 + b_enpassent, 15 + b_enpassent, ENPASSENT, bp);
 			}
 		}
 		if (!addQuietMoves) return;
@@ -333,19 +333,19 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 		attackingPieces = (pieces[bp] >> 8) & bpMove;
 		for_bits(pos, attackingPieces) {
 			if (pos > 7) {
-				moveList.push_back(Move(pos + 8, pos, MOVE, bp));
+				moveList.emplace_back(pos + 8, pos, MOVE, bp);
 			}
 			else {
-				moveList.push_back(Move(pos + 8, pos, PROMOTION, piece_pair(bp, bq)));
-				moveList.push_back(Move(pos + 8, pos, PROMOTION, piece_pair(bp, bn)));
-				moveList.push_back(Move(pos + 8, pos, PROMOTION, piece_pair(bp, br)));
-				moveList.push_back(Move(pos + 8, pos, PROMOTION, piece_pair(bp, bb)));
+				moveList.emplace_back(pos + 8, pos, PROMOTION, piece_pair(bp, bq));
+				moveList.emplace_back(pos + 8, pos, PROMOTION, piece_pair(bp, bn));
+				moveList.emplace_back(pos + 8, pos, PROMOTION, piece_pair(bp, br));
+				moveList.emplace_back(pos + 8, pos, PROMOTION, piece_pair(bp, bb));
 			}
 		}
 		// Double pawn move
 		attackingPieces = ((((0x00FF000000000000 & pieces[bp]) >> 8) & bpMove) >> 8) & bpMove;
 		for_bits(pos, attackingPieces) {
-			moveList.push_back(Move(pos + 16, pos, PAWN2, bp));
+			moveList.emplace_back(pos + 16, pos, PAWN2, bp);
 		}
 	}
 	else {
@@ -359,13 +359,13 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 				pieceAttacks = pieces[candidate] & attackMask;
 				for_bits(target, pieceAttacks) {
 					if (target > 55) {
-						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, wq)));
-						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, wn)));
-						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, wr)));
-						moveList.push_back(Move(pos, target, C_PROMOTION, piece_pair(candidate, wb)));
+						moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, wq));
+						moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, wn));
+						moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, wr));
+						moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, wb));
 					}
 					else {
-						moveList.push_back(Move(pos, target, CAPTURE, piece_pair(wp, candidate)));
+						moveList.emplace_back(pos, target, CAPTURE, piece_pair(wp, candidate));
 					}
 				}
 			}
@@ -374,11 +374,11 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 			// There surely exists an enpassent move
 			if ((bit_at(30 + w_enpassent) & pieces[wp]) & (_row << 32)) {
 				// white pawn right of ep square
-				moveList.push_back(Move(30 + w_enpassent, 39 + w_enpassent, ENPASSENT, wp));
+				moveList.emplace_back(30 + w_enpassent, 39 + w_enpassent, ENPASSENT, wp);
 			 }
 			 if (bit_at(32 + w_enpassent) & pieces[wp] & (_row << 32)) {
 				// white pawn left of ep square
-				moveList.push_back(Move(32 + w_enpassent, 39 + w_enpassent, ENPASSENT, wp));
+				moveList.emplace_back(32 + w_enpassent, 39 + w_enpassent, ENPASSENT, wp);
 			}
 		}
 		if (!addQuietMoves) return;
@@ -386,18 +386,18 @@ void inline Board::pawnMoves(MoveList& moveList, U64 attackingPieces, color side
 		attackingPieces = (pieces[wp] << 8) & wpMove;
 		for_bits(pos, attackingPieces) {
 			if (pos < 56) {
-				moveList.push_back(Move(pos - 8, pos, MOVE, wp));
+				moveList.emplace_back(pos - 8, pos, MOVE, wp);
 			}
 			else {
-				moveList.push_back(Move(pos - 8, pos, PROMOTION, piece_pair(wp, wq)));
-				moveList.push_back(Move(pos - 8, pos, PROMOTION, piece_pair(wp, wn)));
-				moveList.push_back(Move(pos - 8, pos, PROMOTION, piece_pair(wp, wr)));
-				moveList.push_back(Move(pos - 8, pos, PROMOTION, piece_pair(wp, wb)));
+				moveList.emplace_back(pos - 8, pos, PROMOTION, piece_pair(wp, wq));
+				moveList.emplace_back(pos - 8, pos, PROMOTION, piece_pair(wp, wn));
+				moveList.emplace_back(pos - 8, pos, PROMOTION, piece_pair(wp, wr));
+				moveList.emplace_back(pos - 8, pos, PROMOTION, piece_pair(wp, wb));
 			}
 		}
 		attackingPieces = ((((0xFF00 & pieces[wp]) << 8) & wpMove) << 8) & wpMove;
 		for_bits(pos, attackingPieces) {
-			moveList.push_back(Move(pos - 16, pos, PAWN2, wp));
+			moveList.emplace_back(pos - 16, pos, PAWN2, wp);
 		}
 	}
 }
@@ -412,14 +412,14 @@ void inline Board::knightMoves(MoveList& moveList, U64 attackingPieces, color si
 			pieceAttacks = pieces[candidate] & attackMask;
 			if (pieceAttacks) {
 				for_bits(target, pieceAttacks) {
-					moveList.push_back(Move(pos, target, CAPTURE, piece_pair(p, candidate)));
+					moveList.emplace_back(pos, target, CAPTURE, piece_pair(p, candidate));
 				}
 			}
 		}
 		if (addQuietMoves) {
 			attackMask ^= KNIGHT_ATTACKS[pos] & attacks[p];
 			for_bits(target, attackMask) {
-				moveList.push_back(Move(pos, target, MOVE, p));
+				moveList.emplace_back(pos, target, MOVE, p);
 			}
 		}
 	}
@@ -436,7 +436,7 @@ void inline Board::queen_and_bishopMoves(MoveList& moveList, U64 attackingPieces
 			if (pieceAttacks) {
 				for_bits(target, pieceAttacks) {
 					if (!(CONNECTIONS[pos][target] & allPos)) {
-						moveList.push_back(Move(pos, target, CAPTURE, piece_pair(p, candidate)));
+						moveList.emplace_back(pos, target, CAPTURE, piece_pair(p, candidate));
 					}
 				}
 			}
@@ -444,8 +444,9 @@ void inline Board::queen_and_bishopMoves(MoveList& moveList, U64 attackingPieces
 		if(addQuietMoves){
 			attackMask ^= pattern[pos] & attacks[p];
 			for_bits(target, attackMask) {
+				//moveList.reserve(moveList.size() + popcount(attackMask));
 				if (!(CONNECTIONS[pos][target] & allPos)) {
-					moveList.push_back(Move(pos, target, MOVE, p));
+					moveList.emplace_back(pos, target, MOVE, p);
 				}
 			}
 		}
@@ -461,14 +462,14 @@ void inline Board::kingMoves(MoveList& moveList, U64 attackingPieces, color side
 		pieceAttacks = pieces[candidate] & attackMask;
 		if (pieceAttacks) {
 			for_bits(target, pieceAttacks) {
-				moveList.push_back(Move(pos, target, move_metadata(CAPTURE, castlingRights & (side == black ? 0x3 : 0xC)), piece_pair(king, candidate)));
+				moveList.emplace_back(pos, target, move_metadata(CAPTURE, castlingRights & (side == black ? 0x3 : 0xC)), piece_pair(king, candidate));
 			}
 		}
 	}
 	if (addQuietMoves) {
 		attackMask ^= (KING_ATTACKS[pos] & attacks[king]) & ~(side == black ? whiteAtt : blackAtt);
 		for_bits(target, attackMask) {
-			moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & (side == black ? 0x3 : 0xC)), king));
+			moveList.emplace_back(pos, target, move_metadata(MOVE, castlingRights & (side == black ? 0x3 : 0xC)), king);
 		}
 	}
 }
@@ -500,13 +501,13 @@ void inline Board::rookMoves(MoveList& moveList, U64 attackingPieces, color side
 				for_bits(target, pieceAttacks) {
 					if (!(CONNECTIONS[pos][target] & allPos)) {
 						if (pos == a_square) {
-							moveList.push_back(Move(pos, target, move_metadata(CAPTURE, castlingRights & qCastRight), piece_pair(rook, candidate)));
+							moveList.emplace_back(pos, target, move_metadata(CAPTURE, castlingRights & qCastRight), piece_pair(rook, candidate));
 						}
 						else if (pos == h_square) {
-							moveList.push_back(Move(pos, target, move_metadata(CAPTURE, castlingRights & kCastRight), piece_pair(rook, candidate)));
+							moveList.emplace_back(pos, target, move_metadata(CAPTURE, castlingRights & kCastRight), piece_pair(rook, candidate));
 						}
 						else {
-							moveList.push_back(Move(pos, target, CAPTURE, piece_pair(rook, candidate)));
+							moveList.emplace_back(pos, target, CAPTURE, piece_pair(rook, candidate));
 						}
 					}
 				}
@@ -517,13 +518,13 @@ void inline Board::rookMoves(MoveList& moveList, U64 attackingPieces, color side
 			for_bits(target, attackMask) {
 				if (!(CONNECTIONS[pos][target] & allPos)) {
 					if (pos == a_square) {
-						moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & qCastRight), rook));
+						moveList.emplace_back(pos, target, move_metadata(MOVE, castlingRights & qCastRight), rook);
 					}
 					else if (pos == h_square) {
-						moveList.push_back(Move(pos, target, move_metadata(MOVE, castlingRights & kCastRight), rook));
+						moveList.emplace_back(pos, target, move_metadata(MOVE, castlingRights & kCastRight), rook);
 					}
 					else {
-						moveList.push_back(Move(pos, target, MOVE, rook));
+						moveList.emplace_back(pos, target, MOVE, rook);
 					}
 				}
 			}
@@ -607,10 +608,10 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 		// Black King can castle if there are no pieces between king and rook, both havent moved yet and king
 		// does not cross attacked squares during castling, same for white
 		if (castlingRights & castle_k && !(allPos & 0x600000000000000ull) && !(whiteAtt & 0xE00000000000000ull)) {
-			moveList.push_back(Move(castlingRights, BCASTLE));
+			moveList.emplace_back(castlingRights, BCASTLE);
 		}
 		if (castlingRights & castle_q && !(allPos & 0x7000000000000000ull) && !(whiteAtt & 0x3800000000000000ull)) { // Black King can castle (big)
-			moveList.push_back(Move(castlingRights, BCASTLE_2));
+			moveList.emplace_back(castlingRights, BCASTLE_2);
 		}
 	}
 	else{
@@ -635,10 +636,10 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 		}
 		 //  Castling permission King-rook path is not obstructed and not under attack
 		if (castlingRights & castle_K && !(allPos & 0x6ull) && !(blackAtt & 0xEull)) { // White King can castle
-			moveList.push_back(Move(castlingRights, WCASTLE));
+			moveList.emplace_back(castlingRights, WCASTLE);
 		}
 		if (castlingRights & castle_Q && !(allPos & 0x70ull) && !(blackAtt & 0x38ull)) { // White King can castle queenside
-			moveList.push_back(Move(castlingRights, WCASTLE_2));
+			moveList.emplace_back(castlingRights, WCASTLE_2);
 		}
 	}
 	// If opponent rook has been captured, he looses castling rights.
@@ -1085,7 +1086,7 @@ int Board::evaluate(color side)
 
 	// *************************** MATERIAL ***************************
 	/* Material values in units of centipawns (cp):
-	 * Queen  -> 900 cp 
+	 * Queen  -> 900 cp
 	 * Rook   -> 500 cp
 	 * Bishop -> 300 cp
 	 * Knight -> 300 cp
@@ -1145,12 +1146,12 @@ int Board::evaluate(color side)
 	int mobility = 0;
 	for_white(i) mobility += popcount(attacks[i] ^ blackPos);
 	for_black(i) mobility -= popcount(attacks[i] ^ whitePos);
-	total_boardValue += mobility * 10;
+	total_boardValue += mobility * 5;
 	mobility = 0;
 	// Measure "hostiliy" = number of attacked pieces of opponent. 15cp each
 	for_white(i) mobility += popcount(attacks[i] & blackPos);
 	for_black(i) mobility += popcount(attacks[i] & whitePos);
-	total_boardValue += mobility * 15;
+	total_boardValue += mobility * 10;
 	// ~~~ Blocked Pawns ~~~
 	// Determines how many pawns are blocked per player color, penalty of 4 cp for each
 	total_boardValue += 4 * (popcount((pieces[bp] >> 8) & allPos)
@@ -1164,16 +1165,16 @@ int Board::evaluate(color side)
 	// ~~~ King freedom ~~~
 	// Measures number of fields the king can escape to. This should only be 
 	// active in the endgame -> Leads to a quicker checkmate and less transpositions
-	///if (endGameValue > 0.5) {
-	///	//cout << "OK\n";
-	///	mask = pieces[wk];
-	///	mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
-	///
-	///	total_boardValue += 10 * popcount(mask & ~blackAtt);
-	///	mask = pieces[bk];
-	///	mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
-	///	total_boardValue -= 10 * popcount(mask & ~whiteAtt);
-	///}
+	if (endGameValue > 0.5) {
+		//cout << "OK\n";
+		mask = pieces[wk];
+		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
+	
+		total_boardValue += 10 * popcount(mask & ~blackAtt);
+		mask = pieces[bk];
+		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
+		total_boardValue -= 10 * popcount(mask & ~whiteAtt);
+	}
 
 	// Pawn shield. Count number of pawns in front of kings in a 2x3 area 0x707
 	// Kings on the edges are not being rewarded points
