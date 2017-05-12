@@ -163,6 +163,8 @@ private:
 	int NegaMax(int alpha, int beta, int depth, color aiColor, color side);
 	Board testBoard;
 	ZobristHash transposition_hash;
+
+	long evalcnt, negaMaxCnt, storedBoards, hashAccess, moveCnt;
 };
 
 #endif

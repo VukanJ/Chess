@@ -16,15 +16,15 @@ typedef uint8_t  byte;
 
 constexpr int oo = INT_MAX; // Alpha-Beta infinity
 
-U64  inline bit_at(uint x)     { return 0x1ull << x; }        // Sets nth bit in number counting from least significant bit
-U64  inline bit_at_rev(uint x) { return 0x1ull << (63 - x); } // Sets nth bit in number counting from most significant bit
-byte inline piece_pair(byte X, byte Y) { return X | (Y << 4); } // Pairs up 4-bit piece information
+U64  constexpr bit_at(uint x)     { return 0x1ull << x; }        // Sets nth bit in number counting from least significant bit
+U64  constexpr bit_at_rev(uint x) { return 0x1ull << (63 - x); } // Sets nth bit in number counting from most significant bit
+byte constexpr piece_pair(byte X, byte Y) { return X | (Y << 4); } // Pairs up 4-bit piece information
 
 // Move formatting macros:
-byte inline move_piece(byte DATA)   { return DATA & 0xF; } // Piece that moves
-byte inline move_type(byte DATA)    { return DATA & 0xF; }
-byte inline target_piece(byte DATA) { return DATA >> 4; }   // Targeted piece
-byte inline move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
+byte constexpr move_piece(byte DATA)   { return DATA & 0xF; } // Piece that moves
+byte constexpr move_type(byte DATA)    { return DATA & 0xF; }
+byte constexpr target_piece(byte DATA) { return DATA >> 4; }   // Targeted piece
+byte constexpr move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
 
 #ifdef _WIN32
 	#ifndef __MACHINEX64

@@ -2,14 +2,12 @@
 
 ZobristHash::ZobristHash()
 {
-	entries.reserve(static_cast<size_t>(1e6));
 	entries.resize(static_cast<size_t>(1e6));
 	hashSize = static_cast<size_t>(1e6);
 }
 
 ZobristHash::ZobristHash(size_t _hashSize)
 {
-	entries.reserve(static_cast<U64>(_hashSize));
 	entries.resize(_hashSize);
 	hashSize = _hashSize;
 }
