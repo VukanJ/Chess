@@ -138,7 +138,7 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 					showMessage("Invalid move!", sf::Color::White);
 				}
 				else {
-					chessBoard.makeMove(user_GUI_Move, humanColor);
+					chessBoard.makeMove<PROPER>(user_GUI_Move, humanColor);
 					chessBoard.updateAllAttacks();
 					lastMove = user_GUI_Move;
 
@@ -159,7 +159,7 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 					showMessage("Invalid move!", sf::Color::White);
 				}
 				else {
-					chessBoard.makeMove(user_GUI_Move, humanColor);
+					chessBoard.makeMove<PROPER>(user_GUI_Move, humanColor);
 					chessBoard.updateAllAttacks();
 					lastMove = user_GUI_Move;
 					movePlayed = true;
@@ -245,15 +245,15 @@ bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
 	}
 	else { // Check if move is legal
 		inputMove = *matchingMove;
-		chessBoard.makeMove(inputMove, humanColor);
+		chessBoard.makeMove<PROPER>(inputMove, humanColor);
 		chessBoard.updateAllAttacks();
 		if ((humanColor == black && chessBoard.isKingInCheck(black)) ||
 			(humanColor == white && chessBoard.isKingInCheck(white))) {
-			chessBoard.unMakeMove(inputMove, humanColor);
+			chessBoard.unMakeMove<PROPER>(inputMove, humanColor);
 			chessBoard.updateAllAttacks();
 			return false;
 		}
-		chessBoard.unMakeMove(inputMove, humanColor);
+		chessBoard.unMakeMove<PROPER>(inputMove, humanColor);
 		chessBoard.updateAllAttacks();
 		return true;
 	}

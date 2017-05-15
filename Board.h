@@ -16,6 +16,9 @@
 using namespace std;
 
 typedef vector<Move> MoveList;
+enum makeMoveType { PROPER = 0x3, HASH_ONLY = 0x1, POS_ONLY = 0x2 };
+// TODO: Test if these correctly influence move-making
+enum moveGenType { QUIET_ONLY = 0x1, CAPTURES_ONLY = 0x2, ALL = 0x3};
 
 class Board
 {
@@ -45,14 +48,15 @@ public:
 	U64 inline   rookAttacks(long pos, const U64 blockers) const;
 	U64 inline bishopAttacks(long pos, const U64 blockers) const;
 
-	void inline pawnMoves(MoveList&, U64 pieces, color, piece, bool addQuietMoves) const;
-	void inline knightMoves(MoveList&, U64 pieces, color, piece, bool addQuietMoves) const;
-	void inline queen_and_bishopMoves(MoveList&, U64 pieces, const vector<U64>& pattern, color, piece, bool addQuietMoves) const;
-	void inline kingMoves(MoveList&, U64 pieces, color, piece king, bool addQuietMoves) const;
-	void inline rookMoves(MoveList&, U64 pieces, color, piece, bool addQuietMoves) const;
+	template<moveGenType, color> void inline pawnMoves(MoveList&) const;
+	template<moveGenType, color> void inline knightMoves(MoveList&) const;
+	template<moveGenType, color, bool Q> void inline queen_and_bishopMoves(MoveList&) const;
+	template<moveGenType, color> void inline kingMoves(MoveList&) const;
+	template<moveGenType, color> void inline rookMoves(MoveList&) const;
 
-	void makeMove(const Move&, color side);
-	void unMakeMove(const Move&, color side);
+	template<makeMoveType mmt> void makeMove(const Move&, color side);
+	template<makeMoveType mmt> void unMakeMove(const Move&, color side);
+
 	void updateAllAttacks();
 	void updatePinnedPieces(color side);
 	bool isKingInCheck(color kingColor) const;

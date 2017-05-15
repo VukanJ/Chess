@@ -86,7 +86,7 @@ void AI::Play(sf::RenderWindow& window)
 		window.display();
 	}
 	gameHistory.push_back(pair<string, Move>(boardToString(), bestMove.first));
-	chessBoard.makeMove(bestMove.first, aiColor);
+	chessBoard.makeMove<PROPER>(bestMove.first, aiColor);
 	chessBoard.updateAllAttacks();
 
 	gui->visualizeLastMove(bestMove.first);
@@ -97,12 +97,12 @@ void AI::Play(sf::RenderWindow& window)
 void AI::sortMoves(nodePtr& node, color side)
 {
 	sort(node->moveList.begin(), node->moveList.end(), [this, side](const Move& move1, const Move& move2) {
-		chessBoard.makeMove(move1, side);
+		chessBoard.makeMove<PROPER>(move1, side);
 		int val1 = transposition_hash.getValue(chessBoard.hashKey);
-		chessBoard.unMakeMove(move1, side);
-		chessBoard.makeMove(move2, side);
+		chessBoard.unMakeMove<PROPER>(move1, side);
+		chessBoard.makeMove<PROPER>(move2, side);
 		int val2 = transposition_hash.getValue(chessBoard.hashKey);
-		chessBoard.unMakeMove(move2, side);
+		chessBoard.unMakeMove<PROPER>(move2, side);
 		return val1 < val2;
 	});
 }
@@ -122,15 +122,15 @@ pair<Move, int> AI::distributeNegaMax()
 
 		// Clean initial move list at Root
 		for (auto move = Root->moveList.begin(); move != Root->moveList.end();) {
-			chessBoard.makeMove(*move, aiColor);
+			chessBoard.makeMove<PROPER>(*move, aiColor);
 			chessBoard.updateAllAttacks();
 			if (chessBoard.isKingInCheck(aiColor)) {
 				// Black king is in check, invalid move
-				chessBoard.unMakeMove(*move, aiColor);
+				chessBoard.unMakeMove<PROPER>(*move, aiColor);
 				move = Root->moveList.erase(move);
 				continue;
 			}
-			chessBoard.unMakeMove(*move, aiColor);
+			chessBoard.unMakeMove<PROPER>(*move, aiColor);
 			move++;
 		}
 		if (Root->moveList.empty()) {
@@ -152,7 +152,7 @@ pair<Move, int> AI::distributeNegaMax()
 	// Distribute moves to NegaMax if needed
 	int moveIter = 0;
 	for (auto& move_val : RootMoveList) {
-		chessBoard.makeMove(move_val.first, aiColor);
+		chessBoard.makeMove<PROPER>(move_val.first, aiColor);
 		chessBoard.updateAllAttacks();
 		auto entry = transposition_hash.getEntry(chessBoard.hashKey);
 		if (entry.search_depth >= targetDepth) {
@@ -162,7 +162,7 @@ pair<Move, int> AI::distributeNegaMax()
 		else {
 			move_val.second = -NegaMax_Search(Root->nodeList[moveIter++], -oo, oo, targetDepth, aiColor == black ? white : black);
 		}
-		chessBoard.unMakeMove(move_val.first, aiColor);
+		chessBoard.unMakeMove<PROPER>(move_val.first, aiColor);
 	}
 
 	auto bestMove = max_element(RootMoveList.begin(), RootMoveList.end(),
@@ -216,11 +216,11 @@ int AI::NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side
 		chessBoard.generateMoveList(node->moveList, side, true);
 
 	for (auto move = node->moveList.begin(); move != node->moveList.end();) {
-		chessBoard.makeMove(*move, side);
+		chessBoard.makeMove<PROPER>(*move, side);
 		chessBoard.updateAllAttacks();
 		if (chessBoard.isKingInCheck(side)) {
 			// Invalid move: King left in check
-			chessBoard.unMakeMove(*move, side);
+			chessBoard.unMakeMove<PROPER>(*move, side);
 			move = node->moveList.erase(move);
 			continue;
 		}
@@ -233,11 +233,11 @@ int AI::NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side
 		if (alpha >= beta) {
 			// Stop search, bad strategy encountered
 			node->nodeFlags |= Node::Flags::cutNode;
-			chessBoard.unMakeMove(*move, side);
+			chessBoard.unMakeMove<PROPER>(*move, side);
 			break;
 		}
 
-		chessBoard.unMakeMove(*move, side);
+		chessBoard.unMakeMove<PROPER>(*move, side);
 		move++;
 	}
 	node->nodeFlags |= Node::Flags::explored; // Moves can be sorted in next iteration (iterative deepening)
