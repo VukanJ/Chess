@@ -218,13 +218,13 @@ bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
 			else if (pflags == CAPTURE && inputMove.flags == CAPTURE) {
 				return true;
 			}
-			else if (inputMove.flags == MOVE && (target_piece(pmove.pieces) == bq || target_piece(pmove.pieces) == wq)) {
+			else if (inputMove.flags == MOVE && (pmove.targetPiece == bq || pmove.targetPiece == wq)) {
 				// Promotion ?
 				if (pflags & PROMOTION) {
 					return true;
 				}
 			}
-			else if (inputMove.flags == CAPTURE && (target_piece(pmove.pieces) == bq || target_piece(pmove.pieces) == wq)) {
+			else if (inputMove.flags == CAPTURE && (pmove.targetPiece == bq || pmove.targetPiece == wq)) {
 				// Promotion ?
 				if (pflags & C_PROMOTION) {
 					return true;
