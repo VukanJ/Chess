@@ -1,5 +1,4 @@
 #include "Board.h"
-#include "Board_Instantiations.cpp"
 
 Board::Board()
 	: whitePos(0x0), blackPos(0x0), whiteAtt(0x0), blackAtt(0x0), hashKey(0x0),
@@ -19,7 +18,7 @@ void Board::setupBoard(string FEN)
 {
 	for (auto& p : pieces)  p = 0x0;
 	for (auto& a : attacks) a = 0x0;
-	blackPos = whitePos  
+	blackPos = whitePos
 		 = bpMove = wpMove = b_enpassent = w_enpassent = castlingRights = 0x0;
 	wasInCheck = false;
 
@@ -81,7 +80,7 @@ void Board::setupBoard(string FEN)
 
 void Board::initHash()
 {
-	// Generates initial hashkey. 
+	// Generates initial hashkey.
 	// Generates constant table of random 64Bit numbers.
 	random_device r_device;
 	mt19937_64 generator(r_device());
@@ -291,280 +290,9 @@ void Board::pawnFill(color side)
 	}
 }
 
-template<moveGenType mgt, color side> 
-void inline Board::pawnMoves(MoveList& moveList) const
-{
-	U64 attackMask = 0x0, pieceAttacks = 0x0;
-	piece p = side == white ? wp : bp;
-	U64 attackingPieces = pieces[p];
-
-	if(side == black){
-		if (mgt & CAPTURES_ONLY) {
-			// Find normal captures:
-			for_bits(pos, attackingPieces) {
-				attackMask = ((bit_at(pos) >> 9) & ~_left)  & whitePos;
-				attackMask |= ((bit_at(pos) >> 7) & ~_right) & whitePos;
-
-				for_white(candidate) {
-					pieceAttacks = pieces[candidate] & attackMask;
-
-					for_bits(target, pieceAttacks) {
-						if (target < 8) {
-							moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, bq));
-							moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, bn));
-							moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, br));
-							moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, bb));
-						}
-						else {
-							moveList.emplace_back(pos, target, CAPTURE, piece_pair(bp, candidate));
-						}
-					}
-
-				}
-			}
-			// Enpassent
-			if (b_enpassent) {
-				// There surely exists an enpassent move
-				if ((bit_at(24 + b_enpassent) & pieces[bp]) & (_row << 24)) {
-					// black pawn right of ep square
-					moveList.emplace_back(24 + b_enpassent, 15 + b_enpassent, ENPASSENT, bp);
-				}
-				if (bit_at(22 + b_enpassent) & pieces[bp] & (_row << 24)) {
-					// black pawn left of ep square
-					moveList.emplace_back(22 + b_enpassent, 15 + b_enpassent, ENPASSENT, bp);
-				}
-			}
-		}
-		if (mgt & QUIET_ONLY) {
-			// Find normal upwards moves and double pawn steps:
-			attackingPieces = (pieces[bp] >> 8) & bpMove;
-			for_bits(pos, attackingPieces) {
-				if (pos > 7) {
-					moveList.emplace_back(pos + 8, pos, MOVE, bp);
-				}
-				else {
-					moveList.emplace_back(pos + 8, pos, PROMOTION, piece_pair(bp, bq));
-					moveList.emplace_back(pos + 8, pos, PROMOTION, piece_pair(bp, bn));
-					moveList.emplace_back(pos + 8, pos, PROMOTION, piece_pair(bp, br));
-					moveList.emplace_back(pos + 8, pos, PROMOTION, piece_pair(bp, bb));
-				}
-			}
-			// Double pawn move
-			attackingPieces = ((((0x00FF000000000000 & pieces[bp]) >> 8) & bpMove) >> 8) & bpMove;
-			for_bits(pos, attackingPieces) {
-				moveList.emplace_back(pos + 16, pos, PAWN2, bp);
-			}
-		}
-	}
-	else {
-		if (mgt & CAPTURES_ONLY) {
-			// Find normal captures:
-			// attackingPieces stands for attacked squares in this case
-			for_bits(pos, attackingPieces) {
-				attackMask  = (bit_at(pos) << 9 & ~_right) & blackPos;
-				attackMask |= (bit_at(pos) << 7 & ~_left)  & blackPos;
-
-				for_black(candidate) {
-					pieceAttacks = pieces[candidate] & attackMask;
-					for_bits(target, pieceAttacks) {
-						if (target > 55) {
-							moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, wq));
-							moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, wn));
-							moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, wr));
-							moveList.emplace_back(pos, target, C_PROMOTION, piece_pair(candidate, wb));
-						}
-						else {
-							moveList.emplace_back(pos, target, CAPTURE, piece_pair(wp, candidate));
-						}
-					}
-				}
-			}
-			if (w_enpassent) { 
-				// There surely exists an enpassent move
-				if ((bit_at(30 + w_enpassent) & pieces[wp]) & (_row << 32)) {
-					// white pawn right of ep square
-					moveList.emplace_back(30 + w_enpassent, 39 + w_enpassent, ENPASSENT, wp);
-				 }
-				 if (bit_at(32 + w_enpassent) & pieces[wp] & (_row << 32)) {
-					// white pawn left of ep square
-					moveList.emplace_back(32 + w_enpassent, 39 + w_enpassent, ENPASSENT, wp);
-				}
-			}
-		}
-		if (mgt & QUIET_ONLY) {
-			// Find normal upwards moves and double pawn steps:
-			attackingPieces = (pieces[wp] << 8) & wpMove;
-			for_bits(pos, attackingPieces) {
-				if (pos < 56) {
-					moveList.emplace_back(pos - 8, pos, MOVE, wp);
-				}
-				else {
-					moveList.emplace_back(pos - 8, pos, PROMOTION, piece_pair(wp, wq));
-					moveList.emplace_back(pos - 8, pos, PROMOTION, piece_pair(wp, wn));
-					moveList.emplace_back(pos - 8, pos, PROMOTION, piece_pair(wp, wr));
-					moveList.emplace_back(pos - 8, pos, PROMOTION, piece_pair(wp, wb));
-				}
-			}
-			attackingPieces = ((((0xFF00 & pieces[wp]) << 8) & wpMove) << 8) & wpMove;
-			for_bits(pos, attackingPieces) {
-				moveList.emplace_back(pos - 16, pos, PAWN2, wp);
-			}
-		}
-	}
-}
-
-template<moveGenType mgt, color side> 
-void inline Board::knightMoves(MoveList& moveList) const
-{
-	U64 attackingPieces = pieces[side == white ? wn : bn];
-	piece p = side == white ? wn : bn;
-
-	U64 attackMask = 0x0, pieceAttacks = 0x0;
-	for_bits(pos, attackingPieces) {
-		attackMask = KNIGHT_ATTACKS[pos] & attacks[p] & (side == black ? whitePos : blackPos);
-		if (mgt & CAPTURES_ONLY) {
-			for_color(candidate, !side) {
-				pieceAttacks = pieces[candidate] & attackMask;
-				if (pieceAttacks) {
-					for_bits(target, pieceAttacks) {
-						moveList.emplace_back(pos, target, CAPTURE, piece_pair(p, candidate));
-					}
-				}
-			}
-		}
-		if (mgt & QUIET_ONLY) {
-			attackMask ^= KNIGHT_ATTACKS[pos] & attacks[p];
-			for_bits(target, attackMask) {
-				moveList.emplace_back(pos, target, MOVE, p);
-			}
-		}
-	}
-}
-
-template<moveGenType mgt, color side, bool Q>
-void inline Board::queen_and_bishopMoves(MoveList& moveList) const
-{
-	U64 attackMask = 0x0, pieceAttacks = 0x0;
-	piece p = Q ? (side == white ? wq : bq) : (side == white ? wb : bb);
-	U64 attackingPieces = pieces[p];
-
-	for_bits(pos, attackingPieces) {
-		attackMask = (Q ? QUEEN_ATTACKS : BISHOP_ATTACKS)[pos] & attacks[p] & (side == black ? whitePos : blackPos);
-		if (mgt & CAPTURES_ONLY) {
-			for_color(candidate, !side) {
-				pieceAttacks = pieces[candidate] & attackMask;
-				if (pieceAttacks) {
-					for_bits(target, pieceAttacks) {
-						if (!(CONNECTIONS[pos][target] & allPos)) {
-							moveList.emplace_back(pos, target, CAPTURE, piece_pair(p, candidate));
-						}
-					}
-				}
-			}
-		}
-		if(mgt & QUIET_ONLY){
-			attackMask ^= (Q ? QUEEN_ATTACKS : BISHOP_ATTACKS)[pos] & attacks[p];
-			for_bits(target, attackMask) {
-				//moveList.reserve(moveList.size() + popcount(attackMask));
-				if (!(CONNECTIONS[pos][target] & allPos)) {
-					moveList.emplace_back(pos, target, MOVE, p);
-				}
-			}
-		}
-	}
-}
-
-template<moveGenType mgt, color side>
-void inline Board::kingMoves(MoveList& moveList) const
-{
-	piece king = side == white ? wk : bk;
-	U64 attackingPieces = pieces[king];
-	U64 attackMask = 0x0, pieceAttacks = 0x0;
-	ulong pos = msb(pieces[king]);
-	attackMask = ((attacks[king] & (side == black ? whitePos : blackPos)) & ~(side == black ? whiteAtt : blackAtt));
-	if (mgt & CAPTURES_ONLY) {
-		for_color(candidate, !side) {
-			pieceAttacks = pieces[candidate] & attackMask;
-			if (pieceAttacks) {
-				for_bits(target, pieceAttacks) {
-					moveList.emplace_back(pos, target, move_metadata(CAPTURE, castlingRights & (side == black ? 0x3 : 0xC)), piece_pair(king, candidate));
-				}
-			}
-		}
-	}
-	if (mgt & QUIET_ONLY) {
-		attackMask ^= (KING_ATTACKS[pos] & attacks[king]) & ~(side == black ? whiteAtt : blackAtt);
-		for_bits(target, attackMask) {
-			moveList.emplace_back(pos, target, move_metadata(MOVE, castlingRights & (side == black ? 0x3 : 0xC)), king);
-		}
-	}
-}
-
-template<moveGenType mgt, color side>
-void inline Board::rookMoves(MoveList& moveList) const
-{
-	piece rook = side == white ? wr : br;
-	U64 attackingPieces = pieces[rook];
-	U64 attackMask = 0x0, pieceAttacks = 0x0;
-	ulong a_square, h_square, qCastRight, kCastRight;
-	if (side == black) {
-		a_square = a8;
-		h_square = h8;
-		qCastRight = castle_q;
-		kCastRight = castle_k;
-	}
-	else {
-		a_square = a1;
-		h_square = h1;
-		qCastRight = castle_Q;
-		kCastRight = castle_K;
-	}
-	// Calculate attacked pieces
-	for_bits(pos, attackingPieces) {
-		attackMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[rook] & (side == black ? whitePos : blackPos);
-		if (CAPTURES_ONLY) {
-			if (attackMask) {
-				for_color(candidate, !side) {
-					pieceAttacks = pieces[candidate] & attackMask;
-
-					for_bits(target, pieceAttacks) {
-						if (!(CONNECTIONS[pos][target] & allPos)) {
-							if (pos == a_square) {
-								moveList.emplace_back(pos, target, move_metadata(CAPTURE, castlingRights & qCastRight), piece_pair(rook, candidate));
-							}
-							else if (pos == h_square) {
-								moveList.emplace_back(pos, target, move_metadata(CAPTURE, castlingRights & kCastRight), piece_pair(rook, candidate));
-							}
-							else {
-								moveList.emplace_back(pos, target, CAPTURE, piece_pair(rook, candidate));
-							}
-						}
-					}
-				}
-			}
-		}
-		if (mgt & QUIET_ONLY) {
-			attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[rook];
-			for_bits(target, attackMask) {
-				if (!(CONNECTIONS[pos][target] & allPos)) {
-					if (pos == a_square) {
-						moveList.emplace_back(pos, target, move_metadata(MOVE, castlingRights & qCastRight), rook);
-					}
-					else if (pos == h_square) {
-						moveList.emplace_back(pos, target, move_metadata(MOVE, castlingRights & kCastRight), rook);
-					}
-					else {
-						moveList.emplace_back(pos, target, MOVE, rook);
-					}
-				}
-			}
-		}
-	}
-}
-
 void Board::updatePinnedPieces(color side)
 {
-	// Calculates absolute pinned pieces. 
+	// Calculates absolute pinned pieces.
 	// These are considered when checking move legality
 
 	U64 kingXray = 0x0, kingRects = 0x0;
@@ -614,8 +342,8 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 	U64 pieceAttacks = 0x0, attackingPieces = 0x0;
 	// Generate all capturing and normal moves
 	updatePinnedPieces(side);
-	if (side == black){ 
-		/* 
+	if (side == black){
+		/*
 		   ::::::::::::::::::::::::::::::::::
 		   ::     BLACK MOVE GENERATION    ::
 		   ::::::::::::::::::::::::::::::::::
@@ -675,482 +403,27 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 	// If opponent rook has been captured, he looses castling rights.
 	// TODO: Needs nicer solution
 
-	//if (isKingInCheck(side)) 
+	//if (isKingInCheck(side))
 	//	reduceMoveList(moveList, side);
 
 	for_each(moveList.begin(), moveList.end(), [this](Move& move) {
 		if (target_piece(move.pieces) == wr) {
 			if (move_type(move.flags) == CAPTURE || move_type(move.flags) == C_PROMOTION) {
-				if (move.to == a1) 
-					move.flags |= (castlingRights & castle_Q) << 4; 
-				else if (move.to == h1) 
+				if (move.to == a1)
+					move.flags |= (castlingRights & castle_Q) << 4;
+				else if (move.to == h1)
 					move.flags |= (castlingRights & castle_K) << 4;
 			}
 		}
 		else if (target_piece(move.pieces) == br) {
 			if (move_type(move.flags) == CAPTURE || move_type(move.flags) == C_PROMOTION) {
-				if (move.to == a8) 
+				if (move.to == a8)
 					move.flags |= (castlingRights & castle_q) << 4;
-				else if (move.to == h8)  
+				else if (move.to == h8)
 					move.flags |= (castlingRights & castle_k) << 4;
 			}
 		}
 	});
-}
-
-template<makeMoveType mmt> 
-void Board::makeMove(const Move& move, color side)
-{
-	switch (move_type(move.flags)) {
-	case MOVE:
-		// Piece disappears from from-square and appears at to-square:
-		if (mmt & HASH_ONLY) {
-			pieces[move.pieces] ^= bit_at(move.from) | bit_at(move.to);
-		}
-		// Update Hashkey
-		if (mmt & POS_ONLY) {
-			hashKey ^= randomSet[move.pieces][move.from] ^ randomSet[move.pieces][move.to];
-			// update position mask
-			side == black ? (blackPos = ((blackPos ^ bit_at(move.from)) | bit_at(move.to)))
-				: (whitePos = ((whitePos ^ bit_at(move.from)) | bit_at(move.to)));
-		}
-		break;
-	case CAPTURE:
-		if (mmt & HASH_ONLY) {
-			hashKey ^= randomSet[move_piece(move.pieces)][move.from] // Update hashKey...
-				^ randomSet[move_piece(move.pieces)][move.to]
-				^ randomSet[target_piece(move.pieces)][move.to];
-		}
-		if (mmt & POS_ONLY) {
-			pieces[move_piece(move.pieces)] ^= (bit_at(move.from) | bit_at(move.to));
-			pieces[target_piece(move.pieces)] ^= bit_at(move.to);    // Captured piece is deleted
-																	 // Update position mask
-			if (side == black) {
-				blackPos = (blackPos ^ bit_at(move.from)) | bit_at(move.to);
-				whitePos ^= bit_at(move.to);
-			}
-			else {
-				whitePos = (whitePos ^ bit_at(move.from)) | bit_at(move.to);
-				blackPos ^= bit_at(move.to);
-			}
-		}
-		break;
-	case PAWN2:
-		if (mmt & HASH_ONLY) {
-			hashKey ^= randomSet[move.pieces][move.from] // Update hashKey...
-				^ randomSet[move.pieces][move.to]
-				^ randomSet[ENPASSENT_HASH][move.from % 8];
-		}
-		if (mmt & POS_ONLY) {
-			pieces[move.pieces] ^= (bit_at(move.from) | bit_at(move.to));     // Piece disappears from departure
-																			  // update position mask
-			side == black ? (blackPos = ((blackPos ^ bit_at(move.from)) | bit_at(move.to)))
-				: (whitePos = ((whitePos ^ bit_at(move.from)) | bit_at(move.to)));
-		}
-		if (mmt == PROPER) {
-			// The other player can then sometimes perform enpassent (if other pawn is available)
-			if (move.pieces == bp && (0x5ull << (move.to - 1)) & (_row << 32) & pieces[wp]) {
-				w_enpassent = (move.from % 8) + 1;
-				b_enpassent = 0; // Maybe unnecessary
-			}
-			else if (move.pieces == wp && (0x5ull << (move.to - 1)) & (_row << 24) & pieces[bp]) {
-				b_enpassent = (move.from % 8) + 1;
-				w_enpassent = 0;
-			}
-		}
-		break;
-	case PROMOTION:
-		if (mmt & HASH_ONLY) {
-			hashKey ^= randomSet[move_piece(move.pieces)][move.from] // Update hashKey...
-				^ randomSet[target_piece(move.pieces)][move.to];
-		}
-		if (mmt & POS_ONLY) {
-			pieces[move_piece(move.pieces)] ^= bit_at(move.from);    // removes pawn
-			pieces[target_piece(move.pieces)] |= bit_at(move.to);    // New piece appears
-																	 // update position mask
-			side == black ? (blackPos = ((blackPos ^ bit_at(move.from)) | bit_at(move.to)))
-				: (whitePos = ((whitePos ^ bit_at(move.from)) | bit_at(move.to)));
-		}
-		break;
-	case C_PROMOTION:
-		// QN | Captured
-		if (side == black) {
-			if (mmt & HASH_ONLY) {
-				hashKey ^= randomSet[bp][move.from]
-					^ randomSet[move_piece(move.pieces)][move.to]
-					^ randomSet[target_piece(move.pieces)][move.to];
-			}
-			if (mmt & POS_ONLY) {
-				pieces[bp] ^= bit_at(move.from);
-				pieces[move_piece(move.pieces)] ^= bit_at(move.to);
-				pieces[target_piece(move.pieces)] |= bit_at(move.to);
-
-				blackPos = (blackPos ^ bit_at(move.from)) | bit_at(move.to);
-				whitePos ^= bit_at(move.to);
-			}
-		}
-		else {
-			if (mmt & HASH_ONLY) {
-				hashKey ^= randomSet[wp][move.from]
-					^ randomSet[move_piece(move.pieces)][move.to]
-					^ randomSet[target_piece(move.pieces)][move.to];
-			}
-			if (mmt & POS_ONLY) {
-				pieces[wp] ^= bit_at(move.from);
-				pieces[move_piece(move.pieces)] ^= bit_at(move.to);
-				pieces[target_piece(move.pieces)] |= bit_at(move.to);
-
-				whitePos = (whitePos ^ bit_at(move.from)) | bit_at(move.to);
-				blackPos ^= bit_at(move.to);
-			}
-		}
-		break;
-	case BCASTLE: // Kingside castling
-		if (mmt & HASH_ONLY) {
-			// Update hash
-			castlingRights &= ~(castle_k | castle_q);
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
-				^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_k];
-		}
-		if (mmt & POS_ONLY) {
-			pieces[bk] = bit_at(g8);
-			pieces[br] ^= (bit_at(h8) | bit_at(f8));
-			// Override position
-			blackPos ^= blackPos & 0xF00000000000000ull;
-			blackPos |= 0x600000000000000ull;
-		}
-		break;
-	case WCASTLE: // Castling short
-		if (mmt & HASH_ONLY) {
-			// Update hash
-			castlingRights &= ~(castle_K | castle_Q);
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
-				^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_K];
-		}
-		if (mmt & POS_ONLY) {
-			pieces[wk] = bit_at(g1);
-			pieces[wr] ^= (bit_at(h1) | bit_at(f1));
-			// Override position
-			whitePos ^= whitePos & 0xF;
-			whitePos |= 0x6;
-		}
-		break;
-	case BCASTLE_2: // Castling long
-		if (mmt & HASH_ONLY) {
-			// Update hash
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
-				^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_q];
-		}
-		if (mmt & POS_ONLY) {
-			castlingRights &= ~(castle_k | castle_q);
-			pieces[bk] = bit_at(c8);
-			pieces[br] ^= (bit_at(a8) | bit_at(d8));
-			// Override position
-			blackPos ^= blackPos & 0xF800000000000000ull;
-			blackPos |= 0x3000000000000000ull;
-		}
-		break;
-	case WCASTLE_2: // Castling long
-		if (mmt & HASH_ONLY) {
-			// Update hash
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
-				^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_Q];
-		}
-		if (mmt & POS_ONLY) {
-			castlingRights &= ~(castle_K | castle_Q);
-			pieces[wk] = bit_at(c1);
-			pieces[wr] ^= (bit_at(a1) | bit_at(d1));
-			// Override position
-			whitePos ^= whitePos & 0xF8ull;
-			whitePos |= 0x30ull;
-		}
-		break;
-	case ENPASSENT:
-		if (move.pieces == bp) {
-			if (mmt & HASH_ONLY) {
-				// Update hashkey
-				hashKey ^= randomSet[bp][move.from]
-					^ randomSet[bp][move.to]
-					^ randomSet[wp][move.to + 8]
-					^ randomSet[ENPASSENT_HASH][move.from % 8];
-			}
-			if (mmt & POS_ONLY) {
-				// Update positions
-				pieces[bp] ^= (bit_at(move.from) | bit_at(move.to));
-				pieces[wp] ^= bit_at(move.to + 8);
-
-				blackPos = (blackPos ^ bit_at(move.from)) | bit_at(move.to);
-				whitePos ^= bit_at(move.to + 8);
-			}
-			if (mmt == PROPER) {
-				// No more enpassent squares after enpassent
-				b_enpassent = 0;
-			}
-		}
-		else {
-			if (mmt & HASH_ONLY) {
-				hashKey ^= randomSet[wp][move.from]
-					^ randomSet[wp][move.to]
-					^ randomSet[bp][move.to - 8]
-					^ randomSet[ENPASSENT_HASH][move.from % 8];
-			}
-			if (mmt & POS_ONLY) {
-				pieces[wp] ^= (bit_at(move.from) | bit_at(move.to));
-				pieces[bp] ^= bit_at(move.to - 8);
-
-				whitePos = (whitePos ^ bit_at(move.from)) | bit_at(move.to);
-				blackPos ^= bit_at(move.to - 8);
-			}
-			if (mmt == PROPER) {
-				w_enpassent = 0;
-			}
-		}
-		break;
-	default:
-		cerr << "Invalid move info encountered!\n";
-		exit(1);
-	}
-
-	if (mmt == PROPER) {
-		// No enpassent squares after any other move than double pawn push
-		if (move_type(move.flags) != PAWN2) {
-			b_enpassent = w_enpassent = 0;
-		}
-		// Check if castling still permitted
-		byte cast = move.flags >> 4;
-		if (cast) {
-			castlingRights &= ~cast;
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-		}
-	}
-	if (mmt & POS_ONLY) {
-		allPos = blackPos | whitePos;
-	}
-}
-
-template<makeMoveType mmt> 
-void Board::unMakeMove(const Move& move, color side)
-{
-	switch (move_type(move.flags)) {
-	case MOVE:
-		if (mmt & HASH_ONLY) {
-			// Update hashKey...
-			hashKey ^= randomSet[move.pieces][move.from] ^ randomSet[move.pieces][move.to];
-		}
-		if (mmt & POS_ONLY) {
-			// Piece disappears from to-square and appears at from-square:
-			pieces[move.pieces] ^= (bit_at(move.to) | bit_at(move.from));
-
-			// Update position mask
-			side == black ? (blackPos = ((blackPos ^ bit_at(move.to)) | bit_at(move.from)))
-				: (whitePos = ((whitePos ^ bit_at(move.to)) | bit_at(move.from)));
-		}
-		break;
-	case CAPTURE:
-		if (mmt & HASH_ONLY) {
-			hashKey ^= randomSet[move_piece(move.pieces)][move.from]
-				^ randomSet[move_piece(move.pieces)][move.to]
-				^ randomSet[target_piece(move.pieces)][move.to];
-		}
-		if (mmt & POS_ONLY) {
-			pieces[move_piece(move.pieces)] ^= (bit_at(move.to) | bit_at(move.from));
-			pieces[target_piece(move.pieces)] |= bit_at(move.to);
-			// Update position mask
-			if (side == black) {
-				blackPos = (blackPos ^ bit_at(move.to)) | bit_at(move.from);
-				whitePos |= bit_at(move.to);
-			}
-			else {
-				whitePos = (whitePos ^ bit_at(move.to)) | bit_at(move.from);
-				blackPos |= bit_at(move.to);
-			}
-		}
-		break;
-	case PAWN2:
-		if (mmt & HASH_ONLY) {
-			hashKey ^= randomSet[move.pieces][move.to]  // Update hashKey...
-				^ randomSet[move.pieces][move.from]
-				^ randomSet[ENPASSENT_HASH][move.from % 8];
-		}
-		if (mmt & POS_ONLY) {
-			pieces[move.pieces] ^= (bit_at(move.to) | bit_at(move.from));     // Piece disappears from destination
-																			  // update position mask
-			side == black ? (blackPos = ((blackPos ^ bit_at(move.to)) | bit_at(move.from)))
-				: (whitePos = ((whitePos ^ bit_at(move.to)) | bit_at(move.from)));
-		}
-		if (mmt == PROPER) {
-			b_enpassent = w_enpassent = 0x0;
-		}
-		break;
-	case PROMOTION:
-		if (mmt & HASH_ONLY) {
-			hashKey ^= randomSet[move_piece(move.pieces)][move.from]
-				^ randomSet[target_piece(move.pieces)][move.to];
-		}
-		if (mmt & POS_ONLY) {
-			pieces[move_piece(move.pieces)] |= bit_at(move.from);
-			pieces[target_piece(move.pieces)] ^= bit_at(move.to);
-			// update position mask
-			side == black ? (blackPos = ((blackPos ^ bit_at(move.to)) | bit_at(move.from)))
-				: (whitePos = ((whitePos ^ bit_at(move.to)) | bit_at(move.from)));
-		}
-		break;
-	case C_PROMOTION:
-		if (side == black) {
-			if (mmt & HASH_ONLY) {
-				hashKey ^= randomSet[bp][move.from]
-					^ randomSet[move_piece(move.pieces)][move.to]
-					^ randomSet[target_piece(move.pieces)][move.to];
-			}
-			if (mmt & POS_ONLY) {
-				pieces[bp] |= bit_at(move.from);
-				pieces[move_piece(move.pieces)] |= bit_at(move.to);
-				pieces[target_piece(move.pieces)] ^= bit_at(move.to);
-
-				blackPos = (blackPos | bit_at(move.from)) ^ bit_at(move.to);
-				whitePos |= bit_at(move.to);
-			}
-		}
-		else {
-			if (mmt & HASH_ONLY) {
-				hashKey ^= randomSet[wp][move.from]
-					^ randomSet[move_piece(move.pieces)][move.to]
-					^ randomSet[target_piece(move.pieces)][move.to];
-			}
-			if (mmt & POS_ONLY) {
-				pieces[wp] |= bit_at(move.from);
-				pieces[move_piece(move.pieces)] |= bit_at(move.to);
-				pieces[target_piece(move.pieces)] ^= bit_at(move.to);
-
-				whitePos = (whitePos | bit_at(move.from)) ^ bit_at(move.to);
-				blackPos |= bit_at(move.to);
-			}
-		}
-		break;
-	case BCASTLE:
-		if (mmt & HASH_ONLY) {
-			// Update hash
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
-				^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_k];
-		}
-		if (mmt & POS_ONLY) {
-			pieces[bk] = bit_at(e8);
-			pieces[br] ^= (bit_at(f8) | bit_at(h8));
-			// Override position
-			blackPos ^= blackPos & 0xF00000000000000ull;
-			blackPos |= 0x900000000000000ull;
-		}
-		if (mmt == PROPER) {
-			castlingRights = move.from;
-		}
-		break;
-	case WCASTLE: // Castling short
-		if (mmt & HASH_ONLY) {
-			// Update hash
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
-				^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_K];
-		}
-		if (mmt & POS_ONLY) {
-			pieces[wk] = bit_at(e1);
-			pieces[wr] ^= (bit_at(f1) | bit_at(h1));
-			// Override position
-			whitePos ^= whitePos & 0xF;
-			whitePos |= 0x9;
-		}
-		if (mmt == PROPER) {
-			castlingRights = move.from;
-		}
-		break;
-	case BCASTLE_2:
-		if (mmt & HASH_ONLY) {
-			// Update hash
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
-				^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_q];
-		}
-		if (mmt & POS_ONLY) {
-			pieces[bk] = bit_at(e8);
-			pieces[br] ^= (bit_at(d8) | bit_at(a8));
-			// Override position
-			blackPos ^= blackPos & 0xF800000000000000ull;
-			blackPos |= 0x8800000000000000ull;
-		}
-		if (mmt == PROPER) {
-			castlingRights = move.from;
-		}
-		break;
-	case WCASTLE_2: // Castling long
-		if (mmt & HASH_ONLY) {
-			// Update hash
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
-				^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_Q];
-		}
-		if (mmt & POS_ONLY) {
-			pieces[wk] = bit_at(e1);
-			pieces[wr] ^= (bit_at(d1) | bit_at(a1));
-			// Override position
-			whitePos ^= whitePos & 0xF8ull;
-			whitePos |= 0x88ull;
-		}
-		if (mmt == PROPER) {
-			castlingRights = move.from;
-		}
-		break;
-	case ENPASSENT:
-		if (move.pieces == bp) {
-			if (mmt & HASH_ONLY) {
-				// Update hashkey
-				hashKey ^= randomSet[bp][move.from]
-					^ randomSet[bp][move.to]
-					^ randomSet[wp][move.to + 8]
-					^ randomSet[ENPASSENT_HASH][move.from % 8];
-			}
-			if (mmt & POS_ONLY) {
-				pieces[bp] ^= (bit_at(move.to) | bit_at(move.from));
-				pieces[wp] |= bit_at(move.to + 8);
-
-				blackPos ^= bit_at(move.to);
-				blackPos |= bit_at(move.from);
-				whitePos |= bit_at(move.to + 8);
-			}
-			if (mmt == PROPER) {
-				b_enpassent = (move.to % 8) + 1;
-			}
-		}
-		else {
-			if (mmt & HASH_ONLY) {
-				hashKey ^= randomSet[wp][move.from]
-					^ randomSet[wp][move.to]
-					^ randomSet[bp][move.to - 8]
-					^ randomSet[ENPASSENT_HASH][move.from % 8];
-			}
-			if (mmt & POS_ONLY) {
-				pieces[wp] ^= (bit_at(move.to) | bit_at(move.from));
-				pieces[bp] |= bit_at(move.to - 8);
-
-				whitePos ^= bit_at(move.to);
-				whitePos |= bit_at(move.from);
-				blackPos |= bit_at(move.to - 8);
-			}
-			if (mmt == PROPER) {
-				w_enpassent = (move.to % 8) + 1;
-			}
-		}
-		break;
-	default:
-		cerr << "Invalid move encountered!\n";
-		exit(1);
-	}
-	if (mmt == PROPER) {
-		// restore some castling rights
-		byte cast = (move.flags & 0xF0ull) >> 4;
-		if (cast) {
-			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-			castlingRights |= cast;
-		}
-	}
-	if (mmt & POS_ONLY) {
-		allPos = blackPos | whitePos;
-	}
 }
 
 U64 inline Board::rookAttacks(long pos, U64 blockers) const
@@ -1179,8 +452,8 @@ bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove, bool wasChe
 	// Only relies on positional information
 
 	if (   wasCheck
-		|| move_piece(lastMove.pieces) == bk 
-		|| move_piece(lastMove.pieces) == wk 
+		|| move_piece(lastMove.pieces) == bk
+		|| move_piece(lastMove.pieces) == wk
 		|| (bit_at(lastMove.from) & currentlyPinned)) {
 
 		// King was in check before last move, or king was moved, or moved piece was pinned
@@ -1226,7 +499,7 @@ bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove, bool wasChe
 			if ((kingRect)  & (pieces[wr] | pieces[wq])) return true;
 		}
 		return false;  // Move is legal
-	} 
+	}
 	else return false; // Move is legal
 }
 
@@ -1313,18 +586,18 @@ int Board::evaluate(color side)
 						   - popcount((pieces[wp] << 8) & allPos));
 
 	//*************************** KING SAFETY ***************************
-	// Penalty of 250 cp if king is in check, since it generally 
+	// Penalty of 250 cp if king is in check, since it generally
 	// reduces number of possible moves.
 	if (pieces[bk] & whiteAtt)      total_boardValue += 250;
 	else if (pieces[wk] & blackAtt) total_boardValue -= 250;
 	// ~~~ King freedom ~~~
-	// Measures number of fields the king can escape to. This should only be 
+	// Measures number of fields the king can escape to. This should only be
 	// active in the endgame -> Leads to a quicker checkmate and less transpositions
 	if (endGameValue > 0.5) {
 		//cout << "OK\n";
 		mask = pieces[wk];
 		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
-	
+
 		total_boardValue += 10 * popcount(mask & ~blackAtt);
 		mask = pieces[bk];
 		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);

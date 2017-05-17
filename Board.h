@@ -26,14 +26,14 @@ class Board
 private:
 	// Move making
 	void updateAttack(piece p);
-	
+
 	// Init
 	void initHash(); // Used only for Init!, the hashkey is updated for each move
 
 	// Flooding algorithm
 	enum dir {n, e, s, w, ne, se, sw, nw};
 	U64 inline floodFill(U64 propagator, U64 empty, dir) const;
-	
+
 	void pawnFill(color side);
 public:
 	Board();
@@ -85,5 +85,9 @@ public:
 	bool wasInCheck;
 	vector<vector<U64>> randomSet;
 };
+
+// Template definitions
+#include "Makemove.h"
+#include "movegenerators.h"
 
 #endif
