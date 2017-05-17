@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -std=c++17 -Wpedantic -Ofast -O3 -fpermissive
+CFLAGS = -std=c++11 -fms-extensions -Ofast -O3 -fpermissive
 LFLAGS = -lsfml-window -lsfml-graphics -lsfml-system
 NAME = chess2
 OBJ = Main.o ZobristHash.o Testing.o AI.o gui.o Board.o Data.o Move.o

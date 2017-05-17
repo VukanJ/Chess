@@ -37,15 +37,12 @@ union Move
 		uint32_t targetPiece    : 4;
 	};
 	struct {
-		uint32_t from   : 8;
-		uint32_t to     : 8;
-		uint32_t flags  : 8;
-		uint32_t pieces : 8;
+		uint32_t _ft_    : 16;
+		uint32_t flags   : 8;
+		uint32_t pieces  : 8;
 	};
 	struct {
 		uint32_t oldCastlingRights : 8;
-		uint32_t                   : 0;
-		uint32_t flags             : 8;
 	};
 	struct {
 		uint32_t raw;
@@ -70,7 +67,7 @@ static string moveString(Move m)
 	}
 	string s(1, toupper(names[m.movePiece]));
 	if (m.flags == CAPTURE) {
-		if (s[0] == 'P') 
+		if (s[0] == 'P')
 			s = squareNames[m.to][0];
 		s += 'x';
 	}
