@@ -7,6 +7,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <ctime>
 
 #include "defines.h"
 #include "AI.h"

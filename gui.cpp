@@ -6,7 +6,6 @@ Gui::Gui(AI& _ai, color aiColor) : chessBoard(_ai.chessBoard)
 	drawOptions = 0x0;
 
 	// Draw board image (8 x 8) pixel
-	srand((unsigned int)time((time_t)(0)));
 	boardImage.create(8, 8, sf::Color::Black);
 	auto c = 1;
 	for (int i = 0; i < 8; i++){
