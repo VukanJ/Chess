@@ -407,16 +407,16 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 	//	reduceMoveList(moveList, side);
 
 	for_each(moveList.begin(), moveList.end(), [this](Move& move) {
-		if (target_piece(move.pieces) == wr) {
-			if (move_type(move.flags) == CAPTURE || move_type(move.flags) == C_PROMOTION) {
+		if (move.targetPiece == wr) {
+			if (move.mtype == CAPTURE || move.mtype == C_PROMOTION) {
 				if (move.to == a1)
 					move.flags |= (castlingRights & castle_Q) << 4;
 				else if (move.to == h1)
 					move.flags |= (castlingRights & castle_K) << 4;
 			}
 		}
-		else if (target_piece(move.pieces) == br) {
-			if (move_type(move.flags) == CAPTURE || move_type(move.flags) == C_PROMOTION) {
+		else if (move.targetPiece == br) {
+			if (move.mtype == CAPTURE || move.mtype == C_PROMOTION) {
 				if (move.to == a8)
 					move.flags |= (castlingRights & castle_q) << 4;
 				else if (move.to == h8)
@@ -452,8 +452,8 @@ bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove, bool wasChe
 	// Only relies on positional information
 
 	if (   wasCheck
-		|| move_piece(lastMove.pieces) == bk
-		|| move_piece(lastMove.pieces) == wk
+		|| lastMove.movePiece == bk
+		|| lastMove.movePiece == wk
 		|| (bit_at(lastMove.from) & currentlyPinned)) {
 
 		// King was in check before last move, or king was moved, or moved piece was pinned
@@ -462,7 +462,7 @@ bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove, bool wasChe
 		piece king = kingColor == white ? wk : bk;
 		byte kingPos = msb(pieces[king]);
 		U64 kingRect = 0x0, kingDiags = 0x0;
-		if (move_type(lastMove.flags) > 5) {
+		if (lastMove.mtype > 5) {
 			return false; // Castling does not put king in check
 		}
 

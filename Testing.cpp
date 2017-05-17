@@ -19,11 +19,14 @@ UnitTest::UnitTest() {}
 
 void UnitTest::testDefines() const
 {
+  // obsolete
+/*
   byte b = piece_pair(0xA, 0x5);
   if (move_piece(b) != 0xA)
     cerr << "TARGET_PIECE() Failed\n";
   if (target_piece(b) != 0x5)
     cerr << "MOV_PIECE() Failed()\n";
+	*/
 }
 
 void UnitTest::testIntrinsics() const

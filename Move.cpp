@@ -14,3 +14,4 @@ Move::Move(ulong _from, ulong _to, byte _flags, byte _pieces)
 
 Move::Move(int _from, int _to, byte _flags, byte _pieces) 
 	: from((byte)_from), to((byte)_to), flags(_flags), pieces(_pieces) {}
+
