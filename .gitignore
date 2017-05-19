@@ -10,3 +10,4 @@ chess2
 *.png
 *.save
 dump.txt
+call*
