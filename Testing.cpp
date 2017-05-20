@@ -182,7 +182,7 @@ void UnitTest::testPawnFill()
 
 	ai.chessBoard.setupBoard("8/4p3/3N1N2/88888 w - - 1 0");
 	auto hashKey = ai.chessBoard.hashKey;
-	vector<Move> moveList;
+	MoveList moveList;
 	ai.chessBoard.generateMoveList(moveList, black, true);
 	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == CAPTURE && move.from > move.to; }) == 2);
 	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == MOVE && move.from > move.to; }) == 1);
@@ -208,11 +208,11 @@ void UnitTest::testPawnFill()
 
 void UnitTest::testCastling()
 {
-	auto getMove = [](vector<Move>& mlist, int f, int t) {
+	auto getMove = [](MoveList& mlist, int f, int t) {
 		return find_if(mlist.begin(), mlist.end(),
 			[f, t](const Move& m) {return m.from == f && m.to == t; }); };
 
-	vector<Move> moveList;
+	MoveList moveList;
 	AI ai("r3k2r/8/8/8/8/8/8/R3K2R w - - 1 0", black, 10);
 	ai.chessBoard.generateMoveList(moveList, black, true);
 
@@ -444,7 +444,7 @@ void UnitTest::testProm()
 	AI ai("5n2/1P4P1/8/8/8/8/1p4p1/5N w - - 1 0", black, 10);
 	ai.chessBoard.updateAllAttacks();
 	ai.chessBoard.print();
-	vector<Move> whiteMoves, blackMoves;
+	MoveList whiteMoves, blackMoves;
 	ai.chessBoard.generateMoveList(whiteMoves, white, true);
 	ai.chessBoard.generateMoveList(blackMoves, black, true);
 	assert(count_if(whiteMoves.begin(), whiteMoves.end(), [](Move& move) {return move.flags == PROMOTION; })   == 8);
@@ -503,7 +503,7 @@ int UnitTest::MinimalTree::buildGameTreeMinimax(int depth, color side)
 	bool isMax = side == computerColor;
 
 	if (depth == 0) return chessBoard.evaluate(side);
-	vector<Move> moveList;
+	MoveList moveList;
 	int bestValue = isMax ? -oo: +oo;
 	int testValue;
 
@@ -795,7 +795,7 @@ void Benchmark::benchmarkMoveGeneration()
 	}
 	// Measure move generation time
 	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5 w kKqQ - 1 0", black);
-	vector<Move> moves;
+	MoveList moves;
 
 	int testSize = (int)1e7;
 	moves.reserve(testSize);
@@ -829,7 +829,7 @@ void Benchmark::benchmarkMovemaking()
 	}
 
 	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5 w - - 1 0", black);
-	vector<Move> moves;
+	MoveList moves;
 	samplePlayer.chessBoard.generateMoveList(moves, black, true);
 	auto& boardref = samplePlayer.chessBoard;
 	size_t numOfMoves = moves.size();

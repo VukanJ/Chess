@@ -192,15 +192,15 @@ bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
 	// the needed move metadata is filled in correctly.
 	// -> Generates all possible moves and tries to find a match.
 
-	vector<Move> possibleMoves;
+	MoveList possibleMoves;
 	chessBoard.generateMoveList(possibleMoves, humanColor, true);
 
-	vector<Move>::iterator matchingMove = find_if(possibleMoves.begin(), possibleMoves.end(), [&](const Move& pmove) {
+	MoveList::iterator matchingMove = find_if(possibleMoves.begin(), possibleMoves.end(), [&](const Move& pmove) {
 		byte pflags = pmove.flags & 0xF;
 		if (pflags == BCASTLE || pflags == WCASTLE || pflags == BCASTLE_2 || pflags == WCASTLE_2){
 			// Check if human wants to castle
 			if (userInput.movePiece == bk && humanColor == black) {
-				if (inputMove.from - inputMove.to ==  2 && chessBoard.castlingRights & castle_k && pflags == BCASTLE)   return true;																		  
+				if (inputMove.from - inputMove.to ==  2 && chessBoard.castlingRights & castle_k && pflags == BCASTLE)   return true;
 				if (inputMove.from - inputMove.to == -2 && chessBoard.castlingRights & castle_q && pflags == BCASTLE_2) return true;
 			}
 			else if (userInput.movePiece == wk && humanColor == white) {

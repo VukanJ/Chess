@@ -71,14 +71,14 @@ public:
 	};
 
 	class fullTree // Tree containing NegaMax and Implementation
-	{ 
+	{
 	public:
 		fullTree(Board& _chessboard, color comp, int _targetDepth);
 		struct Node {
 			Node();
 			Move thisMove;
 			int thisValue;
-			vector<Move> moveList;
+			MoveList moveList;
 			vector<unique_ptr<Node>> nodeList;
 		};
 		color computerColor;
@@ -151,7 +151,7 @@ private:
 	chrono::high_resolution_clock::time_point t1, t2;
 };
 
-class DataBaseTest 
+class DataBaseTest
 {
 public:
 	DataBaseTest();

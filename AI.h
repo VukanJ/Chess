@@ -17,7 +17,7 @@ using namespace std;
 Computer is always maximizing player.
 */
 
-constexpr unsigned int MAX_DEPTH = 64;
+constexpr uint MAX_DEPTH = 64;
 
 class Gui;
 
@@ -43,7 +43,7 @@ private:
 	{
 	public:
 		Node();
-		vector<Move> moveList;
+		MoveList moveList;
 		vector<nodePtr> nodeList;
 		byte nodeFlags;
 		enum Flags {
@@ -70,13 +70,13 @@ private:
 	ZobristHash transposition_hash;
 	Gui* gui;
 
-	// Gamehistory contains string board representation for 
+	// Gamehistory contains string board representation for
 	// exact comparison. (Hash can be overwritten)
 	string boardToString() const;
 	vector<pair<string, Move>> gameHistory;
 public:
 	AI(string FEN, color computerColor);
-	AI(string FEN, color computerColor, unsigned int hashSize);
+	AI(string FEN, color computerColor, uint hashSize);
 	void printDebug(string show = "prnbkqPRNBKQ");
 	void printBoard();
 	void bindGui(Gui* gui);

@@ -1,6 +1,6 @@
 #include "AI.h"
 
-AI::AI(string FEN, color computerColor) 
+AI::AI(string FEN, color computerColor)
 	: aiColor(computerColor)
 {
 	genChessData data;
@@ -10,7 +10,7 @@ AI::AI(string FEN, color computerColor)
 	//debug();
 }
 
-AI::AI(string FEN, color computerColor, unsigned int hashSize)
+AI::AI(string FEN, color computerColor, uint hashSize)
 	: aiColor(computerColor)
 {
 	genChessData data;
@@ -156,7 +156,7 @@ pair<Move, int> AI::distributeNegaMax()
 		chessBoard.updateAllAttacks();
 		auto entry = transposition_hash.getEntry(chessBoard.hashKey);
 		if (entry.search_depth >= targetDepth) {
-			// Move has been evaluated well enough before 
+			// Move has been evaluated well enough before
 			move_val.second = entry.value;
 		}
 		else {
@@ -185,8 +185,8 @@ int AI::NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side
 	auto &hashEntry = transposition_hash.getEntry(chessBoard.hashKey);
     int oldAlpha = alpha;
 
-	if (hashEntry.search_depth >= targetDepth - depth) { 
-		// If stored move value is of higher quality use 
+	if (hashEntry.search_depth >= targetDepth - depth) {
+		// If stored move value is of higher quality use
 		// data from previous search
 		if (hashEntry.flags & EXACT_VALUE) {
 			return hashEntry.value;
@@ -212,7 +212,7 @@ int AI::NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side
 	if (node->nodeFlags & Node::Flags::explored)
 		// Node already exists in memory and has children
 		sortMoves(node, side);
-	else 
+	else
 		chessBoard.generateMoveList(node->moveList, side, true);
 
 	for (auto move = node->moveList.begin(); move != node->moveList.end();) {
