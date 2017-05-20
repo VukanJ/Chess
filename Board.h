@@ -87,6 +87,6 @@ public:
 };
 // Template definitions
 #include "Makemove.h"
-#include "movegenerators.h"
+#include "Movegenerators.h"
 
 #endif
