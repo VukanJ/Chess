@@ -303,7 +303,7 @@ void Board::updatePinnedPieces(color side)
 	if (side == white) {
 		kingPosition = msb(pieces[wk]);
 		kingXray = BISHOP_ATTACKS[kingPosition] & (pieces[bq] | pieces[bb]);
-		kingXray |= ((_col << kingPosition % 8) ^ (_row << (kingPosition / 8) * 8)) & (pieces[bq] | pieces[br]);
+		kingXray|= ROOK_ATTACKS[kingPosition] & (pieces[bq] | pieces[br]);
 		//printBitboard(kingXray);
 		// Find positions of pieces, that must not be moved
 		for_bits(enemyPos, kingXray) {
@@ -316,7 +316,7 @@ void Board::updatePinnedPieces(color side)
 	else {
 		kingPosition = msb(pieces[bk]);
 		kingXray = BISHOP_ATTACKS[kingPosition] & (pieces[wq] | pieces[wb]);
-		kingXray |= ((_col << kingPosition % 8) ^ (_row << (kingPosition / 8) * 8)) & (pieces[wq] | pieces[wr]);
+		kingXray |= ROOK_ATTACKS[kingPosition] & (pieces[wq] | pieces[wr]);
 		//printBitboard(kingXray);
 		// Find positions of pieces, that must not be moved
 		for_bits(enemyPos, kingXray) {

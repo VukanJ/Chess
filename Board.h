@@ -85,7 +85,6 @@ public:
 	bool wasInCheck;
 	vector<vector<U64>> randomSet;
 };
-
 // Template definitions
 #include "Makemove.h"
 #include "movegenerators.h"
