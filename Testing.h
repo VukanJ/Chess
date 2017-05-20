@@ -23,25 +23,6 @@ using namespace std;
 
 typedef pair<string, string> stringpair;
 
-class ChessError
-{
-public:
-	ChessError(string msg);
-	virtual void what() const;
-protected:
-	string errMsg;
-	string fname;
-};
-
-class IntrinError : public ChessError
-{
-public:
-	IntrinError(string msg, string fname);
-	void what() const override;
-private:
-	string fname;
-};
-
 class UnitTest
 {
 public:
@@ -59,7 +40,7 @@ public:
 	public:
 		MinimalTree(Board& _chessboard, color comp, int _targetDepth);
 		struct Node {
-			Node(float _boardValue);
+			explicit Node(float _boardValue);
 			float boardValue, value_alphabeta;
 		};
 		color computerColor;
@@ -126,7 +107,7 @@ private:
 		bType type;
 		string name;
 		string msg;
-		double value;
+		float value;
 	};
 	Board testBoard;
 	vector<result> results;

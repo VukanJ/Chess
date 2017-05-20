@@ -38,8 +38,6 @@ int main()
 	computer.bindGui(&gui);
 	//computer.Play(window);
 
-	float frameTime = 0;
-
 	sf::RectangleShape testoverlay;
 	testoverlay.setSize(sf::Vector2f(WIDTH, HEIGHT));
 	testoverlay.setPosition(sf::Vector2f(0, 0));
@@ -47,7 +45,7 @@ int main()
 
 	sf::Clock clock;
 	while (window.isOpen()){
-		frameTime = clock.restart().asSeconds();
+		float frameTime = clock.restart().asSeconds();
 		sf::Event ev;
 		while (window.pollEvent(ev)){
 			switch (ev.type){
