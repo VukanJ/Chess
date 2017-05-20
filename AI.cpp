@@ -20,11 +20,6 @@ AI::AI(string FEN, color computerColor, uint hashSize)
 	//debug();
 }
 
-void AI::debug()
-{
-
-}
-
 void AI::printBoard()
 {
 	chessBoard.print();

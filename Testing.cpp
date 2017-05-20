@@ -1,20 +1,5 @@
 ﻿#include "Testing.h"
 
-ChessError::ChessError(string msg) : errMsg(msg){}
-
-void ChessError::what() const
-{
-	cerr << errMsg << '\n';
-}
-
-IntrinError::IntrinError(string msg, string name) : fname(name), ChessError(msg) {}
-
-void IntrinError::what() const
-{
-	printf("Error in %s intrinsic\n", fname.c_str());
-	cerr << errMsg << '\n';
-}
-
 UnitTest::UnitTest() {}
 
 void UnitTest::testDefines() const
@@ -495,7 +480,7 @@ void UnitTest::testMinimalTree()
 	cout << tree.buildGameTreeMinimax(4, white) << endl;
 }
 
-UnitTest::MinimalTree::Node::Node(float _boardValue) : boardValue(_boardValue) {}
+UnitTest::MinimalTree::Node::Node(float _boardValue) : boardValue(_boardValue), value_alphabeta(-oo) {}
 
 int UnitTest::MinimalTree::buildGameTreeMinimax(int depth, color side)
 {
@@ -577,7 +562,7 @@ UnitTest::fullTree::fullTree(Board& _chessBoard, color comp, int _targetDepth)
 	staticEvaluations = nalphaBeta = nHashLookups = 0;
 }
 
-UnitTest::fullTree::Node::Node() {}
+UnitTest::fullTree::Node::Node() : thisValue(0x0) {}
 
 int UnitTest::fullTree::test_NegaMax(unique_ptr<Node>& node, int alpha, int beta, int depth, color side)
 {
@@ -750,7 +735,7 @@ void UnitTest::testMagic()
 	*/
 }
 
-Benchmark::Benchmark() : performingAll(false)
+Benchmark::Benchmark() : totalTotalPerftMoveCount(0), performingAll(false)
 {
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
@@ -763,7 +748,7 @@ Benchmark::Benchmark() : performingAll(false)
 	//testBoard.print();
 
 	testBoard.updateAllAttacks();
-	MoveList moves;
+	//MoveList moves;
 	//testBoard.generateMoveList(moves, white, true);
 
 	perftNodeCount = perftEPCount = perftMoveCount = perftCheckmateCount = totalPerftMoveCount = 0;
@@ -1002,11 +987,10 @@ void Benchmark::perftTestSuite()
 	testFile.close();
 	// Start perft
 	int errorCount = 0;
-	int c = 1;
 	Timer timer;
 	timer.start();
 	for (auto& testNum : perftTestData) {
-		c = 1;
+		int c = 1;
 		testBoard.setupBoard(testNum[0]);
 		//testBoard.print();
 
@@ -1056,10 +1040,9 @@ double Timer::getTime()
 	return (double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 }
 
-DataBaseTest::DataBaseTest()
+DataBaseTest::DataBaseTest() : transposition_hash(ZobristHash(1e7))
 {
 	targetDepth = 1;
-	transposition_hash = ZobristHash(1e7);
 
 	evalcnt = 0;
 	negaMaxCnt = 0;
@@ -1119,7 +1102,11 @@ Move DataBaseTest::getBestMove(color forPlayer)
 		cout << string(80, '~') << endl;
 		cout << "Depth " << targetDepth << " best move = " << shortNotation(bestMove) << endl;
 		cout << "Search Info: \n";
-		printf("\t%d\tEvaluations\n\t%d\tNegaMax Calls\n\t%d\tHashed boards\n\t%d\tHash Accesses\n\t%d\tPlayed Moves\n",
+		printf("\t%d\tEvaluations"
+			   "\n\t%d\tNegaMax Calls"
+			   "\n\t%d\tHashed boards"
+			   "\n\t%d\tHash Accesses"
+			   "\n\t%d\tPlayed Moves\n",
 			evalcnt, negaMaxCnt, storedBoards, hashAccess, moveCnt);
 		evalcnt = negaMaxCnt = hashAccess = moveCnt = 0;
 	}

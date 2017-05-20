@@ -133,7 +133,7 @@ void inline Board::knightMoves(MoveList& moveList) const
 
 	U64 attackMask = 0x0, pieceAttacks = 0x0;
 	for_bits(pos, attackingPieces) {
-		attackMask = KNIGHT_ATTACKS[pos] & attacks[p] & (side == black ? whitePos : blackPos);
+		attackMask = KNIGHT_ATTACKS[pos] & (side == black ? whitePos : blackPos);
 		if (mgt & CAPTURES_ONLY) {
 			for_color(candidate, !side) {
 				pieceAttacks = pieces[candidate] & attackMask;
@@ -191,7 +191,6 @@ template<moveGenType mgt, color side>
 void inline Board::kingMoves(MoveList& moveList) const
 {
 	piece king = side == white ? wk : bk;
-	U64 attackingPieces = pieces[king];
 	U64 attackMask = 0x0, pieceAttacks = 0x0;
 	ulong pos = msb(pieces[king]);
 	attackMask = ((attacks[king] & (side == black ? whitePos : blackPos)) & ~(side == black ? whiteAtt : blackAtt));

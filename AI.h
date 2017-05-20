@@ -83,7 +83,6 @@ public:
 
 	void Play(sf::RenderWindow& window); // Play
 
-	void debug();
 	const Board& getBoardRef();
 
 	Board* getBoardPtr();

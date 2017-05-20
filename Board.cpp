@@ -2,11 +2,9 @@
 
 Board::Board()
 	: whitePos(0x0), blackPos(0x0), whiteAtt(0x0), blackAtt(0x0), hashKey(0x0),
-	castlingRights(0x0), b_enpassent(0x0), w_enpassent(0x0)
-{
-	pieces    = vector<U64>(12, 0x0);
-	attacks   = vector<U64>(12, 0x0);
-}
+	castlingRights(0x0), b_enpassent(0x0), w_enpassent(0x0), pieces(vector<U64>(12, 0x0)),
+	attacks(vector<U64>(12, 0x0)), wpMove(0x0), bpMove(0x0), wpDanger(0x0), bpDanger(0x0),
+	allPos(0x0), pinned(0x0), wasInCheck(false){}
 
 Board::Board(string fen) : Board()
 {
@@ -111,7 +109,7 @@ void Board::initHash()
 		                                           ^ randomSet[wr][a1]
 		                                           ^ randomSet[wr][d1];
 
-	auto pos = 0, i = 0;
+	auto i = 0;
 	for (auto p : pieces) {
 		for_bits(pos, p) {
 			hashKey ^= randomSet[i][pos];
@@ -295,7 +293,7 @@ void Board::updatePinnedPieces(color side)
 	// Calculates absolute pinned pieces.
 	// These are considered when checking move legality
 
-	U64 kingXray = 0x0, kingRects = 0x0;
+	U64 kingXray = 0x0;
 	U64 xray = 0x0;
 	pinned = 0x0;
 	//print();
@@ -531,7 +529,6 @@ int Board::evaluate(color side)
 
 	//// Rewards points, if positions are similar to piece-square-heuristics
 	//// Pawns:
-	int psh = 0;
 	U64 mask = pieces[wp];
 	//for_bits(pos, mask)
 	//	psh += pieceSquareTable[0][63 - pos];

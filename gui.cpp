@@ -71,7 +71,6 @@ void Gui::render(sf::RenderWindow& window)
 		colorSquares(chessBoard.whiteAtt, sf::Color(255, 0, 0, 200), window);
 	}
 	int pieceIndex = 0;
-	ulong pos = 0;
 	for (const auto& type : chessBoard.pieces){
 		auto mask = type;
 		for_bits(pos, mask) {
@@ -175,10 +174,10 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 	case sf::Event::KeyPressed:
 		switch (ev.key.code) {
 		case sf::Keyboard::F1:
-			drawOptions = drawOptions & drawAttB ? drawOptions & ~drawAttB : drawOptions | drawAttB;
+			drawOptions = ((drawOptions & drawAttB) ? (drawOptions & ~drawAttB) : (drawOptions | drawAttB));
 			break;
 		case sf::Keyboard::F2:
-			drawOptions = drawOptions & drawAttW ? drawOptions & ~drawAttW : drawOptions | drawAttW;
+			drawOptions = ((drawOptions & drawAttW) ? (drawOptions & ~drawAttW) : (drawOptions | drawAttW));
 			break;
 		}
 		break;
@@ -383,6 +382,7 @@ void Gui::ScoreGauge::render(sf::RenderWindow& window)
 
 Gui::Arrow::Arrow()
 {
+	elapsedTime = 0;
 	arrowBody.setFillColor(sf::Color(0, 0, 255, 200));
 	arrowHead.setFillColor(sf::Color(0, 0, 255, 200));
 	fadelevel = 200; // Fades out
