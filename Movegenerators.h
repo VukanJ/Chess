@@ -234,7 +234,7 @@ void inline Board::rookMoves(MoveList& moveList) const
 	}
 	// Calculate attacked pieces
 	for_bits(pos, attackingPieces) {
-		attackMask = ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[rook] & (side == black ? whitePos : blackPos);
+		attackMask = ROOK_ATTACKS[pos] & attacks[rook] & (side == black ? whitePos : blackPos);
 		if (CAPTURES_ONLY) {
 			if (attackMask) {
 				for_color(candidate, !side) {
@@ -257,7 +257,7 @@ void inline Board::rookMoves(MoveList& moveList) const
 			}
 		}
 		if (mgt & QUIET_ONLY) {
-			attackMask ^= ((_col << pos % 8) ^ (_row << (pos / 8) * 8)) & attacks[rook];
+			attackMask ^= ROOK_ATTACKS[pos] & attacks[rook];
 			for_bits(target, attackMask) {
 				if (!(CONNECTIONS[pos][target] & allPos)) {
 					if (pos == a_square) {

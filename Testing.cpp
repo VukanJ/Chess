@@ -467,13 +467,13 @@ void UnitTest::testProm()
 void UnitTest::specialTest()
 {
 	AI ai("k7/8/3K4/8/8/6q1/8/5N2 w - - 1 0", white);
-	
+
 	ai.chessBoard.updateAllAttacks();
 	ai.chessBoard.print();
 	MoveList movelist;
 
 	ai.chessBoard.generateMoveList(movelist, white, true);
-	
+
 	exit(0);
 }
 
@@ -755,8 +755,8 @@ Benchmark::Benchmark() : performingAll(false)
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
 
-	testBoard = Board("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5 w - - 1 0");
-	
+	testBoard = Board("*");
+
 	//Move a8a4 = Move(a8, a4, MOVE, wr);
 	//testBoard.makeMove(a8a4, white);
 	// Now: 7r/8/8/2K5/R4k2/8/8/r6R b - - 1 0
@@ -807,11 +807,11 @@ void Benchmark::benchmarkMoveGeneration()
 	}
 	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
 	auto deltaT_inSeconds = (double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count()*1e-6;
-	
+
 	cout << (deltaT_inSeconds) << " Boards per second\n";
 
 	moves.clear();
-	
+
 
 }
 #pragma optimize( "", on )
@@ -884,7 +884,7 @@ void Benchmark::testPerft(int maxdepth)
 	if (maxdepth == -1) {
 		// Check perft numbers
 		auto hashKey = testBoard.hashKey;
-		for (int d = 1; d < 100; d++) {
+		for (int d = 1; d < 10; d++) {
 			chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
 			testBoard.print();
 			perft(d, d, white);
@@ -904,7 +904,7 @@ void Benchmark::testPerft(int maxdepth)
 			totalPerftMoveCount = 0;
 			perftEPCount = 0;
 			assert(hashKey == testBoard.hashKey);
-			cin.ignore();
+			//cin.ignore();
 		}
 		return;
 	}
@@ -1079,7 +1079,7 @@ void DataBaseTest::start_Bratko_Kopec_Test()
 		cerr << "Error: TestDataBase/bratkoKopec.dat missing!\n";
 		exit(1);
 	}
-	
+
 	int count = 0;
 	auto ignore = boost::escaped_list_separator<char>("\\", " ", "\"");
 	while (getline(bkt, read)) {
@@ -1092,7 +1092,7 @@ void DataBaseTest::start_Bratko_Kopec_Test()
 	bkt.close();
 
 	// start testing
-	
+
 	string boardStr;
 	Move bestmove;
 
@@ -1119,7 +1119,7 @@ Move DataBaseTest::getBestMove(color forPlayer)
 		cout << string(80, '~') << endl;
 		cout << "Depth " << targetDepth << " best move = " << shortNotation(bestMove) << endl;
 		cout << "Search Info: \n";
-		printf("\t%d\tEvaluations\n\t%d\tNegaMax Calls\n\t%d\tHashed boards\n\t%d\tHash Accesses\n\t%d\tPlayed Moves\n", 
+		printf("\t%d\tEvaluations\n\t%d\tNegaMax Calls\n\t%d\tHashed boards\n\t%d\tHash Accesses\n\t%d\tPlayed Moves\n",
 			evalcnt, negaMaxCnt, storedBoards, hashAccess, moveCnt);
 		evalcnt = negaMaxCnt = hashAccess = moveCnt = 0;
 	}
@@ -1154,9 +1154,9 @@ Move DataBaseTest::distributeNegaMax(color forPlayer)
 			testBoard.unMakeMove<PROPER>(*move, forPlayer);
 			move++;
 		}
-		// Initialize 
+		// Initialize
 		RootMoveList.resize(moveList.size());
-		for (int i = 0; i < moveList.size(); ++i) 
+		for (int i = 0; i < moveList.size(); ++i)
 			RootMoveList[i] = pair<Move, int>(moveList[i], -oo);
 	}
 

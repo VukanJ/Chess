@@ -4,7 +4,6 @@ vector<vector<U64>> CONNECTIONS = vector<vector<U64>>(64, vector<U64>(64, 0x0));
 vector<vector<U64>> magicRookMoveDatabase   = vector<vector<U64>>(64, vector<U64>());
 vector<vector<U64>> magicBishopMoveDatabase = vector<vector<U64>>(64, vector<U64>());
 
-
 void genChessData::genMoveData()
 {
 	genConnections();

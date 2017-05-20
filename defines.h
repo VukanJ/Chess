@@ -52,11 +52,13 @@ byte constexpr move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); 
 
 	U64 inline popcount(U64 x){ return __builtin_popcountll(x); }
 	U64 inline bitScan_rev64(ulong& index, U64 mask){
+		//index = __builtin_ffsll(mask)-1;
+		//return index;
 		index = mask == 0x0ull ? 0 : 63 - __builtin_clzll(mask);
-		 return index;
+		return index;
 	}
 
-	byte inline msb(U64 x) { ulong index; bitScan_rev64(index, x); return index; }
+	byte inline msb(U64 x) { return __builtin_ffsll(x)-1; }
 
 	U64 inline rotate_l64(U64& x, uint n){
 		return (x << n) | (x >> (64 - n));
@@ -65,9 +67,6 @@ byte constexpr move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); 
 	U64 inline rotate_r64(U64& x, uint n){
 		return (x >> n) | (x << (64 - n));
 	}
-
-	#define BITLOOP(__pos, mask) for(ulong __pos = bitScan_rev64(__pos, mask); \
-																	mask; mask ^= bit_at(bitScan_rev64(__pos, mask)), __pos = bitScan_rev64(__pos, mask))
 
 	#define for_bits(__pos, __mask) for (ulong __pos = msb(__mask); __mask; (__mask) ^= bit_at(__pos), __pos = msb(__mask))
 #endif
