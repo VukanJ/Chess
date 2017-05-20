@@ -15,7 +15,7 @@
 
 using namespace std;
 
-extern const unsigned int WIDTH, HEIGHT;
+extern const uint WIDTH, HEIGHT;
 
 class AI;
 
@@ -49,7 +49,7 @@ private:
 		//sf::RectangleShape hide;
 		sf::Vector2f origin;
 	} scoreGauge;
-	
+
 	class Arrow {
 		// Arrow shows last move of computer
 	public:

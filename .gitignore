@@ -11,3 +11,4 @@ chess2
 *.save
 dump.txt
 call*
+engine

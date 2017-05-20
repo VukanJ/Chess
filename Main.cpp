@@ -17,7 +17,7 @@ using namespace std;
 
 //#define GUI_MODE
 
-const unsigned int WIDTH = 800, HEIGHT = 600; // GUI SIZE
+const uint WIDTH = 800, HEIGHT = 600; // GUI SIZE
 
 void testing();
 void benchmark();
