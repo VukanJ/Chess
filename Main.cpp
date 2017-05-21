@@ -4,7 +4,7 @@
 
 #include "info.h"
 #include "AI.h"
-#include "gui.h"
+//#include "gui.h"
 #include "ZobristHash.h"
 #include "Testing.h"
 
@@ -28,7 +28,6 @@ int main()
 	testing();
 	//AI computer("1k1r4/pp1b1R2/3q2pp/4p3/2B5/4Q3/PPP2B2/2K5 b - - 1 0", black);
 	AI computer("*", black);
-
 #ifdef GUI_MODE
 	sf::RenderWindow window(sf::VideoMode(800, 600), "Chess", sf::Style::Close, sf::ContextSettings(0, 0, 3));
 	window.setFramerateLimit(60);
