@@ -8,14 +8,13 @@ void Board::makeMove(const Move& move, color side)
 	case MOVE:
 		// Piece disappears from from-square and appears at to-square:
 		if (mmt & HASH_ONLY) {
-			pieces[move.movePiece] ^= bit_at(move.from) | bit_at(move.to);
+			hashKey ^= randomSet[move.pieces][move.from] ^ randomSet[move.pieces][move.to];
 		}
 		// Update Hashkey
 		if (mmt & POS_ONLY) {
-			hashKey ^= randomSet[move.pieces][move.from] ^ randomSet[move.pieces][move.to];
+			pieces[move.movePiece] ^= bit_at(move.from) | bit_at(move.to);
 			// update position mask
-			side == black ? (blackPos = ((blackPos ^ bit_at(move.from)) | bit_at(move.to)))
-				: (whitePos = ((whitePos ^ bit_at(move.from)) | bit_at(move.to)));
+			(side == black ? blackPos : whitePos) ^= bit_at(move.from) | bit_at(move.to);
 		}
 		break;
 	case CAPTURE:
@@ -29,11 +28,11 @@ void Board::makeMove(const Move& move, color side)
 			pieces[move.targetPiece] ^= bit_at(move.to);    // Captured piece is deleted
 																	 // Update position mask
 			if (side == black) {
-				blackPos = (blackPos ^ bit_at(move.from)) | bit_at(move.to);
+				blackPos ^= bit_at(move.from) | bit_at(move.to);
 				whitePos ^= bit_at(move.to);
 			}
 			else {
-				whitePos = (whitePos ^ bit_at(move.from)) | bit_at(move.to);
+				whitePos ^= bit_at(move.from) | bit_at(move.to);
 				blackPos ^= bit_at(move.to);
 			}
 		}
@@ -71,8 +70,7 @@ void Board::makeMove(const Move& move, color side)
 			pieces[move.movePiece] ^= bit_at(move.from);    // removes pawn
 			pieces[move.targetPiece] |= bit_at(move.to);    // New piece appears
 											                // update position mask
-			side == black ? (blackPos = ((blackPos ^ bit_at(move.from)) | bit_at(move.to)))
-				: (whitePos = ((whitePos ^ bit_at(move.from)) | bit_at(move.to)));
+			(side == black ? blackPos : whitePos) ^= bit_at(move.from) | bit_at(move.to);
 		}
 		break;
 	case C_PROMOTION:
@@ -88,7 +86,7 @@ void Board::makeMove(const Move& move, color side)
 				pieces[move.movePiece] ^= bit_at(move.to);
 				pieces[move.targetPiece] |= bit_at(move.to);
 
-				blackPos = (blackPos ^ bit_at(move.from)) | bit_at(move.to);
+				blackPos ^= bit_at(move.from) | bit_at(move.to);
 				whitePos ^= bit_at(move.to);
 			}
 		}
@@ -103,7 +101,7 @@ void Board::makeMove(const Move& move, color side)
 				pieces[move.movePiece] ^= bit_at(move.to);
 				pieces[move.targetPiece] |= bit_at(move.to);
 
-				whitePos = (whitePos ^ bit_at(move.from)) | bit_at(move.to);
+				whitePos ^= bit_at(move.from) | bit_at(move.to);
 				blackPos ^= bit_at(move.to);
 			}
 		}
@@ -141,11 +139,11 @@ void Board::makeMove(const Move& move, color side)
 	case BCASTLE_2: // Castling long
 		if (mmt & HASH_ONLY) {
 			// Update hash
+			castlingRights &= ~(castle_k | castle_q);
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
 				^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_q];
 		}
 		if (mmt & POS_ONLY) {
-			castlingRights &= ~(castle_k | castle_q);
 			pieces[bk] = bit_at(c8);
 			pieces[br] ^= (bit_at(a8) | bit_at(d8));
 			// Override position
@@ -156,11 +154,11 @@ void Board::makeMove(const Move& move, color side)
 	case WCASTLE_2: // Castling long
 		if (mmt & HASH_ONLY) {
 			// Update hash
+			castlingRights &= ~(castle_K | castle_Q);
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights]
 				^ randomSet[CASTLE_POSITION_HASH][HASH_CASTLE_Q];
 		}
 		if (mmt & POS_ONLY) {
-			castlingRights &= ~(castle_K | castle_Q);
 			pieces[wk] = bit_at(c1);
 			pieces[wr] ^= (bit_at(a1) | bit_at(d1));
 			// Override position
@@ -182,7 +180,7 @@ void Board::makeMove(const Move& move, color side)
 				pieces[bp] ^= (bit_at(move.from) | bit_at(move.to));
 				pieces[wp] ^= bit_at(move.to + 8);
 
-				blackPos = (blackPos ^ bit_at(move.from)) | bit_at(move.to);
+				blackPos ^= bit_at(move.from) | bit_at(move.to);
 				whitePos ^= bit_at(move.to + 8);
 			}
 			if (mmt == PROPER) {
@@ -201,7 +199,7 @@ void Board::makeMove(const Move& move, color side)
 				pieces[wp] ^= (bit_at(move.from) | bit_at(move.to));
 				pieces[bp] ^= bit_at(move.to - 8);
 
-				whitePos = (whitePos ^ bit_at(move.from)) | bit_at(move.to);
+				whitePos ^= bit_at(move.from) | bit_at(move.to);
 				blackPos ^= bit_at(move.to - 8);
 			}
 			if (mmt == PROPER) {
@@ -245,8 +243,7 @@ void Board::unMakeMove(const Move& move, color side)
 			pieces[move.pieces] ^= (bit_at(move.to) | bit_at(move.from));
 
 			// Update position mask
-			side == black ? (blackPos = ((blackPos ^ bit_at(move.to)) | bit_at(move.from)))
-				: (whitePos = ((whitePos ^ bit_at(move.to)) | bit_at(move.from)));
+			(side == black ? blackPos : whitePos) ^= bit_at(move.from) | bit_at(move.to);
 		}
 		break;
 	case CAPTURE:
@@ -260,11 +257,11 @@ void Board::unMakeMove(const Move& move, color side)
 			pieces[move.targetPiece] |= bit_at(move.to);
 			// Update position mask
 			if (side == black) {
-				blackPos = (blackPos ^ bit_at(move.to)) | bit_at(move.from);
+				blackPos ^= bit_at(move.to) | bit_at(move.from);
 				whitePos |= bit_at(move.to);
 			}
 			else {
-				whitePos = (whitePos ^ bit_at(move.to)) | bit_at(move.from);
+				whitePos ^= bit_at(move.to) | bit_at(move.from);
 				blackPos |= bit_at(move.to);
 			}
 		}
@@ -278,8 +275,7 @@ void Board::unMakeMove(const Move& move, color side)
 		if (mmt & POS_ONLY) {
 			pieces[move.pieces] ^= (bit_at(move.to) | bit_at(move.from));     // Piece disappears from destination
 																			  // update position mask
-			side == black ? (blackPos = ((blackPos ^ bit_at(move.to)) | bit_at(move.from)))
-				: (whitePos = ((whitePos ^ bit_at(move.to)) | bit_at(move.from)));
+			(side == black ? blackPos : whitePos) ^= bit_at(move.from) | bit_at(move.to);
 		}
 		if (mmt == PROPER) {
 			b_enpassent = w_enpassent = 0x0;
@@ -294,8 +290,7 @@ void Board::unMakeMove(const Move& move, color side)
 			pieces[move.movePiece] |= bit_at(move.from);
 			pieces[move.targetPiece] ^= bit_at(move.to);
 			// update position mask
-			side == black ? (blackPos = ((blackPos ^ bit_at(move.to)) | bit_at(move.from)))
-				: (whitePos = ((whitePos ^ bit_at(move.to)) | bit_at(move.from)));
+			(side == black ? blackPos : whitePos) ^= bit_at(move.from) | bit_at(move.to);
 		}
 		break;
 	case C_PROMOTION:
@@ -310,7 +305,7 @@ void Board::unMakeMove(const Move& move, color side)
 				pieces[move.movePiece] |= bit_at(move.to);
 				pieces[move.targetPiece] ^= bit_at(move.to);
 
-				blackPos = (blackPos | bit_at(move.from)) ^ bit_at(move.to);
+				blackPos ^= bit_at(move.from) ^ bit_at(move.to);
 				whitePos |= bit_at(move.to);
 			}
 		}
@@ -325,7 +320,7 @@ void Board::unMakeMove(const Move& move, color side)
 				pieces[move.movePiece] |= bit_at(move.to);
 				pieces[move.targetPiece] ^= bit_at(move.to);
 
-				whitePos = (whitePos | bit_at(move.from)) ^ bit_at(move.to);
+				whitePos ^= bit_at(move.from) ^ bit_at(move.to);
 				blackPos |= bit_at(move.to);
 			}
 		}
