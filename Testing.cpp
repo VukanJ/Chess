@@ -740,7 +740,7 @@ Benchmark::Benchmark() : totalTotalPerftMoveCount(0), performingAll(false)
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
 
-	testBoard = Board("*");
+	testBoard = Board("rnbqkb1r/p3pppp/1p6/2ppP3/3N4/2P5/PPP1QPPP/R1B1KB1R w KQkq - 1 0");
 
 	//Move a8a4 = Move(a8, a4, MOVE, wr);
 	//testBoard.makeMove(a8a4, white);
@@ -889,7 +889,7 @@ void Benchmark::testPerft(int maxdepth)
 			totalPerftMoveCount = 0;
 			perftEPCount = 0;
 			assert(hashKey == testBoard.hashKey);
-			//cin.ignore();
+			cin.ignore();
 		}
 		return;
 	}
@@ -919,26 +919,35 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 	bool checkOnThisDepth = testBoard.wasInCheck;
 	U64 pinnedOnThisDepth = testBoard.pinned;
 	for (auto& move : movelist) {
-		testBoard.makeMove<PROPER>(move, side);
+		//try {
+			//U64 testHash = testBoard.hashKey;
+			testBoard.makeMove<PROPER>(move, side);
 
-		if(depth == 1) perftMoveCount++;
-		if (testBoard.isKingLeftInCheck(side, move, checkOnThisDepth, pinnedOnThisDepth)) {
-			testBoard.unMakeMove<PROPER>(move, side);
-			if (depth == 1) perftMoveCount--;
-			continue;
-		}
+			if (depth == 1) perftMoveCount++;
+			if (testBoard.isKingLeftInCheck(side, move, checkOnThisDepth, pinnedOnThisDepth)) {
+				testBoard.unMakeMove<PROPER>(move, side);
+				//if (testBoard.hashKey != testHash) throw string("Hash Error!");
+				if (depth == 1) perftMoveCount--;
+				continue;
+			}
 
-		if (move.flags == ENPASSENT && depth == 1) perftEPCount++;
+			if (move.flags == ENPASSENT && depth == 1) perftEPCount++;
 
-		checkmate = false; // Moves were found
-		perft(depth - 1, targetDepth, static_cast<color>(!side));
-		testBoard.unMakeMove<PROPER>(move, static_cast<color>(side));
-		if (depth == targetDepth) {
-			//cout << shortNotation(move) << ": " << perftMoveCount << endl;
-			totalPerftMoveCount += perftMoveCount;
-			totalTotalPerftMoveCount += perftMoveCount;
-			perftMoveCount = 0;
-		}
+			checkmate = false; // Moves were found
+			perft(depth - 1, targetDepth, static_cast<color>(!side));
+			testBoard.unMakeMove<PROPER>(move, static_cast<color>(side));
+			//if (testBoard.hashKey != testHash) throw string("Hash Error!");
+			if (depth == targetDepth) {
+				//cout << shortNotation(move) << ": " << perftMoveCount << endl;
+				totalPerftMoveCount += perftMoveCount;
+				totalTotalPerftMoveCount += perftMoveCount;
+				perftMoveCount = 0;
+			}
+		//}
+		//catch (const string& err) {
+		//	cerr << err << endl;
+		//	cerr << "Move " << moveString(move) << endl;
+		//}
 	}
 	if (checkmate && depth == 1) perftCheckmateCount++;
 }
@@ -1200,7 +1209,7 @@ int DataBaseTest::NegaMax(int alpha, int beta, int depth, color aiColor, color s
 	bool checkOnThisDepth = testBoard.wasInCheck;
 	U64 pinnedOnThisDepth = testBoard.pinned;
 	// Move ordering here
-	for (auto move = movelist.begin(); move != movelist.end(); ){
+	for (auto move = movelist.begin(); move != movelist.end(); ) {
 		//testBoard.print();
 		testBoard.makeMove<PROPER>(*move, side);
 		moveCnt++;

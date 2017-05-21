@@ -19,7 +19,6 @@ enum moveType {
 	BCASTLE_2,   // Black castle o-o-o
 };
 
-
 union Move
 {
 	Move();
