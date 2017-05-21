@@ -46,7 +46,6 @@ private:
 		sf::ConvexShape blackSide;
 		sf::ConvexShape whiteSide;
 		sf::CircleShape midCircle;
-		//sf::RectangleShape hide;
 		sf::Vector2f origin;
 	} scoreGauge;
 

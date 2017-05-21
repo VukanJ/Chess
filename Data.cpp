@@ -262,6 +262,7 @@ vector<U64> genChessData::generateMagicBitboards(vector<vector<U64>>& vars, vect
 		finalMagicNumbers.push_back(magicNumber);
 		cout << "0x" << hex << magicNumber << ",\n";
 	}
+	return finalMagicNumbers;
 }
 
 vector<vector<U64>> genChessData::genOccupancyVariations(vector<U64> occupancy)
