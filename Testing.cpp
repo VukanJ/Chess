@@ -1102,12 +1102,16 @@ void DataBaseTest::start_Bratko_Kopec_Test()
 Move DataBaseTest::getBestMove(color forPlayer)
 {
 	Move bestMove;
+	Timer timer;
 	static int count = 1;
 	cout << "Board " << count++ << endl;
 	testBoard.print();
 	auto oldHash = testBoard.hashKey;
 	for (targetDepth = 1; targetDepth < 10; targetDepth++) {
+		timer.start();
 		bestMove = distributeNegaMax(forPlayer);
+		timer.stop();
+		cout << "Time: " << timer.getTime()*1e-6 << endl;
 		cout << string(80, '~') << endl;
 		cout << "Depth " << targetDepth << " best move = " << shortNotation(bestMove) << endl;
 		cout << "Search Info: \n";
@@ -1206,6 +1210,26 @@ int DataBaseTest::NegaMax(int alpha, int beta, int depth, color aiColor, color s
 	movelist.reserve(32);
 	testBoard.updateAllAttacks();
 	testBoard.generateMoveList(movelist, side, true);
+	//stable_sort(movelist.begin(), movelist.end(), [&, this](const Move& m1, const Move& m2) { // Sort moves
+	//	testBoard.makeMove<HASH_ONLY>(m1, side);
+	//	int value1 = transposition_hash.getValue(testBoard.hashKey);
+	//	testBoard.unMakeMove<HASH_ONLY>(m1, side);
+	//	testBoard.makeMove<HASH_ONLY>(m2, side);
+	//	int value2 = transposition_hash.getValue(testBoard.hashKey);
+	//	testBoard.unMakeMove<HASH_ONLY>(m2, side);
+	//	return value1 <= value2;
+	//});
+	//auto bestMove = max_element(movelist.begin(), movelist.end(), [&, this](const Move& m1, const Move& m2) {
+	//	testBoard.makeMove<HASH_ONLY>(m1, side);
+	//	int value1 = transposition_hash.getValue(testBoard.hashKey);
+	//	testBoard.unMakeMove<HASH_ONLY>(m1, side);
+	//	testBoard.makeMove<HASH_ONLY>(m2, side);
+	//	int value2 = transposition_hash.getValue(testBoard.hashKey);
+	//	testBoard.unMakeMove<HASH_ONLY>(m2, side);
+	//	return value1 < value2;
+	//});
+	//iter_swap(movelist.begin(), bestMove);
+
 	bool checkOnThisDepth = testBoard.wasInCheck;
 	U64 pinnedOnThisDepth = testBoard.pinned;
 	// Move ordering here

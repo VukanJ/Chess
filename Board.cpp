@@ -404,24 +404,26 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 	//if (isKingInCheck(side))
 	//	reduceMoveList(moveList, side);
 
-	for_each(moveList.begin(), moveList.end(), [this](Move& move) {
-		if (move.targetPiece == wr) {
-			if (move.mtype == CAPTURE || move.mtype == C_PROMOTION) {
-				if (move.to == a1)
-					move.flags |= (castlingRights & castle_Q) << 4;
-				else if (move.to == h1)
-					move.flags |= (castlingRights & castle_K) << 4;
+	if (castlingRights & (side == black ? 0b1100 : 0b0011)) {
+		for (auto& move : moveList) {
+			if (move.targetPiece == wr) {
+				if (move.mtype == CAPTURE || move.mtype == C_PROMOTION) {
+					if (move.to == a1)
+						move.flags |= (castlingRights & castle_Q) << 4;
+					else if (move.to == h1)
+						move.flags |= (castlingRights & castle_K) << 4;
+				}
+			}
+			else if (move.targetPiece == br) {
+				if (move.mtype == CAPTURE || move.mtype == C_PROMOTION) {
+					if (move.to == a8)
+						move.flags |= (castlingRights & castle_q) << 4;
+					else if (move.to == h8)
+						move.flags |= (castlingRights & castle_k) << 4;
+				}
 			}
 		}
-		else if (move.targetPiece == br) {
-			if (move.mtype == CAPTURE || move.mtype == C_PROMOTION) {
-				if (move.to == a8)
-					move.flags |= (castlingRights & castle_q) << 4;
-				else if (move.to == h8)
-					move.flags |= (castlingRights & castle_k) << 4;
-			}
-		}
-	});
+	}
 }
 
 U64 inline Board::rookAttacks(long pos, U64 blockers) const
