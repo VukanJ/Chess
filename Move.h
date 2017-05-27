@@ -16,7 +16,7 @@ enum moveType {
 	WCASTLE,     // White castle o-o
 	WCASTLE_2,   // White castle o-o-o
 	BCASTLE,     // Black castle o-o
-	BCASTLE_2,   // Black castle o-o-o
+	BCASTLE_2    // Black castle o-o-o
 };
 
 union Move
@@ -36,7 +36,7 @@ union Move
 		uint32_t targetPiece    : 4;
 	};
 	struct {
-		uint32_t _ft_    : 16;
+		uint32_t fromTo  : 16;
 		uint32_t flags   : 8;
 		uint32_t pieces  : 8;
 	};

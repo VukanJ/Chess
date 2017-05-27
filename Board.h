@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <vector>
 #include <typeinfo>
+#include <functional>
+#include <array>
 #include <string>
 #include <chrono>
 #include <boost/algorithm/string.hpp>
@@ -31,8 +33,7 @@ private:
 	void initHash(); // Used only for Init!, the hashkey is updated for each move
 
 	// Flooding algorithm
-	enum dir {n, e, s, w, ne, se, sw, nw};
-	U64 inline floodFill(U64 propagator, U64 empty, dir) const;
+	U64 inline floodFill(U64 propagator, U64 empty, int) const;
 
 	void pawnFill(color side);
 public:
@@ -45,8 +46,16 @@ public:
 	// Move making and move generation
 	void generateMoveList(MoveList&, color, bool addQuietMoves);
 
+	array<array<MoveList, 100>, 12> deepMoves;
+	array<int, 12> moveUpdateDepths;
+	void initDeepMoves();
+	void updateDeepMoves(int depth, color side, const Move& lastMove);
+	MoveList assembleMovelist(int depth, color side);
+
 	U64 inline   rookAttacks(long pos, const U64 blockers) const;
 	U64 inline bishopAttacks(long pos, const U64 blockers) const;
+	// Vector of all move generating functions
+	vector<void(Board::*)(MoveList&)const> moveGenFunction;
 
 	template<moveGenType, color> void inline pawnMoves(MoveList&) const;
 	template<moveGenType, color> void inline knightMoves(MoveList&) const;

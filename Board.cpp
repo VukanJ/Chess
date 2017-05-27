@@ -4,10 +4,30 @@ Board::Board()
 	: whitePos(0x0), blackPos(0x0), whiteAtt(0x0), blackAtt(0x0), hashKey(0x0),
 	castlingRights(0x0), b_enpassent(0x0), w_enpassent(0x0), pieces(vector<U64>(12, 0x0)),
 	attacks(vector<U64>(12, 0x0)), wpMove(0x0), bpMove(0x0), wpDanger(0x0), bpDanger(0x0),
-	allPos(0x0), pinned(0x0), wasInCheck(false){}
+	allPos(0x0), pinned(0x0), wasInCheck(false)
+{
+	moveGenFunction = {
+		&Board::pawnMoves<ALL, black>,
+		&Board::rookMoves<ALL, black>,
+		&Board::knightMoves<ALL, black>,
+		&Board::queen_and_bishopMoves<ALL, black, false>,
+		&Board::kingMoves<ALL, black>,
+		&Board::queen_and_bishopMoves<ALL, black, true>,
+		&Board::pawnMoves<ALL, white>,
+		&Board::rookMoves<ALL, white>,
+		&Board::knightMoves<ALL, white>,
+		&Board::queen_and_bishopMoves<ALL, white, false>,
+		&Board::kingMoves<ALL, white>,
+		&Board::queen_and_bishopMoves<ALL, white, true>,
+	};
+}
 
 Board::Board(string fen) : Board()
 {
+	moveUpdateDepths = array<int, 12>{0};
+
+	//moveGenFunction[bp] = &pawnMoves<ALL, black>;
+
 	setupBoard(fen);
 	//debug();
 }
@@ -244,7 +264,7 @@ void Board::updateAttack(piece p)
 	}
 }
 
-U64 inline Board::floodFill(U64 propagator, U64 empty, dir direction) const
+U64 inline Board::floodFill(U64 propagator, U64 empty, int direction) const
 {
 	// Calculates all attacks including attacked pieces for sliding pieces
 	// (Queen, Rook, bishop)(s)
@@ -327,6 +347,55 @@ void Board::updatePinnedPieces(color side)
 	//printBitboard(pinned);
 }
 
+void Board::initDeepMoves()
+{
+	pawnMoves<ALL, black>(deepMoves[bp][0]);
+	rookMoves<ALL, black>(deepMoves[br][0]);
+	knightMoves<ALL, black>(deepMoves[bn][0]);
+	queen_and_bishopMoves<ALL, black, false>(deepMoves[bb][0]);
+	queen_and_bishopMoves<ALL, black, true>(deepMoves[bq][0]);
+	kingMoves<ALL, black>(deepMoves[bk][0]);
+
+	pawnMoves<ALL, white>(deepMoves[wp][0]);
+	rookMoves<ALL, white>(deepMoves[wr][0]);
+	knightMoves<ALL, white>(deepMoves[wn][0]);
+	queen_and_bishopMoves<ALL, white, false>(deepMoves[wb][0]);
+	queen_and_bishopMoves<ALL, white, true>(deepMoves[wq][0]);
+	kingMoves<ALL, white>(deepMoves[wk][0]);
+}
+
+void Board::updateDeepMoves(int depth, color side, const Move& lastMove)
+{
+	switch (lastMove.mtype) {
+	case MOVE: 
+		if ((lastMove.from | lastMove.to) & (blackAtt | whiteAtt)) {
+			// No piece was influenced by last Move
+			return;
+		}
+		else {
+			// Find out which moves need to be regenerated
+			// Check if square is under sliding piece attack
+			for (auto& sp : { br, bb, bq, wr, wb, wq }) {
+				if (pieces[sp] & (lastMove.from|lastMove.to)) {
+					//deepMoves[sp][depth]
+				}
+			}
+		}
+	break;
+	}
+}
+
+MoveList Board::assembleMovelist(int depth, color side)
+{
+	MoveList result;
+	for_color(p, side) {
+		result.insert(result.end(), 
+			deepMoves[p][min(depth, moveUpdateDepths[p])].begin(), 
+			deepMoves[p][min(depth, moveUpdateDepths[p])].end());
+	}
+	return result;
+}
+
 void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves)
 {
 	/*
@@ -350,14 +419,7 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 		for_black(b) { // Loop through black pieces
 			attackingPieces = pieces[b];
 			if (attackingPieces) { // Only consider non-empty boards
-				switch (b) {
-				case bp: pawnMoves<ALL, black>(moveList); break;
-				case br: rookMoves<ALL, black>(moveList); break;
-				case bn: knightMoves<ALL, black>(moveList); break;
-				case bb: queen_and_bishopMoves<ALL, black, false>(moveList); break;
-				case bq: queen_and_bishopMoves<ALL, black, true>(moveList); break;
-				case bk: kingMoves<ALL, black>(moveList); break;
-				}
+				invoke(moveGenFunction[b], *this, moveList);
 			}
 		}
 		// Generate castling moves
@@ -380,14 +442,7 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 		for_white(w) { // Loop through white pieces
 			attackingPieces = pieces[w];
 			if (attackingPieces){
-				switch (w) {
-				case wp: pawnMoves<ALL, white>(moveList); break;
-				case wr: rookMoves<ALL, white>(moveList); break;
-				case wn: knightMoves<ALL, white>(moveList); break;
-				case wb: queen_and_bishopMoves<ALL, white, false>(moveList); break;
-				case wq: queen_and_bishopMoves<ALL, white, true>(moveList); break;
-				case wk: kingMoves<ALL, white>(moveList); break;
-				}
+				invoke(moveGenFunction[w], *this, moveList);
 			}
 		}
 		 //  Castling permission King-rook path is not obstructed and not under attack
