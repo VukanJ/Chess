@@ -349,39 +349,78 @@ void Board::updatePinnedPieces(color side)
 
 void Board::initDeepMoves()
 {
-	pawnMoves<ALL, black>(deepMoves[bp][0]);
-	rookMoves<ALL, black>(deepMoves[br][0]);
-	knightMoves<ALL, black>(deepMoves[bn][0]);
-	queen_and_bishopMoves<ALL, black, false>(deepMoves[bb][0]);
-	queen_and_bishopMoves<ALL, black, true>(deepMoves[bq][0]);
-	kingMoves<ALL, black>(deepMoves[bk][0]);
-
-	pawnMoves<ALL, white>(deepMoves[wp][0]);
-	rookMoves<ALL, white>(deepMoves[wr][0]);
-	knightMoves<ALL, white>(deepMoves[wn][0]);
-	queen_and_bishopMoves<ALL, white, false>(deepMoves[wb][0]);
-	queen_and_bishopMoves<ALL, white, true>(deepMoves[wq][0]);
-	kingMoves<ALL, white>(deepMoves[wk][0]);
+	for_pieces(p) invoke(moveGenFunction[p], *this, deepMoves[p][0]);
 }
 
 void Board::updateDeepMoves(int depth, color side, const Move& lastMove)
 {
+	U64 fromto = lastMove.from | lastMove.to;
+
 	switch (lastMove.mtype) {
-	case MOVE: 
-		if ((lastMove.from | lastMove.to) & (blackAtt | whiteAtt)) {
-			// No piece was influenced by last Move
-			return;
-		}
-		else {
-			// Find out which moves need to be regenerated
-			// Check if square is under sliding piece attack
-			for (auto& sp : { br, bb, bq, wr, wb, wq }) {
-				if (pieces[sp] & (lastMove.from|lastMove.to)) {
-					//deepMoves[sp][depth]
+	case MOVE: case PAWN2: case CAPTURE:
+		// Update moves of type movePiece
+		updateAttack((piece)lastMove.movePiece);
+		invoke(moveGenFunction[lastMove.movePiece], *this, deepMoves[lastMove.movePiece][depth]);
+		moveUpdateDepths[lastMove.movePiece]++;
+
+		if ((fromto & fromto) != 0) {
+
+			// Some attack sets need to be updated
+			if (side == white) {
+				updateAttack(bp);
+				invoke(moveGenFunction[bp], *this, deepMoves[bp][depth]);
+				moveUpdateDepths[bp]++;
+				if (fromto & whiteAtt) {
+					for_white (w) {
+						if(fromto & attacks[w]) {
+							// Update moves of piece whose attack has been blocke. 
+							updateAttack((piece)w);
+							invoke(moveGenFunction[w], *this, deepMoves[w][depth]);
+							moveUpdateDepths[w]++;
+						}
+					}
+				}
+				if (fromto & blackAtt) {
+					for (auto b : {br, bb, bq}) {
+						if (fromto & attacks[b]) {
+							updateAttack(b);
+							invoke(moveGenFunction[b], *this, deepMoves[b][depth]);
+							moveUpdateDepths[b]++;
+						}
+					}
 				}
 			}
+			else {
+				updateAttack(wp);
+				invoke(moveGenFunction[wp], *this, deepMoves[wp][depth]);
+				moveUpdateDepths[wp]++;
+				if (fromto & blackAtt) {
+					for_white(b) {
+						if (fromto & attacks[b]) {
+							// Update moves of piece whose attack has been blocke. 
+							updateAttack((piece)b);
+							invoke(moveGenFunction[b], *this, deepMoves[b][depth]);
+							moveUpdateDepths[b]++;
+						}
+					}
+				}
+				if (fromto & whiteAtt) {
+					for (auto w : { wr, wb, wq }) {
+						if (fromto & attacks[w]) {
+							updateAttack(w);
+							invoke(moveGenFunction[w], *this, deepMoves[w][depth]);
+							moveUpdateDepths[w]++;
+						}
+					}
+				}
+			}
+
 		}
-	break;
+		if (lastMove.mtype == CAPTURE) {
+			
+		}
+		else return;
+
 	}
 }
 
@@ -455,9 +494,6 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 	}
 	// If opponent rook has been captured, he looses castling rights.
 	// TODO: Needs nicer solution
-
-	//if (isKingInCheck(side))
-	//	reduceMoveList(moveList, side);
 
 	if (castlingRights & (side == black ? 0b1100 : 0b0011)) {
 		for (auto& move : moveList) {

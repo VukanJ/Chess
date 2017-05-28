@@ -75,6 +75,7 @@ byte constexpr move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); 
 
 #define for_black(x) for (int x = 0; x < 6;  ++x)
 #define for_white(x) for (int x = 6; x < 12; ++x)
+#define for_pieces(x) for (int x = 0; x < 12; ++x)
 #define for_color(x, color) for(int x = 6 * color; x < 6 + 6 * color; ++x)
 
 #define BLACKLOOP_IT(x) for (auto& x = pieces.begin(); x != pieces.end() - 5; x++)
