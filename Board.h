@@ -52,8 +52,8 @@ public:
 	void updateDeepMoves(int depth, color side, const Move& lastMove);
 	MoveList assembleMovelist(int depth, color side);
 
-	U64 inline   rookAttacks(long pos, const U64 blockers) const;
-	U64 inline bishopAttacks(long pos, const U64 blockers) const;
+	U64 inline   rookAttacks(long pos) const;
+	U64 inline bishopAttacks(long pos) const;
 	// Vector of all move generating functions
 	vector<void(Board::*)(MoveList&)const> moveGenFunction;
 

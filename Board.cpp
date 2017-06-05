@@ -227,7 +227,7 @@ void Board::updateAttack(piece p)
 		case br: case wr:
 			attacks[p] = 0x0;
 			mask = pieces[p];
-			for_bits(pos, mask) attacks[p] |= rookAttacks(pos, allPos);
+			for_bits(pos, mask) attacks[p] |= rookAttacks(pos);
 			break;
 		case bn:
 			mask = pieces[bn];
@@ -242,7 +242,7 @@ void Board::updateAttack(piece p)
 		case bb: case wb:
 			attacks[p] = 0x0;
 			mask = pieces[p];
-			for_bits(pos, mask) attacks[p] |= bishopAttacks(pos, allPos);
+			for_bits(pos, mask) attacks[p] |= bishopAttacks(pos);
 			break;
 		case bk:
 			mask = pieces[bk];
@@ -259,7 +259,7 @@ void Board::updateAttack(piece p)
 		case bq: case wq:
 			attacks[p] = 0x0;
 			mask = pieces[p];
-			for_bits(pos, mask) attacks[p] |= (rookAttacks(pos, allPos) | bishopAttacks(pos, allPos));
+			for_bits(pos, mask) attacks[p] |= (rookAttacks(pos) | bishopAttacks(pos));
 			break;
 	}
 }
@@ -354,7 +354,24 @@ void Board::initDeepMoves()
 
 void Board::updateDeepMoves(int depth, color side, const Move& lastMove)
 {
-	U64 fromto = lastMove.from | lastMove.to;
+	// Updates a global move list by checking which moves need to be appended/removed
+	// from the list using the last played move. Minimizes redundancy of computing whole move lists
+	// for all pieces after each played move. Keeps track of black and white pieces at each "depth".
+
+	U64 fromto = bit_at(lastMove.from) | bit_at(lastMove.to);
+
+	auto updateProcedureWhite = [&, this] (piece p) -> void {
+		updateAttack(p);
+		attacks[p] &= ~whitePos;
+		invoke(moveGenFunction[p], *this, deepMoves[p][depth]);
+		moveUpdateDepths[p]++;
+	};
+	auto updateProcedureBlack = [&, this](piece p) -> void {
+		updateAttack(p);
+		attacks[p] &= ~blackPos;
+		invoke(moveGenFunction[p], *this, deepMoves[p][depth]);
+		moveUpdateDepths[p]++;
+	};
 
 	switch (lastMove.mtype) {
 	case MOVE: case PAWN2: case CAPTURE:
@@ -363,56 +380,81 @@ void Board::updateDeepMoves(int depth, color side, const Move& lastMove)
 		invoke(moveGenFunction[lastMove.movePiece], *this, deepMoves[lastMove.movePiece][depth]);
 		moveUpdateDepths[lastMove.movePiece]++;
 
-		if ((fromto & fromto) != 0) {
-
+		if ((fromto & (whiteAtt | blackAtt)) != 0) {
+			printBitboard(fromto);
+			printBitboard(whiteAtt | blackAtt);
 			// Some attack sets need to be updated
 			if (side == white) {
-				updateAttack(bp);
-				invoke(moveGenFunction[bp], *this, deepMoves[bp][depth]);
-				moveUpdateDepths[bp]++;
-				if (fromto & whiteAtt) {
-					for_white (w) {
-						if(fromto & attacks[w]) {
-							// Update moves of piece whose attack has been blocke. 
-							updateAttack((piece)w);
-							invoke(moveGenFunction[w], *this, deepMoves[w][depth]);
-							moveUpdateDepths[w]++;
-						}
+				// Update attacks of own pieces and generate moves (if neccessary)
+				U64 mask = rookAttacks(lastMove.from) | rookAttacks(lastMove.to);
+				for (auto w : { wr, wq }) {
+					if (mask & pieces[w]) { 
+						updateProcedureWhite(w); 
 					}
 				}
+				mask = bishopAttacks(lastMove.from) | bishopAttacks(lastMove.to);
+				for (auto w : { wb, wq }) {
+					if (mask & pieces[w]) { 
+						updateProcedureWhite(w); 
+					}
+				}
+				mask = (KNIGHT_ATTACKS[lastMove.from] | KNIGHT_ATTACKS[lastMove.to]) & ~whitePos;
+				if (mask & pieces[wn]) { 
+					updateProcedureWhite(wn); 
+				}
+				if (fromto & (wpDanger | wpMove)) {
+					updateProcedureWhite(wp);
+				}
+				if (fromto & (bpDanger | bpMove)) {
+					updateProcedureBlack(bp);
+				}
+				// Update attacks of enemy pieces 
+
 				if (fromto & blackAtt) {
 					for (auto b : {br, bb, bq}) {
 						if (fromto & attacks[b]) {
-							updateAttack(b);
-							invoke(moveGenFunction[b], *this, deepMoves[b][depth]);
-							moveUpdateDepths[b]++;
+							updateProcedureBlack(b);
 						}
 					}
 				}
+				attacks[bk] &= ~whiteAtt;
+				attacks[wk] &= ~blackPos;
 			}
 			else {
-				updateAttack(wp);
-				invoke(moveGenFunction[wp], *this, deepMoves[wp][depth]);
-				moveUpdateDepths[wp]++;
-				if (fromto & blackAtt) {
-					for_white(b) {
-						if (fromto & attacks[b]) {
-							// Update moves of piece whose attack has been blocke. 
-							updateAttack((piece)b);
-							invoke(moveGenFunction[b], *this, deepMoves[b][depth]);
-							moveUpdateDepths[b]++;
-						}
+				// Update attacks of own pieces and generate moves (if neccessary)
+				U64 mask = rookAttacks(lastMove.from) | rookAttacks(lastMove.to);
+				for (auto b : { br, bq }) {
+					if (mask & pieces[b]) {
+						updateProcedureBlack(b);
 					}
 				}
+				mask = bishopAttacks(lastMove.from) | bishopAttacks(lastMove.to);
+				for (auto b : { bb, bq }) {
+					if (mask & pieces[b]) {
+						updateProcedureBlack(b);
+					}
+				}
+				mask = (KNIGHT_ATTACKS[lastMove.from] | KNIGHT_ATTACKS[lastMove.to]) & ~blackPos;
+				if (mask & pieces[bn]) {
+					updateProcedureBlack(bn);
+				}
+				if (fromto & (bpDanger | bpMove)) {
+					updateProcedureBlack(bp);
+				}
+				if (fromto & (wpDanger | wpMove)) {
+					updateProcedureWhite(wp);
+				}
+				// Update attacks of enemy pieces 
+
 				if (fromto & whiteAtt) {
 					for (auto w : { wr, wb, wq }) {
 						if (fromto & attacks[w]) {
-							updateAttack(w);
-							invoke(moveGenFunction[w], *this, deepMoves[w][depth]);
-							moveUpdateDepths[w]++;
+							updateProcedureBlack(w);
 						}
 					}
 				}
+				attacks[bk] &= ~whiteAtt;
+				attacks[wk] &= ~blackPos;
 			}
 
 		}
@@ -420,7 +462,16 @@ void Board::updateDeepMoves(int depth, color side, const Move& lastMove)
 			
 		}
 		else return;
-
+	case PROMOTION:	 
+		// Check from square, append moves to promoted pieces
+		break;
+	case C_PROMOTION:
+		// Check from square, append moves to promoted pieces. Check if promoted piece is under attack
+		break;
+	case WCASTLE:
+		// Update Rook Moves
+		break;
+	// ...
 	}
 }
 
@@ -517,17 +568,17 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 	}
 }
 
-U64 inline Board::rookAttacks(long pos, U64 blockers) const
+U64 inline Board::rookAttacks(long pos) const
 {
 	// Calculate attack set with magic database
-	U64 index = ((rookAttackMasks[pos] & blockers) * rookMagics[pos]) >> rookMagicShifts[pos];
+	U64 index = ((rookAttackMasks[pos] & allPos) * rookMagics[pos]) >> rookMagicShifts[pos];
 	return magicRookMoveDatabase[pos][index];
 }
 
-U64 inline Board::bishopAttacks(long pos, U64 blockers) const
+U64 inline Board::bishopAttacks(long pos) const
 {
 	// Calculate attack set with magic database
-	U64 index = ((bishopAttackMasks[pos] & blockers) * bishopMagics[pos]) >> bishopMagicShifts[pos];
+	U64 index = ((bishopAttackMasks[pos] & allPos) * bishopMagics[pos]) >> bishopMagicShifts[pos];
 	return magicBishopMoveDatabase[pos][index];
 }
 
@@ -578,15 +629,15 @@ bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove, bool wasChe
 		// Check if enemy attack was uncovered by lastMove
 
 		if (kingColor == white) {
-			kingDiags |= bishopAttacks(kingPos, allPos);
+			kingDiags |= bishopAttacks(kingPos);
 			if ((kingDiags) & (pieces[bq] | pieces[bb])) return true;
-			kingRect |= rookAttacks(kingPos, allPos);
+			kingRect |= rookAttacks(kingPos);
 			if ((kingRect)  & (pieces[br] | pieces[bq])) return true;
 		}
 		else {
-			kingDiags |= bishopAttacks(kingPos, allPos);
+			kingDiags |= bishopAttacks(kingPos);
 			if ((kingDiags) & (pieces[wq] | pieces[wb])) return true;
-			kingRect |= rookAttacks(kingPos, allPos);
+			kingRect |= rookAttacks(kingPos);
 			if ((kingRect)  & (pieces[wr] | pieces[wq])) return true;
 		}
 		return false;  // Move is legal
@@ -686,11 +737,11 @@ int Board::evaluate(color side)
 	if (endGameValue > 0.5) {
 		//cout << "OK\n";
 		mask = pieces[wk];
-		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
+		mask |= rookAttacks(msb(mask)) | bishopAttacks(msb(mask));
 
 		total_boardValue += 10 * popcount(mask & ~blackAtt);
 		mask = pieces[bk];
-		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
+		mask |= rookAttacks(msb(mask)) | bishopAttacks(msb(mask));
 		total_boardValue -= 10 * popcount(mask & ~whiteAtt);
 	}
 

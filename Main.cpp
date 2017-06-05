@@ -92,7 +92,7 @@ void testing(){
 	Benchmark benchmark;
 	UnitTest test;
 	//test.testMagic();
-	//test.specialTest();
+	test.specialTest();
 	//test.testDefines();
 	//test.testIntrinsics();
 
@@ -108,8 +108,8 @@ void testing(){
 	//benchmark.testPerft(-1);
 	//benchmark.perftTestSuite();
 
-	DataBaseTest dbt;
-	dbt.start_Bratko_Kopec_Test();
+	//DataBaseTest dbt;
+	//dbt.start_Bratko_Kopec_Test();
 
 	cout << "EOP\n";
 	cin.ignore();

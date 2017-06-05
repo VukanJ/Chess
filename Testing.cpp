@@ -451,13 +451,20 @@ void UnitTest::testProm()
 
 void UnitTest::specialTest()
 {
-	AI ai("k7/8/3K4/8/8/6q1/8/5N2 w - - 1 0", white);
-
+	AI ai("r1b4r/pp4bp/3k1np1/q1p1p3/2P1P3/2N1QN2/PP2BPPP/2K4R w - - 1 0", white);
 	ai.chessBoard.updateAllAttacks();
 	ai.chessBoard.print();
-	MoveList movelist;
+	ai.chessBoard.initDeepMoves();
 
-	ai.chessBoard.generateMoveList(movelist, white, true);
+	Move m = Move(8, 16, MOVE, wp);
+
+	MoveList ml1 = ai.chessBoard.assembleMovelist(0, white);
+
+	ai.chessBoard.makeMove<PROPER>(m, white);
+	ai.chessBoard.print();
+	ai.chessBoard.updateDeepMoves(1, white, m);
+
+	MoveList ml2 = ai.chessBoard.assembleMovelist(1, black);
 
 	exit(0);
 }
