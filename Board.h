@@ -70,7 +70,7 @@ public:
 
 	// Raw data: (public for easy access)
 	vector<U64> pieces, attacks;
-	byte castlingRights, // Castling rights
+	U8 castlingRights, // Castling rights
 		b_enpassent,     // Possible e.p. squares for black
 		w_enpassent;     // Possible e.p. squares for white
 

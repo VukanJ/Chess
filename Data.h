@@ -33,7 +33,7 @@ private:
 struct MagicBit
 {
 	U64 *ptr, mask, magic;
-	byte shift;
+	U8 shift;
 };
 
 extern vector<vector<U64>> CONNECTIONS;

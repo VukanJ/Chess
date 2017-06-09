@@ -460,7 +460,7 @@ bool Board::isKingLeftInCheck(color kingColor, const Move& lastMove, bool wasChe
 		// Check if king is in check now
 
 		piece king = kingColor == white ? wk : bk;
-		byte kingPos = msb(pieces[king]);
+		U8 kingPos = msb(pieces[king]);
 		U64 kingRect = 0x0, kingDiags = 0x0;
 		if (lastMove.mtype > 5) {
 			return false; // Castling does not put king in check

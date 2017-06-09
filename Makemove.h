@@ -218,7 +218,7 @@ void Board::makeMove(const Move& move, color side)
 			b_enpassent = w_enpassent = 0;
 		}
 		// Check if castling still permitted
-		byte cast = move.castlingRights;
+		U8 cast = move.castlingRights;
 		if (cast) {
 			castlingRights &= ~cast;
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
@@ -440,7 +440,7 @@ void Board::unMakeMove(const Move& move, color side)
 	}
 	if (mmt == PROPER) {
 		// restore some castling rights
-		byte cast = move.castlingRights;
+		U8 cast = move.castlingRights;
 		if (cast) {
 			hashKey ^= randomSet[CASTLE_HASH][castlingRights];
 			castlingRights |= cast;
