@@ -45,7 +45,7 @@ private:
 		Node();
 		MoveList moveList;
 		vector<nodePtr> nodeList;
-		byte nodeFlags;
+		U8 nodeFlags;
 		enum Flags {
 			explored = 0x1,
 			leaf     = 0x2,

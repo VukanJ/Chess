@@ -12,16 +12,16 @@ typedef unsigned long ulong;
 typedef uint64_t U64;
 typedef uint32_t U32;
 typedef uint16_t U16;
-typedef uint8_t  byte;
+typedef uint8_t  U8;
 
 constexpr int oo = INT_MAX; // Alpha-Beta infinity
 
 U64  constexpr bit_at(uint x)     { return 0x1ull << x; }        // Sets nth bit in number counting from least significant bit
 U64  constexpr bit_at_rev(uint x) { return 0x1ull << (63 - x); } // Sets nth bit in number counting from most significant bit
-byte constexpr piece_pair(byte X, byte Y) { return X | (Y << 4); } // Pairs up 4-bit piece information
+U8 constexpr piece_pair(U8 X, U8 Y) { return X | (Y << 4); } // Pairs up 4-bit piece information
 
 // Move formatting macros:
-byte constexpr move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); }
+U8 constexpr move_metadata(U8 TYPE, U8 DATA) { return TYPE | (DATA << 4); }
 
 #ifdef _WIN32
 	#ifndef __MACHINEX64
@@ -29,19 +29,19 @@ byte constexpr move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); 
 	#endif
 	// Compiler intrinsics compatible with WIN32
 	int  inline popcount(U64 x) { return (int)__popcnt64(x); } // Population count, implicit conversion to int
-	byte inline bitScan_rev64(ulong& index, U64 const mask) {
+	U8 inline bitScan_rev64(ulong& index, U64 const mask) {
 		if (!_BitScanReverse64(&index, mask)){
 			index = 0;
 		}
-		return (byte)index;
+		return (U8)index;
 	} // Reverse Bitscan
-	byte inline bitScan_fwd64(ulong& index, U64 const mask) {
+	U8 inline bitScan_fwd64(ulong& index, U64 const mask) {
 		if (!_BitScanForward64(&index, mask)) {
 			index = 0;
 		}
-		return (byte)index;
+		return (U8)index;
 	} // Reverse Bitscan
-	byte inline msb(U64 x) { ulong index; index = !_BitScanReverse64(&index, x) ? -1 : index; return (byte)index; }
+	U8 inline msb(U64 x) { ulong index; index = !_BitScanReverse64(&index, x) ? -1 : index; return (U8)index; }
 	U64  inline rotate_l64(U64 mask, int amount) { return _rotl64(mask, amount); } // Rotate left  (64Bit)
 	U64  inline rotate_r64(U64 mask, int amount) { return _rotr64(mask, amount); } // Rotate right (64Bit)
 
@@ -58,7 +58,7 @@ byte constexpr move_metadata(byte TYPE, byte DATA) { return TYPE | (DATA << 4); 
 		return index;
 	}
 
-	byte inline msb(U64 x) { return __builtin_ffsll(x)-1; }
+	U8 inline msb(U64 x) { return __builtin_ffsll(x)-1; }
 
 	U64 inline rotate_l64(U64& x, uint n){
 		return (x << n) | (x >> (64 - n));

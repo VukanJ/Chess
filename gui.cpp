@@ -195,7 +195,7 @@ bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
 	chessBoard.generateMoveList(possibleMoves, humanColor, true);
 
 	MoveList::iterator matchingMove = find_if(possibleMoves.begin(), possibleMoves.end(), [&](const Move& pmove) {
-		byte pflags = pmove.flags & 0xF;
+		U8 pflags = pmove.flags & 0xF;
 		if (pflags == BCASTLE || pflags == WCASTLE || pflags == BCASTLE_2 || pflags == WCASTLE_2){
 			// Check if human wants to castle
 			if (userInput.movePiece == bk && humanColor == black) {
@@ -392,7 +392,7 @@ void Gui::Arrow::setMove(const Move& move)
 {
 	elapsedTime = 0;
 	fadelevel = 200;
-	byte f = move.flags & 0xF;
+	U8 f = move.flags & 0xF;
 	if (!(f & BCASTLE || f & WCASTLE
 		|| f & BCASTLE_2 || f & WCASTLE_2)) {
 	sf::Vector2f from = sf::Vector2f(7.0 - move.from % 8, 8.0 - move.from / 8.0) * (HEIGHT / 8.0f);

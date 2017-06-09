@@ -6,7 +6,7 @@
 #include "misc.h"
 #include "Move.h"
 
-// Zob_Hash stores already evaluated Boards and their value, 
+// Zob_Hash stores already evaluated Boards and their value,
 // search_depth and move quality
 
 enum hashPosition { CASTLE_HASH = 12, ENPASSENT_HASH = 13, CASTLE_POSITION_HASH = 14};
@@ -29,7 +29,7 @@ private:
 		int value;
 		int search_depth;
 		//Move move;
-		byte flags;
+		U8 flags;
 	};
 	vector<entry> entries; // Hash table
 	size_t hashSize;
