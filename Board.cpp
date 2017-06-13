@@ -359,6 +359,7 @@ void Board::updateDeepMoves(int depth, color side, const Move& lastMove)
 	// for all pieces after each played move. Keeps track of black and white pieces at each "depth".
 
 	U64 fromto = bit_at(lastMove.from) | bit_at(lastMove.to);
+	U64 mask = 0x0;
 
 	auto updateProcedureWhite = [&, this] (piece p) -> void {
 		updateAttack(p);
@@ -373,105 +374,171 @@ void Board::updateDeepMoves(int depth, color side, const Move& lastMove)
 		moveUpdateDepths[p]++;
 	};
 
+	U16 toBeUpdated = 0x0;
+
 	switch (lastMove.mtype) {
-	case MOVE: case PAWN2: case CAPTURE:
-		// Update moves of type movePiece
-		updateAttack((piece)lastMove.movePiece);
-		invoke(moveGenFunction[lastMove.movePiece], *this, deepMoves[lastMove.movePiece][depth]);
-		moveUpdateDepths[lastMove.movePiece]++;
+	case MOVE: case PAWN2: case CAPTURE: case ENPASSENT: case PROMOTION: case C_PROMOTION:
+		// Update moves of type movePiece, because it moved
+		toBeUpdated |= bit_at(lastMove.movePiece);
 
 		if ((fromto & (whiteAtt | blackAtt)) != 0) {
+			// Move intersects attacks => Some attacks sets need to be updated
 			printBitboard(fromto);
 			printBitboard(whiteAtt | blackAtt);
-			// Some attack sets need to be updated
 			if (side == white) {
 				// Update attacks of own pieces and generate moves (if neccessary)
-				U64 mask = rookAttacks(lastMove.from) | rookAttacks(lastMove.to);
+				// Check if own sliding piece attacks are uncovered or blocked:
+				mask = rookAttacks(lastMove.from) | rookAttacks(lastMove.to);
 				for (auto w : { wr, wq }) {
 					if (mask & pieces[w]) { 
-						updateProcedureWhite(w); 
+						toBeUpdated |= bit_at(w);
+					}
+				}
+				if (lastMove.mtype == CAPTURE || lastMove.mtype == C_PROMOTION) {
+					for (auto b : { br, bq }) {
+						if (mask & pieces[b]) {
+							toBeUpdated |= bit_at(b);
+						}
 					}
 				}
 				mask = bishopAttacks(lastMove.from) | bishopAttacks(lastMove.to);
 				for (auto w : { wb, wq }) {
 					if (mask & pieces[w]) { 
-						updateProcedureWhite(w); 
+						toBeUpdated |= bit_at(w);
 					}
 				}
-				mask = (KNIGHT_ATTACKS[lastMove.from] | KNIGHT_ATTACKS[lastMove.to]) & ~whitePos;
-				if (mask & pieces[wn]) { 
-					updateProcedureWhite(wn); 
-				}
-				if (fromto & (wpDanger | wpMove)) {
-					updateProcedureWhite(wp);
-				}
-				if (fromto & (bpDanger | bpMove)) {
-					updateProcedureBlack(bp);
-				}
-				// Update attacks of enemy pieces 
-
-				if (fromto & blackAtt) {
-					for (auto b : {br, bb, bq}) {
-						if (fromto & attacks[b]) {
-							updateProcedureBlack(b);
+				if (lastMove.mtype == CAPTURE) {
+					for (auto b : { bb, bq }) {
+						if (mask & pieces[b]) {
+							toBeUpdated |= bit_at(b);
 						}
 					}
 				}
-				attacks[bk] &= ~whiteAtt;
-				attacks[wk] &= ~blackPos;
+				// Check if knight attacks are intersected
+				mask = (KNIGHT_ATTACKS[lastMove.from] | KNIGHT_ATTACKS[lastMove.to]) & ~whitePos;
+				if (mask & pieces[wn]) { 
+					toBeUpdated |= bit_at(wn);
+				}
+				// Check if pawns are blocked or if their attacks are obstructed / uncovered
+				if (fromto & (wpDanger | wpMove)) {
+					toBeUpdated |= bit_at(wp);
+				}
+				if (fromto & (bpDanger | bpMove)) {
+					toBeUpdated |= bit_at(bp);
+				}
+				// Update attacks of enemy pieces 
+				if (fromto & blackAtt) {
+					for (auto b : {br, bb, bq}) {
+						// Sufficient, because piece white piece can only be attacked by black 
+						// and block its sliding attack.
+						if (fromto & attacks[b]) {
+							toBeUpdated |= bit_at(b);
+						}
+					}
+				}
 			}
 			else {
 				// Update attacks of own pieces and generate moves (if neccessary)
-				U64 mask = rookAttacks(lastMove.from) | rookAttacks(lastMove.to);
+				mask = rookAttacks(lastMove.from) | rookAttacks(lastMove.to);
 				for (auto b : { br, bq }) {
 					if (mask & pieces[b]) {
-						updateProcedureBlack(b);
+						toBeUpdated |= bit_at(b);
+					}
+				}
+				if (lastMove.mtype == CAPTURE) {
+					for (auto w : { wr, wq }) {
+						if (mask & pieces[w]) {
+							toBeUpdated |= bit_at(w);
+						}
 					}
 				}
 				mask = bishopAttacks(lastMove.from) | bishopAttacks(lastMove.to);
 				for (auto b : { bb, bq }) {
 					if (mask & pieces[b]) {
-						updateProcedureBlack(b);
+						toBeUpdated |= bit_at(b);
+					}
+				}
+				if (lastMove.mtype == CAPTURE) {
+					for (auto w : { wb, wq }) {
+						if (mask & pieces[w]) {
+							toBeUpdated |= bit_at(w);
+						}
 					}
 				}
 				mask = (KNIGHT_ATTACKS[lastMove.from] | KNIGHT_ATTACKS[lastMove.to]) & ~blackPos;
 				if (mask & pieces[bn]) {
-					updateProcedureBlack(bn);
+					toBeUpdated |= bit_at(bn);
 				}
 				if (fromto & (bpDanger | bpMove)) {
-					updateProcedureBlack(bp);
+					toBeUpdated |= bit_at(bp);
 				}
 				if (fromto & (wpDanger | wpMove)) {
-					updateProcedureWhite(wp);
+					toBeUpdated |= bit_at(wp);
 				}
 				// Update attacks of enemy pieces 
 
 				if (fromto & whiteAtt) {
 					for (auto w : { wr, wb, wq }) {
 						if (fromto & attacks[w]) {
-							updateProcedureBlack(w);
+							toBeUpdated |= bit_at(w);
 						}
 					}
 				}
-				attacks[bk] &= ~whiteAtt;
-				attacks[wk] &= ~blackPos;
+				//attacks[bk] &= ~whiteAtt;
+				//attacks[wk] &= ~blackPos;
 			}
 
 		}
-		if (lastMove.mtype == CAPTURE) {
-			
+		if (lastMove.mtype == CAPTURE || lastMove.mtype == C_PROMOTION || lastMove.mtype == PROMOTION) {
+			toBeUpdated |= bit_at(lastMove.targetPiece);
 		}
 		else return;
-	case PROMOTION:	 
-		// Check from square, append moves to promoted pieces
+	case WCASTLE:  
+		if (blackAtt & bit_at(h1)) {
+			for_black(b) {
+				if (attacks[b] & bit_at(h1)) {
+					toBeUpdated |= bit_at(b);
+				}
+			}
+		}
 		break;
-	case C_PROMOTION:
-		// Check from square, append moves to promoted pieces. Check if promoted piece is under attack
+	case WCASTLE_2:
+		if (blackAtt & bit_at(a1)) {
+			for_black(b) {
+				if (attacks[b] & bit_at(a1)) {
+					toBeUpdated |= bit_at(b);
+				}
+			}
+		}
 		break;
-	case WCASTLE:
-		// Update Rook Moves
+	case BCASTLE:  
+		if (whiteAtt & bit_at(h8)) {
+			for_white(w) {
+				if (attacks[w] & bit_at(h8)) {
+					toBeUpdated |= bit_at(w);
+				}
+			}
+		}
 		break;
-	// ...
+	case BCASTLE_2:
+		if (whiteAtt & bit_at(a8)) {
+			for_black(w) {
+				if (attacks[w] & bit_at(a8)) {
+					toBeUpdated |= bit_at(w);
+				}
+			}
+		}
+		toBeUpdated |= bit_at(wk);
+		toBeUpdated |= bit_at(wr);
+		break;
+	}
+
+	// Do the actual updates
+	for_color(p, white) {
+		if (bit_at(p) & toBeUpdated) updateProcedureWhite(static_cast<piece>(p));
+	}
+	for_color(p, black) {
+		if (bit_at(p) & toBeUpdated) updateProcedureBlack(static_cast<piece>(p));
 	}
 }
 
