@@ -492,7 +492,6 @@ void Board::updateDeepMoves(int depth, color side, const Move& lastMove)
 		if (lastMove.mtype == CAPTURE || lastMove.mtype == C_PROMOTION || lastMove.mtype == PROMOTION) {
 			toBeUpdated |= bit_at(lastMove.targetPiece);
 		}
-		else return;
 	case WCASTLE:  
 		if (blackAtt & bit_at(h1)) {
 			for_black(b) {
@@ -539,6 +538,50 @@ void Board::updateDeepMoves(int depth, color side, const Move& lastMove)
 	}
 	for_color(p, black) {
 		if (bit_at(p) & toBeUpdated) updateProcedureBlack(static_cast<piece>(p));
+	}
+}
+
+void Board::debugDiffDeepMoves(int depth)
+{
+	int p = 0;
+	for (const auto depths : moveUpdateDepths) {
+		if (depths == depth) { // Most recent changes
+			auto oldMoves = deepMoves[p][min(depth - 1, moveUpdateDepths[p])];
+			auto newMoves = deepMoves[p][min(depth, moveUpdateDepths[p])];
+			MoveList intersection;
+			for (const auto& m : oldMoves) {
+				if (find_if(newMoves.begin(), newMoves.end(), 
+					[m](const Move& mm) {return mm.raw == m.raw; }) != newMoves.end()) intersection.push_back(m);
+			}
+
+			// Remove intersection from both sets
+			for (auto it = oldMoves.begin(); it != oldMoves.end();){
+				if(find_if(intersection.begin(), intersection.end(), [it](const Move& m) {
+					return m.raw == (*it).raw;
+				}) != intersection.end()) it = oldMoves.erase(it);
+				else it++;
+			}
+			for (auto it = newMoves.begin(); it != newMoves.end();) {
+				if (find_if(intersection.begin(), intersection.end(), [it](const Move& m) {
+					return m.raw == (*it).raw;
+				}) != intersection.end()) it = newMoves.erase(it);
+				else it++;
+			}
+			if (!oldMoves.empty()) {
+				cout << "Removed " << names[p] << " moves:\n";
+				for (const auto& delOld : oldMoves) {
+					cout << '\t' << shortNotation(delOld) << endl;
+				}
+			}
+			if (!newMoves.empty()) {
+				cout << "Added " << names[p] << " moves:\n";
+				for (const auto& newm : newMoves) {
+					cout << '\t' << shortNotation(newm) << endl;
+				}
+			}
+			cout << string(20, '+') << endl;
+		}
+		p++;
 	}
 }
 

@@ -26,7 +26,7 @@ union Move
 	Move(byte _from, byte _to, byte _flags, byte _pieces);
 	Move(ulong _from, ulong _to, byte _flags, byte _pieces);
 	Move(int _from, int _to, byte _flags, byte _pieces);
-
+	bool operator<(Move& m) { return raw < m.raw; }
 	struct {
 		uint32_t from           : 8;
 		uint32_t to             : 8;

@@ -50,6 +50,7 @@ public:
 	array<int, 12> moveUpdateDepths;
 	void initDeepMoves();
 	void updateDeepMoves(int depth, color side, const Move& lastMove);
+	void debugDiffDeepMoves(int depth);
 	MoveList assembleMovelist(int depth, color side);
 
 	U64 inline   rookAttacks(long pos) const;

@@ -451,12 +451,13 @@ void UnitTest::testProm()
 
 void UnitTest::specialTest()
 {
-	AI ai("r1b4r/pp4bp/3k1np1/q1p1p3/2P1P3/2N1QN2/PP2BPPP/2K4R w - - 1 0", white);
+	AI ai("r1b4r/pp4bp/3k1np1/q1p1p3/2P1P3/2N1QN2/PP2BPPP/2K4R w - - 1 0", white, 1);
 	ai.chessBoard.updateAllAttacks();
 	ai.chessBoard.print();
 	ai.chessBoard.initDeepMoves();
 
 	Move m = Move(8, 16, MOVE, wp);
+	Move m2 = Move(c8, h3, CAPTURE, piece_pair(bb, wp));
 
 	MoveList ml1 = ai.chessBoard.assembleMovelist(0, white);
 
@@ -465,7 +466,16 @@ void UnitTest::specialTest()
 	ai.chessBoard.updateDeepMoves(1, white, m);
 
 	MoveList ml2 = ai.chessBoard.assembleMovelist(1, black);
+	ai.chessBoard.debugDiffDeepMoves(1);
 
+	ai.chessBoard.makeMove<PROPER>(m2, black);
+	ai.chessBoard.print(); 
+	ai.chessBoard.updateDeepMoves(2, black, m2);
+
+	MoveList ml3 = ai.chessBoard.assembleMovelist(2, white);
+
+	ai.chessBoard.debugDiffDeepMoves(2);
+	cin.ignore();
 	exit(0);
 }
 
