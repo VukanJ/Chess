@@ -92,7 +92,7 @@ void testing(){
 	Benchmark benchmark;
 	UnitTest test;
 	//test.testMagic();
-	test.specialTest();
+	//test.specialTest();
 	//test.testDefines();
 	//test.testIntrinsics();
 
@@ -105,8 +105,8 @@ void testing(){
 
 	//benchmark.benchmarkMovemaking();
 	//benchmark.benchmarkMoveGeneration();
-	//benchmark.testPerft(-1);
-	//benchmark.perftTestSuite();
+	benchmark.testPerft(-1);
+	//benchmark.deepPerftTestSuite();
 
 	//DataBaseTest dbt;
 	//dbt.start_Bratko_Kopec_Test();

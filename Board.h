@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <vector>
 #include <typeinfo>
+#include <fstream>
 #include <functional>
 #include <array>
 #include <string>
@@ -49,8 +50,9 @@ public:
 	array<array<MoveList, 100>, 12> deepMoves;
 	array<int, 12> moveUpdateDepths;
 	void initDeepMoves();
+	void popDeepMovesAtDepth(int depth);
 	void updateDeepMoves(int depth, color side, const Move& lastMove);
-	void debugDiffDeepMoves(int depth);
+	void debugDiffDeepMoves(int depth, ofstream*);
 	MoveList assembleMovelist(int depth, color side);
 
 	U64 inline   rookAttacks(long pos) const;

@@ -35,41 +35,6 @@ public:
 	// Move generation testing
 	void testGenerationAlgorithms();
 
-	// Tree testing
-	class MinimalTree { // Low memory Tree, only stores current path
-	public:
-		MinimalTree(Board& _chessboard, color comp, int _targetDepth);
-		struct Node {
-			explicit Node(float _boardValue);
-			float boardValue, value_alphabeta;
-		};
-		color computerColor;
-		int buildGameTreeMinimax(int depth, color side);
-		int staticEvaluations;
-		Board& chessBoard;
-		unique_ptr<Node> Root;
-		int targetDepth;
-	};
-
-	class fullTree // Tree containing NegaMax and Implementation
-	{
-	public:
-		fullTree(Board& _chessboard, color comp, int _targetDepth);
-		struct Node {
-			Node();
-			Move thisMove;
-			int thisValue;
-			MoveList moveList;
-			vector<unique_ptr<Node>> nodeList;
-		};
-		color computerColor;
-		int test_NegaMax(unique_ptr<Node>& node, int alpha, int beta, int depth, color side);
-		int staticEvaluations, nalphaBeta, nHashLookups; // debug
-		Board& chessBoard;
-		unique_ptr<Node> Root;
-		int targetDepth;
-	};
-
 	void testMinimalTree();
 	void testFullTree();
 	void testTreeStructure();
@@ -97,9 +62,11 @@ public:
 
 	void testPerft(int maxdepth);
 	void perftTestSuite();
+	void deepPerftTestSuite();
 	void benchmarkMoveGeneration();
 	void benchmarkMovemaking();
 	void perft(int maxDepth, const int targetDepth, color startColor);
+	void deepPerft(int maxDepth, const int targetDepth, color startColor);
 private:
 	enum bType{MOVEGEN, MAKEMOVE};
 	bool performingAll;

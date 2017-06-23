@@ -349,7 +349,11 @@ void Board::updatePinnedPieces(color side)
 
 void Board::initDeepMoves()
 {
-	for_pieces(p) invoke(moveGenFunction[p], *this, deepMoves[p][0]);
+	for_pieces(p) {
+		deepMoves[p][0].clear();
+		if(pieces[p] != 0x0)
+			invoke(moveGenFunction[p], *this, deepMoves[p][0]);
+	}
 }
 
 void Board::updateDeepMoves(int depth, color side, const Move& lastMove)
@@ -364,12 +368,14 @@ void Board::updateDeepMoves(int depth, color side, const Move& lastMove)
 	auto updateProcedureWhite = [&, this] (piece p) -> void {
 		updateAttack(p);
 		attacks[p] &= ~whitePos;
+		if (!deepMoves[p][depth].empty()) deepMoves[p][depth].clear();
 		invoke(moveGenFunction[p], *this, deepMoves[p][depth]);
 		moveUpdateDepths[p]++;
 	};
-	auto updateProcedureBlack = [&, this](piece p) -> void {
+	auto updateProcedureBlack = [&, this] (piece p) -> void {
 		updateAttack(p);
 		attacks[p] &= ~blackPos;
+		if (!deepMoves[p][depth].empty()) deepMoves[p][depth].clear();
 		invoke(moveGenFunction[p], *this, deepMoves[p][depth]);
 		moveUpdateDepths[p]++;
 	};
@@ -380,118 +386,121 @@ void Board::updateDeepMoves(int depth, color side, const Move& lastMove)
 	case MOVE: case PAWN2: case CAPTURE: case ENPASSENT: case PROMOTION: case C_PROMOTION:
 		// Update moves of type movePiece, because it moved
 		toBeUpdated |= bit_at(lastMove.movePiece);
-
-		if ((fromto & (whiteAtt | blackAtt)) != 0) {
-			// Move intersects attacks => Some attacks sets need to be updated
-			printBitboard(fromto);
-			printBitboard(whiteAtt | blackAtt);
-			if (side == white) {
-				// Update attacks of own pieces and generate moves (if neccessary)
-				// Check if own sliding piece attacks are uncovered or blocked:
-				mask = rookAttacks(lastMove.from) | rookAttacks(lastMove.to);
-				for (auto w : { wr, wq }) {
-					if (mask & pieces[w]) { 
-						toBeUpdated |= bit_at(w);
-					}
-				}
-				if (lastMove.mtype == CAPTURE || lastMove.mtype == C_PROMOTION) {
-					for (auto b : { br, bq }) {
-						if (mask & pieces[b]) {
-							toBeUpdated |= bit_at(b);
-						}
-					}
-				}
-				mask = bishopAttacks(lastMove.from) | bishopAttacks(lastMove.to);
-				for (auto w : { wb, wq }) {
-					if (mask & pieces[w]) { 
-						toBeUpdated |= bit_at(w);
-					}
-				}
-				if (lastMove.mtype == CAPTURE) {
-					for (auto b : { bb, bq }) {
-						if (mask & pieces[b]) {
-							toBeUpdated |= bit_at(b);
-						}
-					}
-				}
-				// Check if knight attacks are intersected
-				mask = (KNIGHT_ATTACKS[lastMove.from] | KNIGHT_ATTACKS[lastMove.to]) & ~whitePos;
-				if (mask & pieces[wn]) { 
-					toBeUpdated |= bit_at(wn);
-				}
-				// Check if pawns are blocked or if their attacks are obstructed / uncovered
-				if (fromto & (wpDanger | wpMove)) {
-					toBeUpdated |= bit_at(wp);
-				}
-				if (fromto & (bpDanger | bpMove)) {
-					toBeUpdated |= bit_at(bp);
-				}
-				// Update attacks of enemy pieces 
-				if (fromto & blackAtt) {
-					for (auto b : {br, bb, bq}) {
-						// Sufficient, because piece white piece can only be attacked by black 
-						// and block its sliding attack.
-						if (fromto & attacks[b]) {
-							toBeUpdated |= bit_at(b);
-						}
-					}
+		//Some attacks sets need to be updated
+		//printBitboard(fromto);
+		//printBitboard(whiteAtt | blackAtt);
+		if (side == white) {
+			// Update attacks of own pieces and generate moves (if neccessary)
+			// Check if own sliding piece attacks are uncovered or blocked:
+			mask = rookAttacks(lastMove.from) | rookAttacks(lastMove.to);
+			for (auto w : { wr, wq }) {
+				if (mask & pieces[w]) { 
+					toBeUpdated |= bit_at(w);
 				}
 			}
-			else {
-				// Update attacks of own pieces and generate moves (if neccessary)
-				mask = rookAttacks(lastMove.from) | rookAttacks(lastMove.to);
+			if (lastMove.mtype == CAPTURE || lastMove.mtype == C_PROMOTION) {
 				for (auto b : { br, bq }) {
 					if (mask & pieces[b]) {
 						toBeUpdated |= bit_at(b);
 					}
 				}
-				if (lastMove.mtype == CAPTURE) {
-					for (auto w : { wr, wq }) {
-						if (mask & pieces[w]) {
-							toBeUpdated |= bit_at(w);
-						}
-					}
+			}
+			mask = bishopAttacks(lastMove.from) | bishopAttacks(lastMove.to);
+			for (auto w : { wb, wq }) {
+				if (mask & pieces[w]) { 
+					toBeUpdated |= bit_at(w);
 				}
-				mask = bishopAttacks(lastMove.from) | bishopAttacks(lastMove.to);
+			}
+			if (lastMove.mtype == CAPTURE) {
 				for (auto b : { bb, bq }) {
 					if (mask & pieces[b]) {
 						toBeUpdated |= bit_at(b);
 					}
 				}
-				if (lastMove.mtype == CAPTURE) {
-					for (auto w : { wb, wq }) {
-						if (mask & pieces[w]) {
-							toBeUpdated |= bit_at(w);
-						}
-					}
-				}
-				mask = (KNIGHT_ATTACKS[lastMove.from] | KNIGHT_ATTACKS[lastMove.to]) & ~blackPos;
-				if (mask & pieces[bn]) {
-					toBeUpdated |= bit_at(bn);
-				}
-				if (fromto & (bpDanger | bpMove)) {
-					toBeUpdated |= bit_at(bp);
-				}
-				if (fromto & (wpDanger | wpMove)) {
-					toBeUpdated |= bit_at(wp);
-				}
-				// Update attacks of enemy pieces 
-
-				if (fromto & whiteAtt) {
-					for (auto w : { wr, wb, wq }) {
-						if (fromto & attacks[w]) {
-							toBeUpdated |= bit_at(w);
-						}
-					}
-				}
-				//attacks[bk] &= ~whiteAtt;
-				//attacks[wk] &= ~blackPos;
 			}
+			// Check if knight attacks are intersected
+			mask = (KNIGHT_ATTACKS[lastMove.from] | KNIGHT_ATTACKS[lastMove.to]);
+			if (mask & pieces[wn]) { 
+				toBeUpdated |= bit_at(wn);
+			}
+			mask = (KING_ATTACKS[lastMove.from] | KING_ATTACKS[lastMove.to]);
+			if (mask & pieces[wk]) {
+				toBeUpdated |= bit_at(wk);
+			}
+			// Check if pawns are blocked or if their attacks are obstructed / uncovered
+			if (fromto & (wpDanger | wpMove)) {
+				toBeUpdated |= bit_at(wp);
+			}
+			if (fromto & (bpDanger | bpMove)) {
+				toBeUpdated |= bit_at(bp);
+			}
+			// Update attacks of enemy pieces 
+			if (fromto & blackAtt) {
+				for_black (b) {
+					if (fromto & attacks[b]) {
+						toBeUpdated |= bit_at(b);
+					}
+				}
+			}
+		}
+		else {
+			// Update attacks of own pieces and generate moves (if neccessary)
+			mask = rookAttacks(lastMove.from) | rookAttacks(lastMove.to);
+			for (auto b : { br, bq }) {
+				if (mask & pieces[b]) {
+					toBeUpdated |= bit_at(b);
+				}
+			}
+			if (lastMove.mtype == CAPTURE) {
+				for (auto w : { wr, wq }) {
+					if (mask & pieces[w]) {
+						toBeUpdated |= bit_at(w);
+					}
+				}
+			}
+			mask = bishopAttacks(lastMove.from) | bishopAttacks(lastMove.to);
+			for (auto b : { bb, bq }) {
+				if (mask & pieces[b]) {
+					toBeUpdated |= bit_at(b);
+				}
+			}
+			if (lastMove.mtype == CAPTURE) {
+				for (auto w : { wb, wq }) {
+					if (mask & pieces[w]) {
+						toBeUpdated |= bit_at(w);
+					}
+				}
+			}
+			mask = (KNIGHT_ATTACKS[lastMove.from] | KNIGHT_ATTACKS[lastMove.to]);
+			if (mask & pieces[bn]) {
+				toBeUpdated |= bit_at(bn);
+			}
+			mask = (KING_ATTACKS[lastMove.from] | KING_ATTACKS[lastMove.to]);
+			if (mask & pieces[bk]) {
+				toBeUpdated |= bit_at(bk);
+			}
+			if (fromto & (bpDanger | bpMove)) {
+				toBeUpdated |= bit_at(bp);
+			}
+			if (fromto & (wpDanger | wpMove)) {
+				toBeUpdated |= bit_at(wp);
+			}
+			// Update attacks of enemy pieces 
 
+			if (fromto & whiteAtt) {
+				for_white (w) {
+					if (fromto & attacks[w]) {
+						toBeUpdated |= bit_at(w);
+					}
+				}
+			}
+			//attacks[bk] &= ~whiteAtt;
+			//attacks[wk] &= ~blackPos;
 		}
 		if (lastMove.mtype == CAPTURE || lastMove.mtype == C_PROMOTION || lastMove.mtype == PROMOTION) {
 			toBeUpdated |= bit_at(lastMove.targetPiece);
 		}
+		break;
 	case WCASTLE:  
 		if (blackAtt & bit_at(h1)) {
 			for_black(b) {
@@ -541,8 +550,9 @@ void Board::updateDeepMoves(int depth, color side, const Move& lastMove)
 	}
 }
 
-void Board::debugDiffDeepMoves(int depth)
+void Board::debugDiffDeepMoves(int depth, ofstream* outFile)
 {
+	// Display which moves had to be recalculated/removed after some move was made
 	int p = 0;
 	for (const auto depths : moveUpdateDepths) {
 		if (depths == depth) { // Most recent changes
@@ -550,13 +560,13 @@ void Board::debugDiffDeepMoves(int depth)
 			auto newMoves = deepMoves[p][min(depth, moveUpdateDepths[p])];
 			MoveList intersection;
 			for (const auto& m : oldMoves) {
-				if (find_if(newMoves.begin(), newMoves.end(), 
+				if (find_if(newMoves.begin(), newMoves.end(),
 					[m](const Move& mm) {return mm.raw == m.raw; }) != newMoves.end()) intersection.push_back(m);
 			}
 
 			// Remove intersection from both sets
-			for (auto it = oldMoves.begin(); it != oldMoves.end();){
-				if(find_if(intersection.begin(), intersection.end(), [it](const Move& m) {
+			for (auto it = oldMoves.begin(); it != oldMoves.end();) {
+				if (find_if(intersection.begin(), intersection.end(), [it](const Move& m) {
 					return m.raw == (*it).raw;
 				}) != intersection.end()) it = oldMoves.erase(it);
 				else it++;
@@ -567,21 +577,46 @@ void Board::debugDiffDeepMoves(int depth)
 				}) != intersection.end()) it = newMoves.erase(it);
 				else it++;
 			}
-			if (!oldMoves.empty()) {
-				cout << "Removed " << names[p] << " moves:\n";
-				for (const auto& delOld : oldMoves) {
-					cout << '\t' << shortNotation(delOld) << endl;
+			if (outFile == nullptr) {
+				if (!oldMoves.empty()) {
+					cout << "Removed " << names[p] << " moves:\n";
+					for (const auto& delOld : oldMoves) {
+						cout << '\t' << shortNotation(delOld) << endl;
+					}
+				}
+				if (!newMoves.empty()) {
+					cout << "Added " << names[p] << " moves:\n";
+					for (const auto& newm : newMoves) {
+						cout << '\t' << shortNotation(newm) << endl;
+					}
 				}
 			}
-			if (!newMoves.empty()) {
-				cout << "Added " << names[p] << " moves:\n";
-				for (const auto& newm : newMoves) {
-					cout << '\t' << shortNotation(newm) << endl;
+			else {
+				if (!oldMoves.empty()) {
+					*outFile << "Removed " << names[p] << " moves:\n";
+					for (const auto& delOld : oldMoves) {
+						*outFile << '\t' << shortNotation(delOld) << endl;
+					}
+				}
+				if (!newMoves.empty()) {
+					*outFile << "Added " << names[p] << " moves:\n";
+					for (const auto& newm : newMoves) {
+						*outFile << '\t' << shortNotation(newm) << endl;
+					}
 				}
 			}
-			cout << string(20, '+') << endl;
 		}
 		p++;
+	}
+	if(outFile == nullptr) cout << string(20, '+') << endl << endl;
+	else *outFile << string(20, '+') << endl << endl;
+}
+
+void Board::popDeepMovesAtDepth(int depth)
+{
+	for (int i = 0; i < 12; ++i) {
+		deepMoves[i][depth].clear();
+		if (moveUpdateDepths[i] > 0) moveUpdateDepths[i]--;
 	}
 }
 

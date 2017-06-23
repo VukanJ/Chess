@@ -1,0 +1,1165 @@
+~~~~~ Move a4a5 ~~~~~
+Removed p moves:
+	a6a5
+Removed P moves:
+	a4a5
+Added Q moves:
+	b3a4
+++++++++++++++++++++
+
+~~~~~ Move b4b5 ~~~~~
+Removed p moves:
+	b7b5
+Added p moves:
+	a6b5
+	c6b5
+Removed P moves:
+	b4b5
+Added P moves:
+	b5a6
+	b5c6
+	b5b6
+Removed B moves:
+	d3a6
+	d3b5
+Added Q moves:
+	b3b4
+++++++++++++++++++++
+
+~~~~~ Move e4e5 ~~~~~
+Removed r moves:
+	e8e4
+	e8e5
+Added r moves:
+	e8e5
+Removed n moves:
+	d7e5
+Added n moves:
+	d7e5
+Removed b moves:
+	g7e5
+Added b moves:
+	g7e5
+Removed q moves:
+	h4e4
+Added q moves:
+	h4e4
+Removed P moves:
+	e4e5
+Added P moves:
+	e5e6
+Added R moves:
+	e2e4
+Added N moves:
+	g5e4
+Removed B moves:
+	h2b8
+	h2c7
+	h2d6
+	h2e5
+Added B moves:
+	d3g6
+	d3f5
+	d3e4
+++++++++++++++++++++
+
+~~~~~ Move f2f3 ~~~~~
+Removed q moves:
+	h4f2
+Added q moves:
+	h4e1
+	h4f2
+Removed P moves:
+	f2f3
+	f2f4
+Added P moves:
+	f3f4
+Added R moves:
+	e2f2
+	e2g2
+Removed N moves:
+	g5f3
+++++++++++++++++++++
+
+~~~~~ Move f2f4 ~~~~~
+Removed q moves:
+	h4e4
+	h4f2
+	h4f4
+Added q moves:
+	h4f4
+	h4e1
+	h4f2
+Removed P moves:
+	f2f3
+	f2f4
+Added P moves:
+	f4f5
+Added R moves:
+	e2f2
+	e2g2
+Removed B moves:
+	h2b8
+	h2c7
+	h2d6
+	h2e5
+	h2f4
+++++++++++++++++++++
+
+~~~~~ Move e2e3 ~~~~~
+Added p moves:
+	d4e3
+Removed R moves:
+	e2e3
+	e2a2
+	e2b2
+	e2c2
+	e2d2
+Added R moves:
+	e3f3
+	e3g3
+	e3h3
+	e3e2
+Added B moves:
+	d3e2
+	d3f1
+Added K moves:
+	e1e2
+++++++++++++++++++++
+
+~~~~~ Move e2a2 ~~~~~
+Removed R moves:
+	e2e3
+	e2a2
+	e2b2
+	e2c2
+	e2d2
+Added R moves:
+	a2a3
+	a2b2
+	a2c2
+	a2d2
+	a2e2
+	a2a1
+Added B moves:
+	d3e2
+	d3f1
+Added K moves:
+	e1e2
+Removed Q moves:
+	b3a2
+++++++++++++++++++++
+
+~~~~~ Move e2b2 ~~~~~
+Added p moves:
+	c3b2
+Removed R moves:
+	e2e3
+	e2a2
+	e2b2
+	e2c2
+	e2d2
+Added R moves:
+	b2a2
+	b2c2
+	b2d2
+	b2e2
+	b2b1
+Added B moves:
+	d3e2
+	d3f1
+Added K moves:
+	e1e2
+Removed Q moves:
+	b3b2
+	b3b1
+++++++++++++++++++++
+
+~~~~~ Move e2c2 ~~~~~
+Removed p moves:
+	c3c2
+Removed R moves:
+	e2e3
+	e2a2
+	e2b2
+	e2c2
+	e2d2
+Added R moves:
+	c2c3
+	c2a2
+	c2b2
+	c2d2
+	c2e2
+	c2c1
+Removed B moves:
+	d3c2
+	d3b1
+Added B moves:
+	d3e2
+	d3f1
+Added K moves:
+	e1e2
+Removed Q moves:
+	b3c2
+	b3d1
+++++++++++++++++++++
+
+~~~~~ Move e2d2 ~~~~~
+Added p moves:
+	c3d2
+Removed R moves:
+	e2e3
+	e2a2
+	e2b2
+	e2c2
+	e2d2
+Added R moves:
+	d2a2
+	d2b2
+	d2c2
+	d2e2
+	d2d1
+Added B moves:
+	d3e2
+	d3f1
+Removed K moves:
+	e1d2
+Added K moves:
+	e1e2
+++++++++++++++++++++
+
+~~~~~ Move h1f1 ~~~~~
+Removed R moves:
+	h1f1
+	h1g1
+Added R moves:
+	f1g1
+	f1h1
+Removed K moves:
+	e1d2
+	e1d1
+	e1f1
+Added K moves:
+	e1d2
+	e1d1
+++++++++++++++++++++
+
+~~~~~ Move h1g1 ~~~~~
+Removed R moves:
+	h1f1
+	h1g1
+Added R moves:
+	g1g4
+	g1g3
+	g1g2
+	g1f1
+	g1h1
+Removed B moves:
+	h2g1
+++++++++++++++++++++
+
+~~~~~ Move g5h7 ~~~~~
+Removed p moves:
+	h7h6
+	h7h5
+Added p moves:
+	g6g5
+Removed q moves:
+	h4g5
+Added q moves:
+	h4h7
+	h4d8
+	h4e7
+	h4f6
+	h4g5
+Removed N moves:
+	g5h7
+	g5f7
+	g5e6
+	g5f3
+	g5h3
+Added N moves:
+	h7f8
+	h7f6
+	h7g5
+++++++++++++++++++++
+
+~~~~~ Move g5f7 ~~~~~
+Added p moves:
+	g6g5
+Removed q moves:
+	h4g5
+Added q moves:
+	h4d8
+	h4e7
+	h4f6
+	h4g5
+Removed N moves:
+	g5h7
+	g5f7
+	g5e6
+	g5f3
+	g5h3
+Added N moves:
+	f7h8
+	f7d8
+	f7d6
+	f7h6
+	f7e5
+	f7g5
+Removed Q moves:
+	b3g8
+	b3f7
+++++++++++++++++++++
+
+~~~~~ Move g5e6 ~~~~~
+Added p moves:
+	g6g5
+Removed r moves:
+	e8e4
+	e8e6
+	e8e5
+Added r moves:
+	e8e6
+Removed q moves:
+	h4g5
+Added q moves:
+	h4d8
+	h4e7
+	h4f6
+	h4g5
+Removed N moves:
+	g5h7
+	g5f7
+	g5e6
+	g5f3
+	g5h3
+Added N moves:
+	e6d4
+	e6g7
+	e6d8
+	e6f8
+	e6c7
+	e6g5
+	e6f4
+Removed Q moves:
+	b3g8
+	b3f7
+	b3e6
+++++++++++++++++++++
+
+~~~~~ Move g5f3 ~~~~~
+Added p moves:
+	g6g5
+Removed q moves:
+	h4g5
+Added q moves:
+	h4d8
+	h4e7
+	h4f6
+	h4g5
+Removed P moves:
+	f2f3
+	f2f4
+Removed N moves:
+	g5h7
+	g5f7
+	g5e6
+	g5f3
+	g5h3
+Added N moves:
+	f3d4
+	f3h4
+	f3e5
+	f3g5
+	f3d2
+	f3g1
+++++++++++++++++++++
+
+~~~~~ Move g5h3 ~~~~~
+Added p moves:
+	g6g5
+Removed q moves:
+	h4g5
+	h4h2
+	h4h3
+Added q moves:
+	h4h3
+	h4d8
+	h4e7
+	h4f6
+	h4g5
+Removed N moves:
+	g5h7
+	g5f7
+	g5e6
+	g5f3
+	g5h3
+Added N moves:
+	h3g5
+	h3f4
+	h3g1
+++++++++++++++++++++
+
+~~~~~ Move d3a6 ~~~~~
+Removed p moves:
+	a6a5
+Added p moves:
+	b7a6
+	d4d3
+Added r moves:
+	a8a6
+Removed B moves:
+	d3a6
+	d3b5
+	d3c4
+	d3c2
+	d3b1
+Added B moves:
+	a6b7
+	a6b5
+	a6c4
+	a6d3
+++++++++++++++++++++
+
+~~~~~ Move d3b5 ~~~~~
+Removed p moves:
+	b7b5
+Added p moves:
+	a6b5
+	c6b5
+	d4d3
+Removed P moves:
+	b4b5
+Removed B moves:
+	d3a6
+	d3b5
+	d3c4
+	d3c2
+	d3b1
+Added B moves:
+	b5a6
+	b5c6
+	b5c4
+	b5d3
+++++++++++++++++++++
+
+~~~~~ Move d3c4 ~~~~~
+Added p moves:
+	d4d3
+Removed B moves:
+	d3a6
+	d3b5
+	d3c4
+	d3c2
+	d3b1
+Added B moves:
+	c4a6
+	c4g8
+	c4f7
+	c4e6
+	c4b5
+	c4d5
+	c4d3
+Removed Q moves:
+	b3g8
+	b3f7
+	b3e6
+	b3d5
+	b3c4
+++++++++++++++++++++
+
+~~~~~ Move d3c2 ~~~~~
+Removed p moves:
+	c3c2
+Added p moves:
+	d4d3
+Removed R moves:
+	e2a2
+	e2b2
+	e2c2
+Removed B moves:
+	d3a6
+	d3b5
+	d3c4
+	d3c2
+	d3b1
+Added B moves:
+	c2d3
+	c2b1
+	c2d1
+Removed Q moves:
+	b3c2
+	b3d1
+++++++++++++++++++++
+
+~~~~~ Move d3b1 ~~~~~
+Added p moves:
+	d4d3
+Removed B moves:
+	d3a6
+	d3b5
+	d3c4
+	d3c2
+	d3b1
+Added B moves:
+	b1d3
+	b1a2
+	b1c2
+Removed Q moves:
+	b3b1
+++++++++++++++++++++
+
+~~~~~ Move h2b8 ~~~~~
+Removed r moves:
+	a8b8
+Added r moves:
+	a8b8
+Removed n moves:
+	d7b8
+Added n moves:
+	d7b8
+Added R moves:
+	h1h4
+	h1h3
+	h1h2
+Removed B moves:
+	h2b8
+	h2c7
+	h2d6
+	h2e5
+	h2f4
+	h2g3
+	h2g1
+Added B moves:
+	b8a7
+	b8c7
+	b8d6
+	b8e5
+	b8f4
+	b8g3
+	b8h2
+++++++++++++++++++++
+
+~~~~~ Move h2c7 ~~~~~
+Added R moves:
+	h1h4
+	h1h3
+	h1h2
+Removed B moves:
+	h2b8
+	h2c7
+	h2d6
+	h2e5
+	h2f4
+	h2g3
+	h2g1
+Added B moves:
+	c7b8
+	c7d8
+	c7b6
+	c7d6
+	c7a5
+	c7e5
+	c7f4
+	c7g3
+	c7h2
+++++++++++++++++++++
+
+~~~~~ Move h2d6 ~~~~~
+Added R moves:
+	h1h4
+	h1h3
+	h1h2
+Removed B moves:
+	h2b8
+	h2c7
+	h2d6
+	h2e5
+	h2f4
+	h2g3
+	h2g1
+Added B moves:
+	d6b8
+	d6f8
+	d6c7
+	d6e7
+	d6e5
+	d6f4
+	d6g3
+	d6h2
+++++++++++++++++++++
+
+~~~~~ Move h2e5 ~~~~~
+Removed r moves:
+	e8e4
+	e8e5
+Added r moves:
+	e8e5
+Removed n moves:
+	d7e5
+Added n moves:
+	d7e5
+Removed b moves:
+	g7e5
+Added b moves:
+	g7e5
+Removed P moves:
+	e4e5
+Added R moves:
+	h1h4
+	h1h3
+	h1h2
+Removed B moves:
+	h2b8
+	h2c7
+	h2d6
+	h2e5
+	h2f4
+	h2g3
+	h2g1
+Added B moves:
+	e5d4
+	e5g7
+	e5b8
+	e5c7
+	e5d6
+	e5f6
+	e5f4
+	e5g3
+	e5h2
+++++++++++++++++++++
+
+~~~~~ Move h2f4 ~~~~~
+Removed q moves:
+	h4e4
+	h4h2
+	h4f4
+Added q moves:
+	h4h1
+	h4f4
+	h4h2
+Removed P moves:
+	f2f4
+Added R moves:
+	h1h4
+	h1h3
+	h1h2
+Removed B moves:
+	h2b8
+	h2c7
+	h2d6
+	h2e5
+	h2f4
+	h2g3
+	h2g1
+Added B moves:
+	f4b8
+	f4c7
+	f4d6
+	f4e5
+	f4e3
+	f4g3
+	f4d2
+	f4h2
+	f4c1
+++++++++++++++++++++
+
+~~~~~ Move h2g3 ~~~~~
+Removed q moves:
+	h4f2
+	h4h2
+	h4g3
+Added q moves:
+	h4h1
+	h4g3
+	h4h2
+Added R moves:
+	h1h4
+	h1h3
+	h1h2
+Removed B moves:
+	h2b8
+	h2c7
+	h2d6
+	h2e5
+	h2f4
+	h2g3
+	h2g1
+Added B moves:
+	g3h4
+	g3b8
+	g3c7
+	g3d6
+	g3e5
+	g3f4
+	g3h2
+++++++++++++++++++++
+
+~~~~~ Move h2g1 ~~~~~
+Removed q moves:
+	h4h2
+Added q moves:
+	h4h1
+	h4h2
+Removed R moves:
+	h1f1
+	h1g1
+Added R moves:
+	h1h4
+	h1h3
+	h1h2
+Removed B moves:
+	h2b8
+	h2c7
+	h2d6
+	h2e5
+	h2f4
+	h2g3
+	h2g1
+Added B moves:
+	g1h2
+++++++++++++++++++++
+
+~~~~~ Move e1d2 ~~~~~
+Added p moves:
+	c3d2
+Removed R moves:
+	e2a2
+	e2b2
+	e2c2
+	e2d2
+	h1f1
+	h1g1
+Added R moves:
+	e2e1
+	h1a1
+	h1b1
+	h1c1
+	h1d1
+	h1e1
+	h1f1
+	h1g1
+Removed K moves:
+	e1d2
+	e1d1
+	e1f1
+Added K moves:
+	d2c3
+	d2e3
+	d2c2
+	d2c1
+	d2d1
+	d2e1
+++++++++++++++++++++
+
+~~~~~ Move e1d1 ~~~~~
+Removed R moves:
+	h1f1
+	h1g1
+Added R moves:
+	e2e1
+	h1e1
+	h1f1
+	h1g1
+Removed K moves:
+	e1d2
+	e1d1
+	e1f1
+Added K moves:
+	d1c2
+	d1d2
+	d1c1
+	d1e1
+Removed Q moves:
+	b3d1
+++++++++++++++++++++
+
+~~~~~ Move e1f1 ~~~~~
+Removed R moves:
+	h1f1
+	h1g1
+Added R moves:
+	e2e1
+	h1g1
+Removed K moves:
+	e1d2
+	e1d1
+	e1f1
+Added K moves:
+	f1g2
+	f1e1
+	f1g1
+++++++++++++++++++++
+
+~~~~~ Move b3c3 ~~~~~
+Removed p moves:
+	c3c2
+Added p moves:
+	d4c3
+Removed Q moves:
+	b3c3
+	b3g8
+	b3f7
+	b3e6
+	b3d5
+	b3c4
+	b3a3
+	b3a2
+	b3b2
+	b3c2
+	b3b1
+	b3d1
+Added Q moves:
+	c3d4
+	c3c4
+	c3a3
+	c3b3
+	c3b2
+	c3c2
+	c3d2
+	c3a1
+	c3c1
+++++++++++++++++++++
+
+~~~~~ Move b3g8 ~~~~~
+Removed r moves:
+	e8g8
+Added r moves:
+	e8g8
+Removed Q moves:
+	b3c3
+	b3g8
+	b3f7
+	b3e6
+	b3d5
+	b3c4
+	b3a3
+	b3a2
+	b3b2
+	b3c2
+	b3b1
+	b3d1
+Added Q moves:
+	g8h7
+	g8e8
+	g8g7
+	g8h8
+	g8f8
+	g8f7
+	g8e6
+	g8d5
+	g8c4
+	g8b3
+	g8a2
+++++++++++++++++++++
+
+~~~~~ Move b3f7 ~~~~~
+Removed N moves:
+	g5f7
+Removed Q moves:
+	b3c3
+	b3g8
+	b3f7
+	b3e6
+	b3d5
+	b3c4
+	b3a3
+	b3a2
+	b3b2
+	b3c2
+	b3b1
+	b3d1
+Added Q moves:
+	f7g6
+	f7e8
+	f7d7
+	f7g7
+	f7f8
+	f7g8
+	f7e7
+	f7e6
+	f7f6
+	f7d5
+	f7f5
+	f7c4
+	f7f4
+	f7b3
+	f7f3
+	f7a2
+++++++++++++++++++++
+
+~~~~~ Move b3e6 ~~~~~
+Removed r moves:
+	e8e4
+	e8e6
+	e8e5
+Added r moves:
+	e8e6
+Removed N moves:
+	g5e6
+Removed Q moves:
+	b3c3
+	b3g8
+	b3f7
+	b3e6
+	b3d5
+	b3c4
+	b3a3
+	b3a2
+	b3b2
+	b3c2
+	b3b1
+	b3d1
+Added Q moves:
+	e6c6
+	e6g6
+	e6e8
+	e6d7
+	e6g8
+	e6e7
+	e6f7
+	e6d6
+	e6f6
+	e6d5
+	e6e5
+	e6f5
+	e6c4
+	e6g4
+	e6b3
+	e6h3
+	e6a2
+++++++++++++++++++++
+
+~~~~~ Move b3d5 ~~~~~
+Added p moves:
+	c6d5
+Removed Q moves:
+	b3c3
+	b3g8
+	b3f7
+	b3e6
+	b3d5
+	b3c4
+	b3a3
+	b3a2
+	b3b2
+	b3c2
+	b3b1
+	b3d1
+Added Q moves:
+	d5c6
+	d5d4
+	d5d7
+	d5g8
+	d5f7
+	d5d6
+	d5e6
+	d5e5
+	d5f5
+	d5c4
+	d5b3
+	d5a2
+++++++++++++++++++++
+
+~~~~~ Move b3c4 ~~~~~
+Removed B moves:
+	d3a6
+	d3b5
+	d3c4
+Removed Q moves:
+	b3c3
+	b3g8
+	b3f7
+	b3e6
+	b3d5
+	b3c4
+	b3a3
+	b3a2
+	b3b2
+	b3c2
+	b3b1
+	b3d1
+Added Q moves:
+	c4a6
+	c4d4
+	c4c3
+	c4g8
+	c4f7
+	c4e6
+	c4b5
+	c4d5
+	c4b3
+	c4a2
+++++++++++++++++++++
+
+~~~~~ Move b3a3 ~~~~~
+Removed Q moves:
+	b3c3
+	b3g8
+	b3f7
+	b3e6
+	b3d5
+	b3c4
+	b3a3
+	b3a2
+	b3b2
+	b3c2
+	b3b1
+	b3d1
+Added Q moves:
+	a3c3
+	a3b3
+	a3a2
+	a3b2
+	a3a1
+	a3c1
+++++++++++++++++++++
+
+~~~~~ Move b3a2 ~~~~~
+Removed R moves:
+	e2a2
+Removed Q moves:
+	b3c3
+	b3g8
+	b3f7
+	b3e6
+	b3d5
+	b3c4
+	b3a3
+	b3a2
+	b3b2
+	b3c2
+	b3b1
+	b3d1
+Added Q moves:
+	a2g8
+	a2f7
+	a2e6
+	a2d5
+	a2c4
+	a2a3
+	a2b3
+	a2b2
+	a2c2
+	a2d2
+	a2a1
+	a2b1
+++++++++++++++++++++
+
+~~~~~ Move b3b2 ~~~~~
+Added p moves:
+	c3b2
+Removed R moves:
+	e2a2
+	e2b2
+Removed Q moves:
+	b3c3
+	b3g8
+	b3f7
+	b3e6
+	b3d5
+	b3c4
+	b3a3
+	b3a2
+	b3b2
+	b3c2
+	b3b1
+	b3d1
+Added Q moves:
+	b2c3
+	b2a3
+	b2b3
+	b2a2
+	b2c2
+	b2d2
+	b2a1
+	b2b1
+	b2c1
+++++++++++++++++++++
+
+~~~~~ Move b3c2 ~~~~~
+Removed p moves:
+	c3c2
+Removed R moves:
+	e2a2
+	e2b2
+	e2c2
+Removed B moves:
+	d3c2
+	d3b1
+Removed Q moves:
+	b3c3
+	b3g8
+	b3f7
+	b3e6
+	b3d5
+	b3c4
+	b3a3
+	b3a2
+	b3b2
+	b3c2
+	b3b1
+	b3d1
+Added Q moves:
+	c2c3
+	c2b3
+	c2a2
+	c2b2
+	c2d2
+	c2b1
+	c2c1
+	c2d1
+++++++++++++++++++++
+
+~~~~~ Move b3b1 ~~~~~
+Removed B moves:
+	d3b1
+Removed Q moves:
+	b3c3
+	b3g8
+	b3f7
+	b3e6
+	b3d5
+	b3c4
+	b3a3
+	b3a2
+	b3b2
+	b3c2
+	b3b1
+	b3d1
+Added Q moves:
+	b1b3
+	b1a2
+	b1b2
+	b1c2
+	b1a1
+	b1c1
+	b1d1
+++++++++++++++++++++
+
+~~~~~ Move b3d1 ~~~~~
+Removed K moves:
+	e1d1
+Removed Q moves:
+	b3c3
+	b3g8
+	b3f7
+	b3e6
+	b3d5
+	b3c4
+	b3a3
+	b3a2
+	b3b2
+	b3c2
+	b3b1
+	b3d1
+Added Q moves:
+	d1b3
+	d1c2
+	d1d2
+	d1a1
+	d1b1
+	d1c1
+++++++++++++++++++++
+

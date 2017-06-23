@@ -451,89 +451,28 @@ void UnitTest::testProm()
 
 void UnitTest::specialTest()
 {
-	AI ai("r1b4r/pp4bp/3k1np1/q1p1p3/2P1P3/2N1QN2/PP2BPPP/2K4R w - - 1 0", white, 1);
+	AI ai("r1b1r2k/1p1n2bp/p1p3p1/2P3N1/PP1pP2q/1QpB4/4RP1B/4K2R w K - 1 0", white, 1);
 	ai.chessBoard.updateAllAttacks();
-	ai.chessBoard.print();
 	ai.chessBoard.initDeepMoves();
-
-	Move m = Move(8, 16, MOVE, wp);
-	Move m2 = Move(c8, h3, CAPTURE, piece_pair(bb, wp));
-
-	MoveList ml1 = ai.chessBoard.assembleMovelist(0, white);
-
-	ai.chessBoard.makeMove<PROPER>(m, white);
 	ai.chessBoard.print();
-	ai.chessBoard.updateDeepMoves(1, white, m);
+	MoveList whiteMoves = ai.chessBoard.assembleMovelist(0, white);
+	MoveList blackMoves = ai.chessBoard.assembleMovelist(0, black);
 
-	MoveList ml2 = ai.chessBoard.assembleMovelist(1, black);
-	ai.chessBoard.debugDiffDeepMoves(1);
-
-	ai.chessBoard.makeMove<PROPER>(m2, black);
-	ai.chessBoard.print(); 
-	ai.chessBoard.updateDeepMoves(2, black, m2);
-
-	MoveList ml3 = ai.chessBoard.assembleMovelist(2, white);
-
-	ai.chessBoard.debugDiffDeepMoves(2);
+	ofstream logFile("persistentLog.txt", ios::out);
+	
+	for (const auto& move : whiteMoves) {
+		ai.chessBoard.makeMove<PROPER>(move, white);
+		ai.chessBoard.updateDeepMoves(1, white, move);
+		logFile << "~~~~~ Move " << shortNotation(move) << " ~~~~~\n";
+		cout << "~~~~~ Move " << shortNotation(move) << " ~~~~~\n";
+		ai.chessBoard.debugDiffDeepMoves(1, nullptr);
+		ai.chessBoard.debugDiffDeepMoves(1, &logFile);
+		ai.chessBoard.unMakeMove<PROPER>(move, white);
+		ai.chessBoard.popDeepMovesAtDepth(1);
+	}
+	logFile.close();
 	cin.ignore();
 	exit(0);
-}
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ MINIMAL TREE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-
-UnitTest::MinimalTree::MinimalTree(Board& _chessBoard, color comp, int _targetDepth)
-	: Root(nullptr), targetDepth(_targetDepth), chessBoard(_chessBoard), computerColor(comp)
-{
-	//Root.reset(new Node(chessBoard.evaluate(true)));
-	staticEvaluations = 0;
-}
-
-void UnitTest::testMinimalTree()
-{
-	//AI ai("2r3k1/1p2Bpp1/p3p1p1/bq1pP3/1n1P2PQ/1R3N2/1P3PKP/8 w - 1 0", white);
-	AI ai("rnb2b1r/ppk2ppp/2p5/4q1B1/88/PPP2PPP/2KR1BNR w - 1 0", white);
-	ai.chessBoard.print();
-	MinimalTree tree(ai.chessBoard, white, 4);
-	cout << tree.buildGameTreeMinimax(4, white) << endl;
-}
-
-UnitTest::MinimalTree::Node::Node(float _boardValue) : boardValue(_boardValue), value_alphabeta(-oo) {}
-
-int UnitTest::MinimalTree::buildGameTreeMinimax(int depth, color side)
-{
-	// Even depths correspond to maximizing player (computer)
-	bool isMax = side == computerColor;
-
-	if (depth == 0) return chessBoard.evaluate(side);
-	MoveList moveList;
-	int bestValue = isMax ? -oo: +oo;
-	int testValue;
-
-	chessBoard.generateMoveList(moveList, side, true);
-	static auto bestMove = moveList.front();
-
-	for (auto move = moveList.begin(); move != moveList.end(); move++) {
-		chessBoard.makeMove<PROPER>(*move, side);
-		if (isMax) {
-			testValue = buildGameTreeMinimax(depth - 1, side == black ? white : black);
-			if (testValue > bestValue && depth == targetDepth) {
-				bestMove = *move;
-				cout << "New best move -> " << moveString(*move) << endl;
-			}
-			bestValue = max(bestValue, testValue);
-		}
-		else {
-			testValue = buildGameTreeMinimax(depth - 1, side == black ? white : black);
-			if (testValue < bestValue && depth == targetDepth) {
-				bestMove = *move;
-				cout << "New best move -> " << moveString(*move) << endl;
-			}
-			bestValue = min(bestValue, testValue);
-		}
-		chessBoard.unMakeMove<PROPER>(*move, side);
-	}
-	if (depth == targetDepth) cout << "Best Move ==> " << moveString(bestMove) << endl;
-	return bestValue;
 }
 
 void UnitTest::testEvaluation()
@@ -545,92 +484,6 @@ void UnitTest::testEvaluation()
 	AI ai("3q1rk1/pp4bp/3p1p2/3N1pB1/2r5/1N6/PPPQ3P/1K5R w - 1 0", white);
 	//cout << "Score (w)" << ai.chessBoard.evaluate(white) << endl;
 	ai.chessBoard.print();
-}
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ NEGAMAX TREE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-
-void UnitTest::testFullTree()
-{
-    // http://www.chesspuzzles.com/
-	AI ai("rk5r/pp1Q1p1p/1q1p1N2/88/6P1/PP3PBP/2R3K1 w - 1 0", white); // Mate in 2 puzzle
-	// Solution: Re8 Bf8 Bh6 d6 Rxf8#
-	ai.chessBoard.print();
-	auto hash = ai.chessBoard.hashKey;
-	fullTree tree(ai.chessBoard, white, 6);
-	cout << "Start with Enter\n";
-	cin.ignore();
-	tree.test_NegaMax(tree.Root, -oo, oo, 6, white);
-	cout << "# Full Evaluations:   " << tree.staticEvaluations << endl;
-	cout << "# Alpha Beta Cutoffs: " << tree.nalphaBeta << endl;
-	cout << "# Hash Lookups:       " << tree.nHashLookups << endl;
-
-	for (int n = 0; n < tree.Root->nodeList.size(); n++) {
-		cout << moveString(tree.Root->nodeList[n]->thisMove) << "; V = " << tree.Root->nodeList[n]->thisValue << '\n';
-	}
-
-	// Check if hashKey is still consistent
-	assert(hash == ai.chessBoard.hashKey);
-}
-
-UnitTest::fullTree::fullTree(Board& _chessBoard, color comp, int _targetDepth)
-	: Root(nullptr), targetDepth(_targetDepth), chessBoard(_chessBoard), computerColor(comp)
-{
-	Root.reset(new Node()); // Computer plays at Root
-	staticEvaluations = nalphaBeta = nHashLookups = 0;
-}
-
-UnitTest::fullTree::Node::Node() : thisValue(0x0) {}
-
-int UnitTest::fullTree::test_NegaMax(unique_ptr<Node>& node, int alpha, int beta, int depth, color side)
-{
-	int bestValue = -oo, boardValue = 0;
-	if (depth == 0) {
-		//if (chessBoard.hash.hasBetterEntry(chessBoard.hashKey, targetDepth - depth)) {
-		//	// Use pre-calculated value if it exists
-		//	chessBoard.hash.getEntry(chessBoard.hashKey, boardValue);
-		//	nHashLookups++;
-		//}
-		//else {
-		//	// Else make new hash-entry and evaluate board
-		//	boardValue = chessBoard.evaluate(side, targetDepth - depth);
-		//	chessBoard.hash.addEntry(chessBoard.hashKey, boardValue, targetDepth - depth);
-		//	staticEvaluations++;
-		//}
-		return boardValue;
-	}
-	chessBoard.generateMoveList(node->moveList, side, true);
-	for (auto move = node->moveList.begin(); move != node->moveList.end();) {
-		// Play move
-		//cout << moveString(*move) << endl;
-		chessBoard.makeMove<PROPER>(*move, side);
-		// Is king in check?
-		if (chessBoard.pieces[side == black ? bk : wk] & (side == black ? chessBoard.whiteAtt : chessBoard.blackAtt)) {
-			chessBoard.unMakeMove<PROPER>(*move, side);
-			move = node->moveList.erase(move);
-			if (node->moveList.empty()) {
-				//cout << "Mate in " << ceil((float)(targetDepth - depth) / 2.0) << " for " << (side==black ? "white" : "black") << endl;
-				boardValue = oo; // Checkmate
-			}
-			continue;
-		}
-		node->nodeList.push_back(unique_ptr<Node>(new Node()));
-		node->nodeList.back()->thisMove = *move;
-		boardValue = -test_NegaMax(node->nodeList.back(), -beta, -alpha, depth - 1, side == black ? white : black);
-		node->nodeList.back()->thisValue = boardValue;
-		bestValue = max(bestValue, boardValue);
-		alpha = max(alpha, boardValue);
-		if (alpha >= beta) {
-			nalphaBeta++;
-			chessBoard.unMakeMove<PROPER>(*move, side);
-			break;
-		}
-		chessBoard.unMakeMove<PROPER>(*move, side);
-		move++;
-	}
-	if (depth == targetDepth) {
-		cout << "bestValue: " << bestValue << endl;
-	}
-	return bestValue;
 }
 
 void UnitTest::testHashing()
@@ -757,14 +610,16 @@ Benchmark::Benchmark() : totalTotalPerftMoveCount(0), performingAll(false)
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
 
-	testBoard = Board("rnbqkb1r/p3pppp/1p6/2ppP3/3N4/2P5/PPP1QPPP/R1B1KB1R w KQkq - 1 0");
+	testBoard = Board("4k3/8/8/8/8/8/8/4K2R w K - 0 1");
 
-	//Move a8a4 = Move(a8, a4, MOVE, wr);
-	//testBoard.makeMove(a8a4, white);
+	//testBoard.makeMove<PROPER>(Move(e2, e4, PAWN2, wp), white);
+	//testBoard.makeMove<PROPER>(Move(g8, f6, MOVE, bn), black);
+	//testBoard.makeMove<PROPER>(Move(f1, b5, MOVE, wb), white);
 	// Now: 7r/8/8/2K5/R4k2/8/8/r6R b - - 1 0
 	//testBoard.print();
 
 	testBoard.updateAllAttacks();
+	testBoard.initDeepMoves();
 	//MoveList moves;
 	//testBoard.generateMoveList(moves, white, true);
 
@@ -886,10 +741,10 @@ void Benchmark::testPerft(int maxdepth)
 	if (maxdepth == -1) {
 		// Check perft numbers
 		auto hashKey = testBoard.hashKey;
-		for (int d = 1; d < 10; d++) {
+		for (int d = 1; d < 100; d++) {
 			chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
 			testBoard.print();
-			perft(d, d, white);
+			deepPerft(d, d, white);
 			//testBoard.print();
 			//printBitboard(testBoard.attacks[bk]);
 			//printBitboard(testBoard.blackAtt);
@@ -969,6 +824,52 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 	if (checkmate && depth == 1) perftCheckmateCount++;
 }
 
+void Benchmark::deepPerft(int depth, const int targetDepth, color side)
+{
+	// Builds a tree to benchmark move generation
+	if (depth == 0) return;
+	MoveList movelist = testBoard.assembleMovelist(targetDepth - depth + 1, side);
+	testBoard.updateAllAttacks();
+	testBoard.updatePinnedPieces(side);
+	// Store pairs of root moves and number of possible moves after them
+	bool checkmate = true;
+	bool checkOnThisDepth = testBoard.wasInCheck;
+	U64 pinnedOnThisDepth = testBoard.pinned;
+	for (auto& move : movelist) {
+		try {
+		U64 testHash = testBoard.hashKey;
+		testBoard.makeMove<PROPER>(move, side);
+		
+		if (depth == 1) perftMoveCount++;
+		if (testBoard.isKingLeftInCheck(side, move, checkOnThisDepth, pinnedOnThisDepth)) {
+			testBoard.unMakeMove<PROPER>(move, side);
+			if (testBoard.hashKey != testHash) throw string("Hash Error!");
+			if (depth == 1) perftMoveCount--;
+			continue;
+		}
+		if(depth > 1) testBoard.updateDeepMoves(targetDepth - depth + 1, side, move);
+		if (move.flags == ENPASSENT && depth == 1) perftEPCount++;
+
+		checkmate = false; // Moves were found
+		deepPerft(depth - 1, targetDepth, static_cast<color>(!side));
+		testBoard.unMakeMove<PROPER>(move, static_cast<color>(side));
+		if(depth > 0) testBoard.popDeepMovesAtDepth(targetDepth - depth + 1);
+		if (testBoard.hashKey != testHash) throw string("Hash Error!");
+		if (depth == targetDepth) {
+			cout << shortNotation(move) << ": " << perftMoveCount << endl;
+			totalPerftMoveCount += perftMoveCount;
+			totalTotalPerftMoveCount += perftMoveCount;
+			perftMoveCount = 0;
+		}
+		}
+		catch (const string& err) {
+			cerr << err << endl;
+			cerr << "Move " << moveString(move) << endl;
+		}
+	}
+	if (checkmate && depth == 1) perftCheckmateCount++;
+}
+
 // Scoreboard: AMD Phenom(tm) II X4 945
 // commit 226506b6038d0991f0b10a4998adaea203f2af50
 //		  Perft computation time: 85.6962 s (depth 5)
@@ -1044,6 +945,66 @@ void Benchmark::perftTestSuite()
 	cout << "Average moves per second: " << ((float)totalTotalPerftMoveCount) / (timer.getTime()*1e-6)*1e-6 << " M\n";
 	cin.ignore();
 }
+
+void Benchmark::deepPerftTestSuite()
+{
+	// Loading perft data and fens from file
+	totalTotalPerftMoveCount = 0;
+	ifstream testFile("perftsuite.txt", ios::in);
+	if (!testFile.is_open()) {
+		cout << "Error: Perft testsuite not found in project dir!\n";
+		return;
+	}
+	vector<vector<string>> perftTestData = vector<vector<string>>(125, vector<string>(7, ""));
+	string read;
+	for (int i = 0; i < 125; ++i) {
+		for (int j = 0; j < 12; ++j) {
+			testFile >> read;
+			if (read[0] != ';') {
+				if (j < 6)
+					perftTestData[i][0] += " " + read;
+				else
+					perftTestData[i][j - 5] = read;
+			}
+			else j--;
+		}
+	}
+	testFile.close();
+	// Start perft
+	int errorCount = 0;
+	Timer timer;
+	timer.start();
+	for (auto& testNum : perftTestData) {
+		int c = 1;
+		testBoard.setupBoard(testNum[0]);
+		testBoard.initDeepMoves();
+		//testBoard.print();
+
+		for (auto moveCount = testNum.begin() + 1; moveCount != testNum.end(); ++moveCount) {
+			if (c == 6) continue;
+			//cout << "Depth " << c << " start...\n";
+			deepPerft(c, c, any_of(testNum[0].begin(), testNum[0].end(), [](char c) {return c == 'w'; }) ? white : black);
+			c++;
+			if (totalPerftMoveCount != stol(*moveCount)) {
+				cout << "Discrepancy detected: " << testNum[0] << " Depth : " << c - 1 << endl;
+				cout << "Expected: " << *moveCount << " Found: " << totalPerftMoveCount << endl;
+				cout << "Press Enter\n";
+				errorCount++;
+				cin.ignore();
+				totalPerftMoveCount = 0;
+				break;
+			}
+			totalPerftMoveCount = 0;
+		}
+	}
+	timer.stop();
+	cout << "Correct percentage:       " << 100 * ((float)(perftTestData.size() - errorCount) / (float)perftTestData.size()) << "%\n";
+	cout << "Computation time:         " << timer.getTime()*1e-6 << " s" << endl;
+	cout << "Total moves examined:     " << totalTotalPerftMoveCount << endl;
+	cout << "Average moves per second: " << ((float)totalTotalPerftMoveCount) / (timer.getTime()*1e-6)*1e-6 << " M\n";
+	cin.ignore();
+}
+
 
 Timer::Timer()
 {
