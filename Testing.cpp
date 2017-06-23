@@ -740,10 +740,14 @@ Benchmark::Benchmark() : totalTotalPerftMoveCount(0), performingAll(false)
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
 
-	testBoard = Board("rnbqkb1r/p3pppp/1p6/2ppP3/3N4/2P5/PPP1QPPP/R1B1KB1R w KQkq - 1 0");
+	testBoard = Board("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1");
 
-	//Move a8a4 = Move(a8, a4, MOVE, wr);
-	//testBoard.makeMove(a8a4, white);
+	Move h1f1 = Move(h1, f1, move_metadata(MOVE, castle_K), wr);
+	testBoard.makeMove<PROPER>(h1f1, white);
+	Move a8a2 = Move(a8, a2, move_metadata(MOVE, castle_q), br);
+	testBoard.makeMove<PROPER>(a8a2, black);
+	Move a1a2 = Move(a1, a2, move_metadata(CAPTURE, castle_Q), piece_pair(wr, br));
+	testBoard.makeMove<PROPER>(a1a2, white);
 	// Now: 7r/8/8/2K5/R4k2/8/8/r6R b - - 1 0
 	//testBoard.print();
 
@@ -872,7 +876,7 @@ void Benchmark::testPerft(int maxdepth)
 		for (int d = 1; d < 10; d++) {
 			chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
 			testBoard.print();
-			perft(d, d, white);
+			perft(d, d, black);
 			//testBoard.print();
 			//printBitboard(testBoard.attacks[bk]);
 			//printBitboard(testBoard.blackAtt);

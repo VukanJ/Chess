@@ -1,10 +1,14 @@
 #include "Move.h"
 
-Move::Move() : raw(0x0){}
+Move::Move() 
+{
+	from = to = flags = nullSquare;
+	pieces = nullPiece;
+}
 
 Move::Move(U8 OldCastlingRights, U8 _flags)
 {
-	oldCastlingRights = OldCastlingRights;
+	from = OldCastlingRights;
 	flags = _flags;
 }
 
@@ -16,18 +20,11 @@ Move::Move(U8 _from, U8 _to, U8 _flags, U8 _pieces)
 	pieces =_pieces;
 }
 
-Move::Move(ulong _from, ulong _to, U8 _flags, U8 _pieces)
+Move& Move::operator=(const Move& o)
 {
-	from = _from;
-	to = _to;
-	flags =_flags;
-	pieces = _pieces;
-}
-
-Move::Move(int _from, int _to, U8 _flags, U8 _pieces)
-{
-	from = _from;
-	to = _to;
-	flags = _flags;
-	pieces = _pieces;
+	from = o.from;
+	to = o.to;
+	flags = o.flags;
+	pieces = o.pieces;
+	return *this;
 }
