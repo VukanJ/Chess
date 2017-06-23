@@ -6,6 +6,7 @@
 #include <climits>
 #include <functional>
 #include <vector>
+#include <intrin.h>
 
 typedef unsigned uint;
 typedef unsigned long ulong;
@@ -16,9 +17,9 @@ typedef uint8_t  U8;
 
 constexpr int oo = INT_MAX; // Alpha-Beta infinity
 
-U64  constexpr bit_at(uint x)     { return 0x1ull << x; }        // Sets nth bit in number counting from least significant bit
-U64  constexpr bit_at_rev(uint x) { return 0x1ull << (63 - x); } // Sets nth bit in number counting from most significant bit
-U8 constexpr piece_pair(U8 X, U8 Y) { return X | (Y << 4); } // Pairs up 4-bit piece information
+U64 constexpr bit_at(uint x)     { return 0x1ull << x; }        // Sets nth bit in number counting from least significant bit
+U64 constexpr bit_at_rev(uint x) { return 0x1ull << (63 - x); } // Sets nth bit in number counting from most significant bit
+U8  constexpr piece_pair(U8 X, U8 Y) { return X | (Y << 4); } // Pairs up 4-bit piece information
 
 // Move formatting macros:
 U8 constexpr move_metadata(U8 TYPE, U8 DATA) { return TYPE | (DATA << 4); }

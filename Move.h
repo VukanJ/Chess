@@ -19,33 +19,20 @@ enum moveType {
 	BCASTLE_2,   // Black castle o-o-o
 };
 
-union Move
+struct Move
 {
 	Move();
 	Move(U8 OldCastlingRights, U8 _flags);
 	Move(U8 _from, U8 _to, U8 _flags, U8 _pieces);
-	Move(ulong _from, ulong _to, U8 _flags, U8 _pieces);
-	Move(int _from, int _to, U8 _flags, U8 _pieces);
 
-	struct {
-		uint32_t from           : 8;
-		uint32_t to             : 8;
-		uint32_t mtype          : 4;
-		uint32_t castlingRights : 4;
-		uint32_t movePiece      : 4;
-		uint32_t targetPiece    : 4;
-	};
-	struct {
-		uint32_t _ft_    : 16;
-		uint32_t flags   : 8;
-		uint32_t pieces  : 8;
-	};
-	struct {
-		uint32_t oldCastlingRights : 8;
-	};
-	struct {
-		uint32_t raw;
-	};
+	Move& operator=(const Move&);
+
+	U8 from, to, flags, pieces;
+	U8 inline movePiece()   const { return pieces & 0xF; }
+	U8 inline targetPiece() const { return pieces >> 4; }
+	U8 inline mtype()       const { return flags & 0xF; }
+	U8 inline castlingRights() const { return flags >> 4; }
+	U8 inline oldCastlingRights() const { return from; }
 	// Flagbits: 1-4: castlingRuleReset?[k,K,w,W]; 5-8: Movetype
 };
 
@@ -56,15 +43,15 @@ static string moveString(Move m)
 		return "O-O";
 	}
 	else if (m.flags == PROMOTION) {
-		return string(1, squareNames[m.to][0]) + "8=" + string(1, toupper(names[m.targetPiece]));
+		return string(1, squareNames[m.to][0]) + "8=" + string(1, toupper(names[m.targetPiece()]));
 	}
 	else if (m.flags == C_PROMOTION) {
-		return string(1, squareNames[m.to][0]) + "x" + squareNames[m.to] + "=" + string(1, toupper(names[m.targetPiece]));
+		return string(1, squareNames[m.to][0]) + "x" + squareNames[m.to] + "=" + string(1, toupper(names[m.targetPiece()]));
 	}
 	else if (m.flags == BCASTLE_2 || m.flags == WCASTLE_2) {
 		return "O-O-O";
 	}
-	string s(1, toupper(names[m.movePiece]));
+	string s(1, toupper(names[m.movePiece()]));
 	if (m.flags == CAPTURE) {
 		if (s[0] == 'P')
 			s = squareNames[m.to][0];
@@ -89,7 +76,7 @@ static string shortNotation(const Move& move)
 		           + string(1,(char)('h' - (move.to % 8)))
 		           + string(1,(char)('1' + (move.to / 8)));
 	if (move.flags == PROMOTION || move.flags == C_PROMOTION) {
-		moveStr += names[move.targetPiece];
+		moveStr += names[move.targetPiece()];
 	}
 	return moveStr;
 }
