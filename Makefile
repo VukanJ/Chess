@@ -7,35 +7,7 @@ DEBUG = #-g
 
 compile: ${OBJ} EXE
 
-Main.o: Main.cpp
-	@echo Compiling $< ...
-	@${CC} -c ${DEBUG} $< ${CFLAGS}
-
-AI.o: AI.cpp AI.h
-	@echo Compiling $< ...
-	@${CC} -c ${DEBUG} $< ${CFLAGS}
-
-Board.o: Board.cpp Board.h
-	@echo Compiling $< ...
-	@${CC} -c ${DEBUG} $< ${CFLAGS}
-
-gui.o: gui.cpp gui.h
-	@echo Compiling $< ...
-	@${CC} -c ${DEBUG} $< ${CFLAGS}
-
-Testing.o: Testing.cpp Testing.h
-	@echo Compiling $< ...
-	@${CC} -c ${DEBUG} $< ${CFLAGS}
-
-ZobristHash.o: ZobristHash.cpp ZobristHash.h
-	@echo Compiling $< ...
-	@${CC} -c ${DEBUG} $< ${CFLAGS}
-
-Data.o: Data.cpp Data.h
-	@echo Compiling $< ...
-	@${CC} -c ${DEBUG} $< ${CFLAGS}
-
-Move.o: Move.cpp Move.h
+%.o: %.cpp
 	@echo Compiling $< ...
 	@${CC} -c ${DEBUG} $< ${CFLAGS}
 
