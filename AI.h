@@ -27,42 +27,15 @@ friend class Benchmark;
 friend class UnitTest;
 friend class Gui;
 friend class DataBaseTest;
-class Node;
 
-typedef unique_ptr<AI::Node> nodePtr;
-private:
-	enum moveOrdering{
-		// Currently unused
-		QUIET,
-		CAPTURE,
-		PV_MOVE,
-		ALPHABETA_CUTOFF,
-		MATE
-	};
-	class Node
-	{
-	public:
-		Node();
-		MoveList moveList;
-		vector<nodePtr> nodeList;
-		U8 nodeFlags;
-		enum Flags {
-			explored = 0x1,
-			leaf     = 0x2,
-			terminal = 0x4,
-			cutNode  = 0x8
-		};
-	};
+
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Master functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-	pair<Move, int> distributeNegaMax();
-	int NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side);
+	//pair<Move, int> distributeNegaMax();
+	//int NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side);
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-	// TODO: Implement NegaScout instead of negaMax
+	//void sortMoves(nodePtr&, color side);
 
-	void sortMoves(nodePtr&, color side);
-
-	nodePtr Root;
 	Board chessBoard;
 	color sideToMove;
 	int targetDepth; // Needed for iterative deepening
