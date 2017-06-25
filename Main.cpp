@@ -8,11 +8,6 @@
 #include "ZobristHash.h"
 #include "Testing.h"
 
-// TODO: Track definite move history
-// TODO: The transposition table needs to store the best move for move ordering
-// TODO: 50 Move rule
-// TODO: insufficient material / draw detection
-
 using namespace std;
 
 //#define GUI_MODE
