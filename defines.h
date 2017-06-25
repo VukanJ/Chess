@@ -6,7 +6,6 @@
 #include <climits>
 #include <functional>
 #include <vector>
-#include <intrin.h>
 
 typedef unsigned uint;
 typedef unsigned long ulong;
@@ -28,6 +27,7 @@ U8 constexpr move_metadata(U8 TYPE, U8 DATA) { return TYPE | (DATA << 4); }
 	#ifndef __MACHINEX64
 		#pragma message ("X64 ARCHITECTURE RECOMMENDED!\n COMPILATION MAY FAIL")
 	#endif
+	#include <intrin.h>
 	// Compiler intrinsics compatible with WIN32
 	int  inline popcount(U64 x) { return (int)__popcnt64(x); } // Population count, implicit conversion to int
 	U8 inline bitScan_rev64(ulong& index, U64 const mask) {
