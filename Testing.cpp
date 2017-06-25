@@ -462,160 +462,6 @@ void UnitTest::specialTest()
 	exit(0);
 }
 
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ MINIMAL TREE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-
-UnitTest::MinimalTree::MinimalTree(Board& _chessBoard, color comp, int _targetDepth)
-	: Root(nullptr), targetDepth(_targetDepth), chessBoard(_chessBoard), computerColor(comp)
-{
-	//Root.reset(new Node(chessBoard.evaluate(true)));
-	staticEvaluations = 0;
-}
-
-void UnitTest::testMinimalTree()
-{
-	//AI ai("2r3k1/1p2Bpp1/p3p1p1/bq1pP3/1n1P2PQ/1R3N2/1P3PKP/8 w - 1 0", white);
-	AI ai("rnb2b1r/ppk2ppp/2p5/4q1B1/88/PPP2PPP/2KR1BNR w - 1 0", white);
-	ai.chessBoard.print();
-	MinimalTree tree(ai.chessBoard, white, 4);
-	cout << tree.buildGameTreeMinimax(4, white) << endl;
-}
-
-UnitTest::MinimalTree::Node::Node(float _boardValue) : boardValue(_boardValue), value_alphabeta(-oo) {}
-
-int UnitTest::MinimalTree::buildGameTreeMinimax(int depth, color side)
-{
-	// Even depths correspond to maximizing player (computer)
-	bool isMax = side == computerColor;
-
-	if (depth == 0) return chessBoard.evaluate(side);
-	MoveList moveList;
-	int bestValue = isMax ? -oo: +oo;
-	int testValue;
-
-	chessBoard.generateMoveList(moveList, side, true);
-	static auto bestMove = moveList.front();
-
-	for (auto move = moveList.begin(); move != moveList.end(); move++) {
-		chessBoard.makeMove<PROPER>(*move, side);
-		if (isMax) {
-			testValue = buildGameTreeMinimax(depth - 1, side == black ? white : black);
-			if (testValue > bestValue && depth == targetDepth) {
-				bestMove = *move;
-				cout << "New best move -> " << moveString(*move) << endl;
-			}
-			bestValue = max(bestValue, testValue);
-		}
-		else {
-			testValue = buildGameTreeMinimax(depth - 1, side == black ? white : black);
-			if (testValue < bestValue && depth == targetDepth) {
-				bestMove = *move;
-				cout << "New best move -> " << moveString(*move) << endl;
-			}
-			bestValue = min(bestValue, testValue);
-		}
-		chessBoard.unMakeMove<PROPER>(*move, side);
-	}
-	if (depth == targetDepth) cout << "Best Move ==> " << moveString(bestMove) << endl;
-	return bestValue;
-}
-
-void UnitTest::testEvaluation()
-{
-	{
-		AI ai("*", white);
-		assert(ai.chessBoard.evaluate(black) == ai.chessBoard.evaluate(white)); // Symmetric position
-	}
-	AI ai("3q1rk1/pp4bp/3p1p2/3N1pB1/2r5/1N6/PPPQ3P/1K5R w - 1 0", white);
-	//cout << "Score (w)" << ai.chessBoard.evaluate(white) << endl;
-	ai.chessBoard.print();
-}
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ NEGAMAX TREE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-
-void UnitTest::testFullTree()
-{
-    // http://www.chesspuzzles.com/
-	AI ai("rk5r/pp1Q1p1p/1q1p1N2/88/6P1/PP3PBP/2R3K1 w - 1 0", white); // Mate in 2 puzzle
-	// Solution: Re8 Bf8 Bh6 d6 Rxf8#
-	ai.chessBoard.print();
-	auto hash = ai.chessBoard.hashKey;
-	fullTree tree(ai.chessBoard, white, 6);
-	cout << "Start with Enter\n";
-	cin.ignore();
-	tree.test_NegaMax(tree.Root, -oo, oo, 6, white);
-	cout << "# Full Evaluations:   " << tree.staticEvaluations << endl;
-	cout << "# Alpha Beta Cutoffs: " << tree.nalphaBeta << endl;
-	cout << "# Hash Lookups:       " << tree.nHashLookups << endl;
-
-	for (int n = 0; n < tree.Root->nodeList.size(); n++) {
-		cout << moveString(tree.Root->nodeList[n]->thisMove) << "; V = " << tree.Root->nodeList[n]->thisValue << '\n';
-	}
-
-	// Check if hashKey is still consistent
-	assert(hash == ai.chessBoard.hashKey);
-}
-
-UnitTest::fullTree::fullTree(Board& _chessBoard, color comp, int _targetDepth)
-	: Root(nullptr), targetDepth(_targetDepth), chessBoard(_chessBoard), computerColor(comp)
-{
-	Root.reset(new Node()); // Computer plays at Root
-	staticEvaluations = nalphaBeta = nHashLookups = 0;
-}
-
-UnitTest::fullTree::Node::Node() : thisValue(0x0) {}
-
-int UnitTest::fullTree::test_NegaMax(unique_ptr<Node>& node, int alpha, int beta, int depth, color side)
-{
-	int bestValue = -oo, boardValue = 0;
-	if (depth == 0) {
-		//if (chessBoard.hash.hasBetterEntry(chessBoard.hashKey, targetDepth - depth)) {
-		//	// Use pre-calculated value if it exists
-		//	chessBoard.hash.getEntry(chessBoard.hashKey, boardValue);
-		//	nHashLookups++;
-		//}
-		//else {
-		//	// Else make new hash-entry and evaluate board
-		//	boardValue = chessBoard.evaluate(side, targetDepth - depth);
-		//	chessBoard.hash.addEntry(chessBoard.hashKey, boardValue, targetDepth - depth);
-		//	staticEvaluations++;
-		//}
-		return boardValue;
-	}
-	chessBoard.generateMoveList(node->moveList, side, true);
-	for (auto move = node->moveList.begin(); move != node->moveList.end();) {
-		// Play move
-		//cout << moveString(*move) << endl;
-		chessBoard.makeMove<PROPER>(*move, side);
-		// Is king in check?
-		if (chessBoard.pieces[side == black ? bk : wk] & (side == black ? chessBoard.whiteAtt : chessBoard.blackAtt)) {
-			chessBoard.unMakeMove<PROPER>(*move, side);
-			move = node->moveList.erase(move);
-			if (node->moveList.empty()) {
-				//cout << "Mate in " << ceil((float)(targetDepth - depth) / 2.0) << " for " << (side==black ? "white" : "black") << endl;
-				boardValue = oo; // Checkmate
-			}
-			continue;
-		}
-		node->nodeList.push_back(unique_ptr<Node>(new Node()));
-		node->nodeList.back()->thisMove = *move;
-		boardValue = -test_NegaMax(node->nodeList.back(), -beta, -alpha, depth - 1, side == black ? white : black);
-		node->nodeList.back()->thisValue = boardValue;
-		bestValue = max(bestValue, boardValue);
-		alpha = max(alpha, boardValue);
-		if (alpha >= beta) {
-			nalphaBeta++;
-			chessBoard.unMakeMove<PROPER>(*move, side);
-			break;
-		}
-		chessBoard.unMakeMove<PROPER>(*move, side);
-		move++;
-	}
-	if (depth == targetDepth) {
-		cout << "bestValue: " << bestValue << endl;
-	}
-	return bestValue;
-}
-
 void UnitTest::testHashing()
 {
 	ZobristHash Hash(size_t(1e3));
@@ -1103,6 +949,7 @@ void DataBaseTest::start_Bratko_Kopec_Test()
 	}
 }
 
+
 Move DataBaseTest::getBestMove(color forPlayer)
 {
 	Move bestMove;
@@ -1120,10 +967,10 @@ Move DataBaseTest::getBestMove(color forPlayer)
 		cout << "Depth " << targetDepth << " best move = " << shortNotation(bestMove) << endl;
 		cout << "Search Info: \n";
 		printf("\t%d\tEvaluations"
-			   "\n\t%d\tNegaMax Calls"
-			   "\n\t%d\tHashed boards"
-			   "\n\t%d\tHash Accesses"
-			   "\n\t%d\tPlayed Moves\n",
+			"\n\t%d\tNegaMax Calls"
+			"\n\t%d\tHashed boards"
+			"\n\t%d\tHash Accesses"
+			"\n\t%d\tPlayed Moves\n",
 			evalcnt, negaMaxCnt, storedBoards, hashAccess, moveCnt);
 		evalcnt = negaMaxCnt = hashAccess = moveCnt = 0;
 	}
@@ -1172,7 +1019,7 @@ Move DataBaseTest::distributeNegaMax(color forPlayer)
 			move_value.second = entry.value;
 		}
 		else {
-			move_value.second = -NegaMax(-oo, oo, targetDepth-1, forPlayer, forPlayer == white ? black : white);
+			move_value.second = -NegaMax(-oo, oo, targetDepth - 1, forPlayer, forPlayer == white ? black : white);
 		}
 		testBoard.unMakeMove<PROPER>(move_value.first, forPlayer);
 	}
@@ -1261,7 +1108,7 @@ int DataBaseTest::NegaMax(int alpha, int beta, int depth, color aiColor, color s
 		// This player has no possible legal moves
 		testBoard.updateAllAttacks();
 		if (testBoard.isKingInCheck(side))
-			 return -oo;          // Checkmate
+			return -oo;          // Checkmate
 		else return -oo + 100000; // Stalemate, slightly better than being checkmated
 	}
 
