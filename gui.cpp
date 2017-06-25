@@ -124,7 +124,6 @@ bool Gui::handleEvent(sf::Event& ev, sf::RenderWindow& window)
 				}
 			}
 		}
-
 		if (pieceClicked == nullPiece) { // No piece selected
 			if (userInput.pieceSelected) { // May be a quiet move
 				user_GUI_Move.from   = userInput.from;

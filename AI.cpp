@@ -65,7 +65,8 @@ void AI::Play(sf::RenderWindow& window)
 
 }
 
-void AI::sortMoves(nodePtr& node, color side)
+/*
+void AI::sortMoves(MoveList& list)
 {
 
 }
@@ -79,6 +80,7 @@ int AI::NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side
 {
 
 }
+*/
 
 const Board& AI::getBoardRef()
 {
@@ -90,8 +92,6 @@ Board* AI::getBoardPtr()
 	return &chessBoard;
 	//return static_cast<const Board*>(&chessBoard);
 }
-
-AI::Node::Node() : nodeFlags(0x0) {}
 
 void AI::resetGame()
 {

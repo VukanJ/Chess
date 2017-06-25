@@ -85,19 +85,7 @@ int main()
 void testing(){
 
 	Benchmark benchmark;
-	UnitTest test;
-	//test.testMagic();
-	//test.specialTest();
-	//test.testDefines();
-	//test.testIntrinsics();
-
-	//test.testGenerationAlgorithms();
-	//test.testTreeStructure();
-	//test.testEvaluation();
-	//test.testFullTree();
-	//test.testHashing();
-	//test.testMinimalTree();
-
+	SearchTest searchTest;
 	//benchmark.benchmarkMovemaking();
 	//benchmark.benchmarkMoveGeneration();
 	//benchmark.testPerft(-1);

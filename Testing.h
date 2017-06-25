@@ -26,6 +26,7 @@ typedef pair<string, string> stringpair;
 class UnitTest
 {
 public:
+	// Test game mechanics and calculations
 	UnitTest();
 
 	// Intrinsics testing
@@ -35,46 +36,7 @@ public:
 	// Move generation testing
 	void testGenerationAlgorithms();
 
-	// Tree testing
-	class MinimalTree { // Low memory Tree, only stores current path
-	public:
-		MinimalTree(Board& _chessboard, color comp, int _targetDepth);
-		struct Node {
-			explicit Node(float _boardValue);
-			float boardValue, value_alphabeta;
-		};
-		color computerColor;
-		int buildGameTreeMinimax(int depth, color side);
-		int staticEvaluations;
-		Board& chessBoard;
-		unique_ptr<Node> Root;
-		int targetDepth;
-	};
-
-	class fullTree // Tree containing NegaMax and Implementation
-	{
-	public:
-		fullTree(Board& _chessboard, color comp, int _targetDepth);
-		struct Node {
-			Node();
-			Move thisMove;
-			int thisValue;
-			MoveList moveList;
-			vector<unique_ptr<Node>> nodeList;
-		};
-		color computerColor;
-		int test_NegaMax(unique_ptr<Node>& node, int alpha, int beta, int depth, color side);
-		int staticEvaluations, nalphaBeta, nHashLookups; // debug
-		Board& chessBoard;
-		unique_ptr<Node> Root;
-		int targetDepth;
-	};
-
-	void testMinimalTree();
-	void testFullTree();
-	void testTreeStructure();
 	void specialTest(); // unspecified custom test
-	void testEvaluation();
 	void testHashing();
 	void testMagic();
 
@@ -127,7 +89,7 @@ public:
 	Timer();
 	void start();
 	void stop();
-	double getTime(); // return microseconds
+	double getTime(); // returns microseconds
 private:
 	chrono::high_resolution_clock::time_point t1, t2;
 };
@@ -146,6 +108,22 @@ private:
 	ZobristHash transposition_hash;
 
 	long evalcnt, negaMaxCnt, storedBoards, hashAccess, moveCnt;
+};
+
+class SearchTest
+{
+public:
+	SearchTest();
+	Move getBestMove(color forPlayer);
+	Move distributeNegaMax(color forPlayer);
+	int NegaMax(int alpha, int beta, int depth, color aiColor, color side);
+
+private:
+	int targetDepth;
+	Board board;
+	ZobristHash transpositionHash;
+	long evalcnt, negaMaxCnt, storedBoards, hashAccess, moveCnt;
+
 };
 
 #endif
