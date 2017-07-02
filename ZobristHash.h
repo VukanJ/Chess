@@ -6,7 +6,7 @@
 #include "misc.h"
 #include "Move.h"
 
-// Zob_Hash stores already evaluated Boards and their value,
+// ZobristHash stores already evaluated Boards and their value,
 // search_depth and move quality
 
 enum hashPosition { CASTLE_HASH = 12, ENPASSENT_HASH = 13, CASTLE_POSITION_HASH = 14};
@@ -28,7 +28,7 @@ private:
 		entry();
 		int value;
 		int search_depth;
-		//Move move;
+		Move bestMove;
 		U8 flags;
 	};
 	vector<entry> entries; // Hash table
@@ -36,12 +36,9 @@ private:
 public:
 	ZobristHash();
 	ZobristHash(size_t hashSize);
-	entry* const addEntry(const U64 Key, int  value, int depth);
-	entry& getEntry(const U64 Key);
-	int getValue(const U64 key) const;
+	entry& getEntry(const U64& Key);
+	int getValue(const U64& key) const;
 	void clear();
-
-	void inline setBoundFlags(const U64 key, valueType);
 };
 
 #endif

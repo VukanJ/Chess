@@ -110,20 +110,38 @@ private:
 	long evalcnt, negaMaxCnt, storedBoards, hashAccess, moveCnt;
 };
 
+// p n b r q 
+constexpr int valueMapping[6] = {0, 3, 1, 2, 5, 4};
+const vector<vector<int>> captureScore = {
+	//       p    n    b    r    q
+	/* p */ {104, 204, 304, 404, 504},
+	/* n */ {103, 203, 303, 403, 503},
+	/* b */ {102, 202, 302, 402, 502},
+	/* r */ {101, 201, 301, 401, 501},
+	/* q */ {100, 200, 300, 400, 500}
+};
+
 class SearchTest
 {
 public:
 	SearchTest();
+	void test(); // Custom function
 	Move getBestMove(color forPlayer);
-	Move distributeNegaMax(color forPlayer);
+	//Move distributeNegaMax(color forPlayer);
 	int NegaMax(int alpha, int beta, int depth, color aiColor, color side);
-
+	int QuiescenceSearch(int alpha, int beta, int depth, color aiColor, color side);
+	MoveList::iterator nextMove(MoveList&, MoveList::iterator&, color);
+	
+	void extractPrincipalVariation(const U64& startKey, int maxPrintDepth, color aiColor);
+	vector<Move> PVtable;
+	Move getMaxRootMove(color side);
 private:
 	int targetDepth;
 	Board board;
 	ZobristHash transpositionHash;
 	long evalcnt, negaMaxCnt, storedBoards, hashAccess, moveCnt;
-
+	double finished;
+	double ordering;
 };
 
 #endif

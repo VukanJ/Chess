@@ -65,20 +65,26 @@ static string moveString(Move m)
 static string shortNotation(const Move& move)
 {
 	// returns string with mainly from to square information
-	if (move.flags == BCASTLE || move.flags == WCASTLE) {
-		return "O-O";
+	switch (move.mtype()) {
+	case BCASTLE:   return "o-o";
+	case WCASTLE:   return "O-O";
+	case BCASTLE_2: return "o-o-o";
+	case WCASTLE_2: return "O-O-O";
+	case ENPASSENT: return "e.p.";
 	}
-	if (move.flags == BCASTLE_2 || move.flags == WCASTLE_2) {
-		return "O-O-O";
-	}
-	string moveStr = string(1,(char)('h' - (move.from % 8)))
-		           + string(1,(char)('1' + (move.from / 8)))
-		           + string(1,(char)('h' - (move.to % 8)))
-		           + string(1,(char)('1' + (move.to / 8)));
+	if (move.flags == 255) return "_voidMove_";
+	string moveStr = squareNames[move.from] + squareNames[move.to];
 	if (move.flags == PROMOTION || move.flags == C_PROMOTION) {
 		moveStr += names[move.targetPiece()];
 	}
 	return moveStr;
 }
+
+static ostream& operator<<(ostream& stream, const Move& move)
+{
+	cout << shortNotation(move);
+	return stream;
+}
+
 
 #endif

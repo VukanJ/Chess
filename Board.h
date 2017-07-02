@@ -15,7 +15,7 @@
 
 using namespace std;
 
-typedef vector<Move> MoveList;
+using MoveList = vector<Move>;
 enum makeMoveType { PROPER = 0x7, HASH_AND_POS = 0x4, HASH_ONLY = 0x1, POS_ONLY = 0x2 };
 // TODO: Test if these correctly influence move-making
 enum moveGenType { QUIET_ONLY = 0x1, CAPTURES_ONLY = 0x2, ALL = 0x3};
@@ -39,7 +39,6 @@ public:
 	Board();
 	Board(string fen);
 	// Init
-	void debug();
 	void setupBoard(string FEN);
 
 	// Move making and move generation
@@ -81,9 +80,9 @@ public:
 		hashKey,                    // Hashkey representing current board
 		pinned;                     // Squares containing absolute pinned pieces
 
-	ZobristHash hash;
 	bool wasInCheck;
 	vector<vector<U64>> randomSet;
+	U64 sideToMoveMask;
 };
 // Template definitions
 #include "Makemove.h"
