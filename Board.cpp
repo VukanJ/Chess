@@ -109,6 +109,8 @@ void Board::initHash()
 		                                           ^ randomSet[wr][a1]
 		                                           ^ randomSet[wr][d1];
 
+	sideToMoveMask = distr(generator);
+
 	auto i = 0;
 	for (auto p : pieces) {
 		for_bits(pos, p) {
@@ -117,53 +119,6 @@ void Board::initHash()
 		i++;
 	}
 	hashKey ^= randomSet[CASTLE_HASH][castlingRights];
-}
-
-void Board::debug()
-{
-	//cout << "Castling rights -> ";
-	//printBits(castlingRights);
-
-	// debug
-	//printf("blocked black pawns: %d\n", blockedPawn(black));
-	//printf("blocked white pawns: %d\n", blockedPawn(white));
-	auto startingHash = hashKey;
-	MoveList movelist;
-	cout << "Board value (w): " << evaluate(white) << endl;
-	movelist.clear();
-	print();
-
-	color debugPlayerColor = black;
-
-	generateMoveList(movelist, debugPlayerColor, true);
-
-	cout << "Start hash " << hex << hashKey << endl;
-	//int count = 0;
-	//for (auto& m : movelist) {
-	//	cout << moveString(m) << (count % 10 == 0 ? "\n" : "  ");
-	//	count++;
-	//	makeMove(m, sideToMove);
-	//	//print();
-	//	//printBitboard(whitePos);
-	//	unMakeMove(m, sideToMove);
-	//	//print();
-	//	//printBitboard(whitePos);
-	//}
-
-	cout << "\nEnd hash   " << hex << hashKey << endl;
-
-	if (startingHash != hashKey) {
-		cerr << "\t\t\t::: HASHING ERROR :::\n";
-		printBitboard(hashKey);
-	}
-	else clog << "::: HASH OK :::\n";
-	if (!pieces[bk] || !pieces[wk])
-		cerr << "Missing Kings!!\n";
-	if (popcount(pieces[bk]) > 1 || popcount(pieces[wk]) > 1) {
-		// No need to handle multiple kings
-		cerr << "Too many kings. Invalid Board!\n" << endl;
-		exit(1);
-	}
 }
 
 void Board::updateAllAttacks()
@@ -573,12 +528,12 @@ int Board::evaluate(color side)
 	int mobility = 0;
 	for_white(i) mobility += popcount(attacks[i] ^ blackPos);
 	for_black(i) mobility -= popcount(attacks[i] ^ whitePos);
-	total_boardValue += mobility * 5;
+	total_boardValue += mobility;
 	mobility = 0;
 	// Measure "hostiliy" = number of attacked pieces of opponent. 15cp each
 	for_white(i) mobility += popcount(attacks[i] & blackPos);
 	for_black(i) mobility += popcount(attacks[i] & whitePos);
-	total_boardValue += mobility * 10;
+	total_boardValue += mobility * 2;
 	// ~~~ Blocked Pawns ~~~
 	// Determines how many pawns are blocked per player color, penalty of 4 cp for each
 	total_boardValue += 4 * (popcount((pieces[bp] >> 8) & allPos)
@@ -596,7 +551,7 @@ int Board::evaluate(color side)
 		//cout << "OK\n";
 		mask = pieces[wk];
 		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
-
+	
 		total_boardValue += 10 * popcount(mask & ~blackAtt);
 		mask = pieces[bk];
 		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);

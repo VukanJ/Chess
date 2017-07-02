@@ -12,39 +12,21 @@ ZobristHash::ZobristHash(size_t _hashSize)
 	hashSize = _hashSize;
 }
 
-ZobristHash::entry* const ZobristHash::addEntry(const U64 key, int value, int depth)
+ZobristHash::entry& ZobristHash::getEntry(const U64& key)
 {
-	auto index = key % hashSize;
-	if (entries[index].search_depth < depth){
-		entries[index].search_depth = depth;
-		entries[index].value = value;
-	}
-	return &entries[index];
+	//cout << hex << key % hashSize << dec << endl;
+	return entries[key % hashSize];
 }
 
-ZobristHash::entry& ZobristHash::getEntry(const U64 key)
+int ZobristHash::getValue(const U64& key) const
 {
-	auto index = key % hashSize;
-	return entries[index];
-}
-
-int ZobristHash::getValue(const U64 key) const
-{
-	auto index = key % hashSize;
-	return entries[index].value;
-}
-
-// Probably not needed:
-void inline ZobristHash::setBoundFlags(const U64 key, valueType vt) 
-{
-	auto index = key % hashSize;
-	entries[index].flags = vt;
+	return entries[key % hashSize].value;
 }
 
 void ZobristHash::clear()
 {
 	for (auto& entry : entries) {
-		// This invalidates an entry:
+		// Invalidate entry:
 		entry.search_depth = -1;
 	}
 }

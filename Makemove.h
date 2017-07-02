@@ -4,6 +4,7 @@
 template<makeMoveType mmt>
 void Board::makeMove(const Move& move, color side)
 {
+	hashKey ^= sideToMoveMask;
 	switch (move.mtype()) {
 	case MOVE:
 		// Piece disappears from from-square and appears at to-square:
@@ -209,6 +210,7 @@ void Board::makeMove(const Move& move, color side)
 		break;
 	default:
 		cerr << "Invalid move info encountered!\n";
+		cin.ignore();
 		exit(1);
 	}
 
@@ -232,6 +234,7 @@ void Board::makeMove(const Move& move, color side)
 template<makeMoveType mmt>
 void Board::unMakeMove(const Move& move, color side)
 {
+	hashKey ^= sideToMoveMask;
 	switch (move.mtype()) {
 	case MOVE:
 		if (mmt & HASH_ONLY) {

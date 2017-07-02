@@ -85,11 +85,12 @@ int main()
 void testing(){
 
 	Benchmark benchmark;
-	SearchTest searchTest;
+	//SearchTest searchTest;
+	//searchTest.test();
 	//benchmark.benchmarkMovemaking();
 	//benchmark.benchmarkMoveGeneration();
-	//benchmark.testPerft(-1);
-	benchmark.perftTestSuite();
+	benchmark.testPerft(-1);
+//	benchmark.perftTestSuite();
 
 	//DataBaseTest dbt;
 	//dbt.start_Bratko_Kopec_Test();

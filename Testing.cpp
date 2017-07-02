@@ -464,6 +464,7 @@ void UnitTest::specialTest()
 
 void UnitTest::testHashing()
 {
+	/*
 	ZobristHash Hash(size_t(1e3));
 	random_device r_device;
 	mt19937_64 generator(r_device());
@@ -476,6 +477,7 @@ void UnitTest::testHashing()
 		//assert(Hash.hasEntry(b));
 	}
 	//assert(Hash.hasEntry(boards[55]));
+	*/
 }
 
 void UnitTest::testMagic()
@@ -586,14 +588,8 @@ Benchmark::Benchmark() : totalTotalPerftMoveCount(0), performingAll(false)
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
 
-	testBoard = Board("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1");
+	testBoard = Board("5n2/K7/8/2B5/kP6/N1r5/R1P5/1Q6 w - - 1 0");
 
-	Move h1f1 = Move(h1, f1, move_metadata(MOVE, castle_K), wr);
-	testBoard.makeMove<PROPER>(h1f1, white);
-	Move a8a2 = Move(a8, a2, move_metadata(MOVE, castle_q), br);
-	testBoard.makeMove<PROPER>(a8a2, black);
-	Move a1a2 = Move(a1, a2, move_metadata(CAPTURE, castle_Q), piece_pair(wr, br));
-	testBoard.makeMove<PROPER>(a1a2, white);
 	// Now: 7r/8/8/2K5/R4k2/8/8/r6R b - - 1 0
 	//testBoard.print();
 
@@ -722,7 +718,7 @@ void Benchmark::testPerft(int maxdepth)
 		for (int d = 1; d < 10; d++) {
 			chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
 			testBoard.print();
-			perft(d, d, black);
+			perft(d, d, white);
 			//testBoard.print();
 			//printBitboard(testBoard.attacks[bk]);
 			//printBitboard(testBoard.blackAtt);
@@ -788,7 +784,7 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 			testBoard.unMakeMove<PROPER>(move, static_cast<color>(side));
 			//if (testBoard.hashKey != testHash) throw string("Hash Error!");
 			if (depth == targetDepth) {
-				//cout << shortNotation(move) << ": " << perftMoveCount << endl;
+				//cout << move << ": " << perftMoveCount << endl;
 				totalPerftMoveCount += perftMoveCount;
 				totalTotalPerftMoveCount += perftMoveCount;
 				perftMoveCount = 0;
@@ -964,7 +960,7 @@ Move DataBaseTest::getBestMove(color forPlayer)
 		timer.stop();
 		cout << "Time: " << timer.getTime()*1e-6 << endl;
 		cout << string(80, '~') << endl;
-		cout << "Depth " << targetDepth << " best move = " << shortNotation(bestMove) << endl;
+		cout << "Depth " << targetDepth << " best move = " << bestMove << endl;
 		cout << "Search Info: \n";
 		printf("\t%d\tEvaluations"
 			"\n\t%d\tNegaMax Calls"
@@ -1019,7 +1015,7 @@ Move DataBaseTest::distributeNegaMax(color forPlayer)
 			move_value.second = entry.value;
 		}
 		else {
-			move_value.second = -NegaMax(-oo, oo, targetDepth - 1, forPlayer, forPlayer == white ? black : white);
+			move_value.second = -NegaMax(-oo, oo, targetDepth - 1, forPlayer, !forPlayer);
 		}
 		testBoard.unMakeMove<PROPER>(move_value.first, forPlayer);
 	}
@@ -1094,7 +1090,7 @@ int DataBaseTest::NegaMax(int alpha, int beta, int depth, color aiColor, color s
 			//move++;
 			continue;
 		}
-		int currentValue = -NegaMax(-beta, -alpha, depth - 1, aiColor, side == white ? black : white);
+		int currentValue = -NegaMax(-beta, -alpha, depth - 1, aiColor, !side);
 		testBoard.unMakeMove<PROPER>(*move, side);
 		move++;
 		bestValue = max(bestValue, currentValue);
