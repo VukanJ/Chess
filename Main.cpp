@@ -85,11 +85,11 @@ int main()
 void testing(){
 
 	Benchmark benchmark;
-	//SearchTest searchTest;
-	//searchTest.test();
+	SearchTest searchTest;
+	searchTest.test();
 	//benchmark.benchmarkMovemaking();
 	//benchmark.benchmarkMoveGeneration();
-	benchmark.testPerft(-1);
+	//benchmark.testPerft(-1);
 //	benchmark.perftTestSuite();
 
 	//DataBaseTest dbt;

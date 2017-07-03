@@ -133,7 +133,6 @@ public:
 	MoveList::iterator nextMove(MoveList&, MoveList::iterator&, color);
 	
 	void extractPrincipalVariation(const U64& startKey, int maxPrintDepth, color aiColor);
-	vector<Move> PVtable;
 	Move getMaxRootMove(color side);
 private:
 	int targetDepth;

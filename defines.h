@@ -14,7 +14,7 @@ typedef uint32_t U32;
 typedef uint16_t U16;
 typedef uint8_t  U8;
 
-constexpr int oo = INT_MAX; // Alpha-Beta infinity
+constexpr int oo = 1000000000; // Alpha-Beta infinity
 
 U64 constexpr bit_at(uint x)     { return 0x1ull << x; }        // Sets nth bit in number counting from least significant bit
 U64 constexpr bit_at_rev(uint x) { return 0x1ull << (63 - x); } // Sets nth bit in number counting from most significant bit
