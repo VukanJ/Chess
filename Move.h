@@ -26,6 +26,12 @@ struct Move
 	Move(U8 _from, U8 _to, U8 _flags, U8 _pieces);
 
 	Move& operator=(const Move&);
+	bool inline operator==(const Move& m) {
+		return (m.from == from) 
+			&& (m.to == to) 
+			&& (m.flags == flags)
+			&& (m.pieces == pieces);
+	}
 
 	U8 from, to, flags, pieces;
 	U8 inline movePiece()   const { return pieces & 0xF; }
@@ -51,14 +57,12 @@ static string moveString(Move m)
 	else if (m.flags == BCASTLE_2 || m.flags == WCASTLE_2) {
 		return "O-O-O";
 	}
-	string s(1, toupper(names[m.movePiece()]));
+	string s(1, names[m.movePiece()]);
 	if (m.flags == CAPTURE) {
-		if (s[0] == 'P')
-			s = squareNames[m.to][0];
 		s += 'x';
+		s += string("{") + names[m.targetPiece()] + "}";
 	}
-	if (s[0] == 'P')s.clear(); // P is left out
-	s = squareNames[m.to];
+	s += squareNames[m.from] + squareNames[m.to];
 	return s;
 }
 

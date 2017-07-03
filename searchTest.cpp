@@ -5,7 +5,6 @@ SearchTest::SearchTest()
 	targetDepth(1), evalcnt(0), negaMaxCnt(0), 
 	storedBoards(0), hashAccess(0), moveCnt(0), finished(0), ordering(0.9) 
 {
-	PVtable = vector<Move>(5050, Move());
 }
 
 void SearchTest::test()
@@ -16,14 +15,14 @@ void SearchTest::test()
 	// string FEN = "4B3/5p2/qpN4K/r2R1Q2/1Pk5/4P3/1R6/1Nnr3b w - - 1 0"; // Mate in two
 	//string FEN = "r4r1k/1bpq1p1n/p1np4/1p1Bb1BQ/P7/6R1/1P3PPP/1N2R1K1 w - - 1 0"; // Mate in 8
 	//string FEN = "2r2k1r/pB3pp1/4p3/Q1p1P3/3P4/2P1q1p1/PP3RP1/5RK1 w - - 1 0"; // ate in 3
-	//string FEN = "8/B7/88/4n3/5kpp/8/7K b - - 1 0";
-	string FEN = "5n2/K7/8/2B5/kP6/N1r5/R1P5/1Q6 w - - 1 0";
+	string FEN = "8/B7/8/8/4n3/5kpp/8/7K w - - 1 0";
+	//string FEN = "5n2/K7/8/2B5/kP6/N1r5/R1P5/1Q6 w - - 1 0";
 
 	board.setupBoard(FEN);
 	board.updateAllAttacks();
 	board.print();
 
-	auto bestMove = getBestMove(white);
+	auto bestMove = getBestMove(black);
 }
 
 Move SearchTest::getMaxRootMove(color side)
@@ -171,59 +170,52 @@ MoveList::iterator SearchTest::nextMove(MoveList& moveList, MoveList::iterator& 
 
 int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color side)
 {
-	try {
-		int oldAlpha = alpha;
+	int oldAlpha = alpha;
+	if (targetDepth == 9 && depth == 9) board.print();
+	auto &entry = transpositionHash.getEntry(board.hashKey);
 
-		auto &entry = transpositionHash.getEntry(board.hashKey);
-
-		if (entry.search_depth >= depth) {
-			if (entry.flags & EXACT_VALUE) {
-				return entry.value;
-			}
-			else if (entry.flags & LOWER_BOUND)
-				alpha = max(alpha, entry.value);
-			else if (entry.flags & UPPER_BOUND)
-				beta = min(beta, entry.value);
-			if (alpha >= beta)
-				return entry.value;
+	if (entry.search_depth >= depth) {
+		if (entry.flags & EXACT_VALUE) {
+			return entry.value;
 		}
+		else if (entry.flags & LOWER_BOUND)
+			alpha = max(alpha, entry.value);
+		else if (entry.flags & UPPER_BOUND)
+			beta = min(beta, entry.value);
+		if (alpha >= beta)
+			return entry.value;
+	}
 
-		if (depth == 0) {
-			return board.evaluate(side);
-		}
+	if (depth == 0) {
+		return board.evaluate(side) - targetDepth + depth;
+	}
 
-		int bestValue = -oo;
-		MoveList movelist;
-		Move bestMove;
-
-		board.generateMoveList(movelist, side, true);
-		bool checkOnThisDepth = board.wasInCheck;
-		U64 pinnedOnThisDepth = board.pinned;
-
-		// Move ordering here
-		for (auto move = movelist.begin();
-			move != movelist.end(); move++) {
-			if (targetDepth == 1) cout << *move << endl;
+	int bestValue = -oo;
+	MoveList movelist;
+	board.updateAllAttacks(); // TODO: Possibly relocate
+	board.generateMoveList(movelist, side, true);
+	bool checkOnThisDepth = board.wasInCheck;
+	U64 pinnedOnThisDepth = board.pinned;
+	Move bestMove;
+	//cout << "FOR\n";
+	if (!movelist.empty()) {
+		bestMove = *movelist.begin();
+		for (auto move = movelist.begin(); move != movelist.end(); move++) {
 			board.makeMove<PROPER>(*move, side);
 			board.updateAllAttacks();
 			if (board.isKingLeftInCheck(side, *move, checkOnThisDepth, pinnedOnThisDepth)) {
 				board.unMakeMove<PROPER>(*move, side);
 				continue;
 			}
-			int score;
-
-			score = -NegaMax(-beta, -alpha, depth - 1, aiColor, !side);
+			//cout << moveString(*move) << '\n';
+			int score = -NegaMax(-beta, -alpha, depth - 1, aiColor, !side);
 
 			board.unMakeMove<PROPER>(*move, side);
-
 			if (score >= bestValue) {
 				bestValue = score;
+				bestMove = *move;
 			}
 			if (score >= alpha) {
-				if (move == movelist.end()) {
-					cout << "OK";
-				}
-				bestMove = *move;
 				// Found better move
 				alpha = score;
 			}
@@ -232,35 +224,43 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color sid
 				break; // Alpha beta cutoff
 			}
 		}
-		if (movelist.empty()) {
-			// This player has no possible legal moves
-			board.updateAllAttacks();
-			if (board.isKingInCheck(side)) {
-				bestValue = -oo; // Checkmate
-			}
-			else {
-				bestValue = -oo + 100000; // Stalemate, slightly better than being checkmated
-			}
-		}
-
-		// Store board in transposition table
-		storedBoards++;
-		entry.bestMove = bestMove;
-		entry.value = bestValue;
-		if (bestValue <= oldAlpha)
-			entry.flags = UPPER_BOUND;
-		else if (bestValue >= beta)
-			entry.flags = LOWER_BOUND;
-		else {
+	}
+	if (movelist.empty()) {
+		// This player has no possible legal moves
+		board.updateAllAttacks();
+		if (board.isKingInCheck(side)) {
+			//cout << 'C';
+			entry.value = -oo;       // Checkmate -> end of game path
+			entry.search_depth = oo; // This evaluation always prevails
 			entry.flags = EXACT_VALUE;
+			return -oo;
 		}
-		entry.search_depth = depth;
+		else {
+			//cout << 'S';
+			//board.print();
+			//entry;
 
-		return bestValue;
+			entry.value = 0;         // Stalemate -> end of game path
+			entry.search_depth = oo; // This evaluation always prevails
+			entry.flags = EXACT_VALUE;
+			return 0;
+		}
 	}
-	catch (...) {
 
+	// Store board in transposition table
+	entry.bestMove = bestMove;
+	entry.value = bestValue;
+	entry.search_depth = depth;
+
+	if (bestValue <= oldAlpha)
+		entry.flags = UPPER_BOUND;
+	else if (bestValue >= beta)
+		entry.flags = LOWER_BOUND;
+	else {
+		entry.flags = EXACT_VALUE;
 	}
+
+	return bestValue;
 }
 
 int SearchTest::QuiescenceSearch(int alpha, int beta, int depth, color aiColor, color side)

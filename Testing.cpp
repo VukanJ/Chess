@@ -588,7 +588,7 @@ Benchmark::Benchmark() : totalTotalPerftMoveCount(0), performingAll(false)
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
 
-	testBoard = Board("5n2/K7/8/2B5/kP6/N1r5/R1P5/1Q6 w - - 1 0");
+	testBoard = Board("8/B7/88/4n3/5kpp/8/7K b - - 1 0");
 
 	// Now: 7r/8/8/2K5/R4k2/8/8/r6R b - - 1 0
 	//testBoard.print();
@@ -784,7 +784,7 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 			testBoard.unMakeMove<PROPER>(move, static_cast<color>(side));
 			//if (testBoard.hashKey != testHash) throw string("Hash Error!");
 			if (depth == targetDepth) {
-				//cout << move << ": " << perftMoveCount << endl;
+				cout << shortNotation(move) << ": " << perftMoveCount << endl;
 				totalPerftMoveCount += perftMoveCount;
 				totalTotalPerftMoveCount += perftMoveCount;
 				perftMoveCount = 0;
