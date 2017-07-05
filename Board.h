@@ -16,7 +16,7 @@
 using namespace std;
 
 using MoveList = vector<Move>;
-enum makeMoveType { PROPER = 0x7, HASH_AND_POS = 0x4, HASH_ONLY = 0x1, POS_ONLY = 0x2 };
+
 // TODO: Test if these correctly influence move-making
 enum moveGenType { QUIET_ONLY = 0x1, CAPTURES_ONLY = 0x2, ALL = 0x3};
 

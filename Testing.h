@@ -134,6 +134,7 @@ public:
 	
 	void extractPrincipalVariation(const U64& startKey, int maxPrintDepth, color aiColor);
 	Move getMaxRootMove(color side);
+	template<color side> bool isCheckmate();
 private:
 	int targetDepth;
 	Board board;

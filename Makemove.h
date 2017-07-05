@@ -50,7 +50,7 @@ void Board::makeMove(const Move& move, color side)
 			side == black ? (blackPos = ((blackPos ^ bit_at(move.from)) | bit_at(move.to)))
 				: (whitePos = ((whitePos ^ bit_at(move.from)) | bit_at(move.to)));
 		}
-		if (mmt == PROPER) {
+		if (mmt == FULL) {
 			// The other player can then sometimes perform enpassent (if other pawn is available)
 			if (move.pieces == bp && (0x5ull << (move.to - 1)) & (_row << 32) & pieces[wp]) {
 				w_enpassent = (move.from % 8) + 1;
@@ -184,7 +184,7 @@ void Board::makeMove(const Move& move, color side)
 				blackPos ^= bit_at(move.from) | bit_at(move.to);
 				whitePos ^= bit_at(move.to + 8);
 			}
-			if (mmt == PROPER) {
+			if (mmt == FULL) {
 				// No more enpassent squares after enpassent
 				b_enpassent = 0;
 			}
@@ -203,7 +203,7 @@ void Board::makeMove(const Move& move, color side)
 				whitePos ^= bit_at(move.from) | bit_at(move.to);
 				blackPos ^= bit_at(move.to - 8);
 			}
-			if (mmt == PROPER) {
+			if (mmt == FULL) {
 				w_enpassent = 0;
 			}
 		}
@@ -214,7 +214,7 @@ void Board::makeMove(const Move& move, color side)
 		exit(1);
 	}
 
-	if (mmt == PROPER) {
+	if (mmt == FULL) {
 		// No enpassent squares after any other move than double pawn push
 		if (move.mtype() != PAWN2) {
 			b_enpassent = w_enpassent = 0;
@@ -280,7 +280,7 @@ void Board::unMakeMove(const Move& move, color side)
 																			  // update position mask
 			(side == black ? blackPos : whitePos) ^= bit_at(move.from) | bit_at(move.to);
 		}
-		if (mmt == PROPER) {
+		if (mmt == FULL) {
 			b_enpassent = w_enpassent = 0x0;
 		}
 		break;
@@ -341,7 +341,7 @@ void Board::unMakeMove(const Move& move, color side)
 			blackPos ^= blackPos & 0xF00000000000000ull;
 			blackPos |= 0x900000000000000ull;
 		}
-		if (mmt == PROPER) {
+		if (mmt == FULL) {
 			castlingRights = move.oldCastlingRights();
 		}
 		break;
@@ -358,7 +358,7 @@ void Board::unMakeMove(const Move& move, color side)
 			whitePos ^= whitePos & 0xF;
 			whitePos |= 0x9;
 		}
-		if (mmt == PROPER) {
+		if (mmt == FULL) {
 			castlingRights = move.oldCastlingRights();
 		}
 		break;
@@ -375,7 +375,7 @@ void Board::unMakeMove(const Move& move, color side)
 			blackPos ^= blackPos & 0xF800000000000000ull;
 			blackPos |= 0x8800000000000000ull;
 		}
-		if (mmt == PROPER) {
+		if (mmt == FULL) {
 			castlingRights = move.oldCastlingRights();
 		}
 		break;
@@ -392,7 +392,7 @@ void Board::unMakeMove(const Move& move, color side)
 			whitePos ^= whitePos & 0xF8ull;
 			whitePos |= 0x88ull;
 		}
-		if (mmt == PROPER) {
+		if (mmt == FULL) {
 			castlingRights = move.oldCastlingRights();
 		}
 		break;
@@ -413,7 +413,7 @@ void Board::unMakeMove(const Move& move, color side)
 				blackPos |= bit_at(move.from);
 				whitePos |= bit_at(move.to + 8);
 			}
-			if (mmt == PROPER) {
+			if (mmt == FULL) {
 				b_enpassent = (move.to % 8) + 1;
 			}
 		}
@@ -432,7 +432,7 @@ void Board::unMakeMove(const Move& move, color side)
 				whitePos |= bit_at(move.from);
 				blackPos |= bit_at(move.to - 8);
 			}
-			if (mmt == PROPER) {
+			if (mmt == FULL) {
 				w_enpassent = (move.to % 8) + 1;
 			}
 		}
@@ -441,7 +441,7 @@ void Board::unMakeMove(const Move& move, color side)
 		cerr << "Invalid move encountered!\n";
 		exit(1);
 	}
-	if (mmt == PROPER) {
+	if (mmt == FULL) {
 		// restore some castling rights
 		U8 cast = move.castlingRights();
 		if (cast) {

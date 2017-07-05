@@ -17,11 +17,11 @@ const uint WIDTH = 800, HEIGHT = 600; // GUI SIZE
 void testing();
 void benchmark();
 
-int main()
+int main(int argc, char* argv)
 {
 	sayHello();
 	testing();
-	//AI computer("1k1r4/pp1b1R2/3q2pp/4p3/2B5/4Q3/PPP2B2/2K5 b - - 1 0", black);
+
 	AI computer("*", black);
 #ifdef GUI_MODE
 	sf::RenderWindow window(sf::VideoMode(800, 600), "Chess", sf::Style::Close, sf::ContextSettings(0, 0, 3));
@@ -90,7 +90,7 @@ void testing(){
 	//benchmark.benchmarkMovemaking();
 	//benchmark.benchmarkMoveGeneration();
 	//benchmark.testPerft(-1);
-//	benchmark.perftTestSuite();
+	//benchmark.perftTestSuite();
 
 	//DataBaseTest dbt;
 	//dbt.start_Bratko_Kopec_Test();
