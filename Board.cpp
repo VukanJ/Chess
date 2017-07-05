@@ -82,7 +82,7 @@ void Board::initHash()
 	// Generates constant table of random 64Bit numbers.
 	random_device r_device;
 	mt19937_64 generator(r_device());
-	generator.seed(42);
+	//generator.seed(42);
 	uniform_int_distribution<U64> distr;
 	randomSet = vector<vector<U64>>(14, vector<U64>(64, 0));
 	// Index 0-11: Piece type
@@ -282,7 +282,7 @@ void Board::updatePinnedPieces(color side)
 	//printBitboard(pinned);
 }
 
-void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves)
+void Board::generateMoveList(MoveList& moveList, color side, bool addQuietMoves)
 {
 	/*
 	This method generates a list of all possible moves for a player.
@@ -295,7 +295,7 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 	U64 pieceAttacks = 0x0, attackingPieces = 0x0;
 	// Generate all capturing and normal moves
 	updatePinnedPieces(side);
-	if (side == black){
+	if (side == black) {
 		/*
 		   ::::::::::::::::::::::::::::::::::
 		   ::     BLACK MOVE GENERATION    ::
@@ -325,7 +325,7 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 			moveList.emplace_back(castlingRights, BCASTLE_2);
 		}
 	}
-	else{
+	else {
 		/*
 			::::::::::::::::::::::::::::::::::
 			::     WHITE MOVE GENERATION    ::
@@ -334,7 +334,7 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 		wasInCheck = (pieces[wk] & blackAtt) > 0;
 		for_white(w) { // Loop through white pieces
 			attackingPieces = pieces[w];
-			if (attackingPieces){
+			if (attackingPieces) {
 				switch (w) {
 				case wp: pawnMoves<ALL, white>(moveList); break;
 				case wr: rookMoves<ALL, white>(moveList); break;
@@ -345,7 +345,7 @@ void Board::generateMoveList(MoveList & moveList, color side, bool addQuietMoves
 				}
 			}
 		}
-		 //  Castling permission King-rook path is not obstructed and not under attack
+		//  Castling permission King-rook path is not obstructed and not under attack
 		if (castlingRights & castle_K && !(allPos & 0x6ull) && !(blackAtt & 0xEull)) { // White King can castle
 			moveList.emplace_back(castlingRights, WCASTLE);
 		}
@@ -533,17 +533,17 @@ int Board::evaluate(color side)
 	// Measure "hostiliy" = number of attacked pieces of opponent. 15cp each
 	for_white(i) mobility += popcount(attacks[i] & blackPos);
 	for_black(i) mobility += popcount(attacks[i] & whitePos);
-	total_boardValue += mobility * 2;
+	total_boardValue += mobility;
 	// ~~~ Blocked Pawns ~~~
 	// Determines how many pawns are blocked per player color, penalty of 4 cp for each
 	total_boardValue += 4 * (popcount((pieces[bp] >> 8) & allPos)
 						   - popcount((pieces[wp] << 8) & allPos));
 
 	//*************************** KING SAFETY ***************************
-	// Penalty of 250 cp if king is in check, since it generally
+	// Penalty of 50 cp if king is in check, since it generally
 	// reduces number of possible moves.
-	if (pieces[bk] & whiteAtt)      total_boardValue += 250;
-	else if (pieces[wk] & blackAtt) total_boardValue -= 250;
+	if (pieces[bk] & whiteAtt)      total_boardValue += 50;
+	else if (pieces[wk] & blackAtt) total_boardValue -= 50;
 	// ~~~ King freedom ~~~
 	// Measures number of fields the king can escape to. This should only be
 	// active in the endgame -> Leads to a quicker checkmate and less transpositions

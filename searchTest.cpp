@@ -3,26 +3,30 @@
 SearchTest::SearchTest() 
 	: transpositionHash(ZobristHash(1e7)),
 	targetDepth(1), evalcnt(0), negaMaxCnt(0), 
-	storedBoards(0), hashAccess(0), moveCnt(0), finished(0), ordering(0.9) 
-{
-}
+	storedBoards(0), hashAccess(0), moveCnt(0), finished(0), ordering(0.9){}
 
 void SearchTest::test()
 {
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
 
-	// string FEN = "4B3/5p2/qpN4K/r2R1Q2/1Pk5/4P3/1R6/1Nnr3b w - - 1 0"; // Mate in two
+	//string FEN = "4B3/5p2/qpN4K/r2R1Q2/1Pk5/4P3/1R6/1Nnr3b w - - 1 0"; // Mate in two
 	//string FEN = "r4r1k/1bpq1p1n/p1np4/1p1Bb1BQ/P7/6R1/1P3PPP/1N2R1K1 w - - 1 0"; // Mate in 8
-	//string FEN = "2r2k1r/pB3pp1/4p3/Q1p1P3/3P4/2P1q1p1/PP3RP1/5RK1 w - - 1 0"; // ate in 3
-	string FEN = "8/B7/8/8/4n3/5kpp/8/7K w - - 1 0";
+	
+	//string FEN = "*";
+	//string FEN = "2r2k1r/pB3pp1/4p3/Q1p1P3/3P4/2P1q1p1/PP3RP1/5RK1 w - - 1 0"; // Mate in 3
+
+	//string FEN = "8/pk1B4/p7/2K1p3/8/8/4Q3/8 w - - 1 0"; // Bh3 a5 Qa6 Kxa6 Bc8#
+	string FEN = "k7/pp1K4/N7/8/8/8/8/7B w - - 1 0";
+
+	//string FEN = "7R/8/8/k1K5/8/8/8/8 w - - 1 0"; // Mate in 0.5
+
 	//string FEN = "5n2/K7/8/2B5/kP6/N1r5/R1P5/1Q6 w - - 1 0";
 
 	board.setupBoard(FEN);
-	board.updateAllAttacks();
 	board.print();
 
-	auto bestMove = getBestMove(black);
+	auto bestMove = getBestMove(white);
 }
 
 Move SearchTest::getMaxRootMove(color side)
@@ -37,9 +41,9 @@ Move SearchTest::getMaxRootMove(color side)
 	int bestvalue = -oo;
 	for (auto& move : movelist)
 	{
-		board.makeMove<PROPER>(move, side);
+		board.makeMove<FULL>(move, side);
 		if (board.isKingLeftInCheck(side, move, checkOnThisDepth, pinnedOnThisDepth)) {
-			board.unMakeMove<PROPER>(move, side);
+			board.unMakeMove<FULL>(move, side);
 			continue;
 		}
 		int value = transpositionHash.getValue(board.hashKey);
@@ -47,7 +51,7 @@ Move SearchTest::getMaxRootMove(color side)
 			bestvalue = value;
 			bestMove = transpositionHash.getEntry(board.hashKey).bestMove;
 		}
-		board.unMakeMove<PROPER>(move, side);
+		board.unMakeMove<FULL>(move, side);
 	}
 	return transpositionHash.getEntry(board.hashKey).bestMove;
 }
@@ -62,11 +66,11 @@ Move SearchTest::getBestMove(color forPlayer)
 		timer.start();
 		NegaMax(-oo, oo, targetDepth, forPlayer, forPlayer);
 		timer.stop();
-
-		cout << "Depth: " << targetDepth << endl;
-		cout << "Time: " << timer.getTime()*1e-6 << endl;
-
-		cout << "PV: " << '(' << transpositionHash.getValue(board.hashKey) << ") ";
+		
+		cout << "D:{" << targetDepth << '}';
+		cout << " T:{" << (int)(timer.getTime()*1e-6) << "} ";
+		int val = transpositionHash.getValue(board.hashKey);
+		cout << "PV: " << '(' << (abs(val) == oo ? (val > 0 ? "oo" : "-oo") : to_string(val)) << ") ";
 		extractPrincipalVariation(board.hashKey, targetDepth, forPlayer);
 		cout << ".\n";
 	}
@@ -171,7 +175,6 @@ MoveList::iterator SearchTest::nextMove(MoveList& moveList, MoveList::iterator& 
 int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color side)
 {
 	int oldAlpha = alpha;
-	if (targetDepth == 9 && depth == 9) board.print();
 	auto &entry = transpositionHash.getEntry(board.hashKey);
 
 	if (entry.search_depth >= depth) {
@@ -197,20 +200,27 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color sid
 	bool checkOnThisDepth = board.wasInCheck;
 	U64 pinnedOnThisDepth = board.pinned;
 	Move bestMove;
-	//cout << "FOR\n";
+
 	if (!movelist.empty()) {
-		bestMove = *movelist.begin();
 		for (auto move = movelist.begin(); move != movelist.end(); move++) {
-			board.makeMove<PROPER>(*move, side);
+			board.makeMove<FULL>(*move, side);
+
 			board.updateAllAttacks();
 			if (board.isKingLeftInCheck(side, *move, checkOnThisDepth, pinnedOnThisDepth)) {
-				board.unMakeMove<PROPER>(*move, side);
+				board.unMakeMove<FULL>(*move, side);
 				continue;
 			}
-			//cout << moveString(*move) << '\n';
-			int score = -NegaMax(-beta, -alpha, depth - 1, aiColor, !side);
 
-			board.unMakeMove<PROPER>(*move, side);
+			int score;
+			if ((side == white && board.pieces[bk] & board.whiteAtt && isCheckmate<black>())
+				|| (side == black && board.pieces[wk] & board.blackAtt && isCheckmate<white>())) {
+				entry.search_depth == oo;
+				score = oo;
+			}
+			else {
+				score = -NegaMax(-beta, -alpha, depth - 1, aiColor, !side);
+			}
+			board.unMakeMove<FULL>(*move, side);
 			if (score >= bestValue) {
 				bestValue = score;
 				bestMove = *move;
@@ -219,27 +229,29 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color sid
 				// Found better move
 				alpha = score;
 			}
-			// Update move value and get next most promising move
 			if (alpha >= beta) {
 				break; // Alpha beta cutoff
 			}
+		}
+		if (bestMove.invalid()) {
+			// Bestmove wasnt set => all moves were skipped 
+			// Stalemate, end of game path
+			entry.search_depth = oo;
+			entry.flags = EXACT_VALUE;
+			entry.value = 0;
+			return 0;
 		}
 	}
 	if (movelist.empty()) {
 		// This player has no possible legal moves
 		board.updateAllAttacks();
 		if (board.isKingInCheck(side)) {
-			//cout << 'C';
 			entry.value = -oo;       // Checkmate -> end of game path
 			entry.search_depth = oo; // This evaluation always prevails
 			entry.flags = EXACT_VALUE;
 			return -oo;
 		}
 		else {
-			//cout << 'S';
-			//board.print();
-			//entry;
-
 			entry.value = 0;         // Stalemate -> end of game path
 			entry.search_depth = oo; // This evaluation always prevails
 			entry.flags = EXACT_VALUE;
@@ -248,6 +260,7 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color sid
 	}
 
 	// Store board in transposition table
+
 	entry.bestMove = bestMove;
 	entry.value = bestValue;
 	entry.search_depth = depth;
@@ -263,6 +276,26 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color sid
 	return bestValue;
 }
 
+template<color side> bool SearchTest::isCheckmate()
+{
+	MoveList ml;
+	board.generateMoveList(ml, side, true);
+	bool checkOnThisDepth = board.wasInCheck;
+	U64 pinnedOnThisDepth = board.pinned;
+
+	auto invalid = 0;
+
+	for (auto& move : ml) {
+		board.makeMove<POS_ONLY>(move, side);
+		//board.print();
+		board.updateAllAttacks();
+		if (board.isKingLeftInCheck(side, move, checkOnThisDepth, pinnedOnThisDepth))
+			invalid++;
+		board.unMakeMove<POS_ONLY>(move, side);
+	}
+	return invalid == ml.size() ? true : false;
+}
+
 int SearchTest::QuiescenceSearch(int alpha, int beta, int depth, color aiColor, color side)
 {
 	return 0;
@@ -270,11 +303,10 @@ int SearchTest::QuiescenceSearch(int alpha, int beta, int depth, color aiColor, 
 
 void SearchTest::extractPrincipalVariation(const U64& key, int maxPrintDepth, color side)
 {
-	if (maxPrintDepth == 0) return; // If loops (transpositions) occur abort 
 	const auto& entry = transpositionHash.getEntry(key);
-	if (entry.search_depth == -1 || entry.bestMove.from == 255) return;
-	board.makeMove<PROPER>(entry.bestMove, side);
-	cout << entry.bestMove << "  ";
+	if (entry.search_depth == -1 || maxPrintDepth == 0 || entry.bestMove.invalid()) return;
+	board.makeMove<FULL>(entry.bestMove, side);
+	cout << moveString(entry.bestMove) << "  ";
 	extractPrincipalVariation(board.hashKey, maxPrintDepth - 1, !side);
-	board.unMakeMove<PROPER>(entry.bestMove, side);
+	board.unMakeMove<FULL>(entry.bestMove, side);
 }

@@ -6,6 +6,8 @@
 
 using namespace std;
 
+enum makeMoveType { FULL = 0x7, HASH_AND_POS = 0x4, HASH_ONLY = 0x1, POS_ONLY = 0x2 };
+
 enum moveType {
 	MOVE,        // Quiet move
 	CAPTURE,     // Capture
@@ -27,16 +29,17 @@ struct Move
 
 	Move& operator=(const Move&);
 	bool inline operator==(const Move& m) {
-		return (m.from == from) 
-			&& (m.to == to) 
+		return (m.from == from)
+			&& (m.to == to)
 			&& (m.flags == flags)
 			&& (m.pieces == pieces);
 	}
 
 	U8 from, to, flags, pieces;
-	U8 inline movePiece()   const { return pieces & 0xF; }
+	bool inline invalid() const { return from == 255; }
+	U8 inline movePiece() const { return pieces & 0xF; }
 	U8 inline targetPiece() const { return pieces >> 4; }
-	U8 inline mtype()       const { return flags & 0xF; }
+	U8 inline mtype() const { return flags & 0xF; }
 	U8 inline castlingRights() const { return flags >> 4; }
 	U8 inline oldCastlingRights() const { return from; }
 	// Flagbits: 1-4: castlingRuleReset?[k,K,w,W]; 5-8: Movetype
