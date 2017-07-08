@@ -127,7 +127,6 @@ public:
 	SearchTest();
 	void test(); // Custom function
 	Move getBestMove(color forPlayer);
-	//Move distributeNegaMax(color forPlayer);
 	int NegaMax(int alpha, int beta, int depth, color aiColor, color side);
 	int QuiescenceSearch(int alpha, int beta, int depth, color aiColor, color side);
 	void nextMove(MoveList&, const MoveList::iterator&, color);
