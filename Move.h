@@ -6,7 +6,7 @@
 
 using namespace std;
 
-enum makeMoveType { FULL = 0x7, HASH_AND_POS = 0x4, HASH_ONLY = 0x1, POS_ONLY = 0x2 };
+enum makeMoveType { FULL = 0x7, HASH_POS = 0x4, HASH = 0x1, POS = 0x2 };
 
 enum moveType {
 	MOVE,        // Quiet move

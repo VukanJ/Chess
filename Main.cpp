@@ -84,7 +84,7 @@ int main(int argc, char* argv)
 
 void testing(){
 
-	Benchmark benchmark;
+	//Benchmark benchmark;
 	SearchTest searchTest;
 	searchTest.test();
 	//benchmark.benchmarkMovemaking();
