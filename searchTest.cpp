@@ -66,7 +66,7 @@ Move SearchTest::getBestMove(color forPlayer)
 	Timer timer, totalTimer;
 
 	totalTimer.start();
-	for (targetDepth = 1; targetDepth < 14; targetDepth++) {
+	for (targetDepth = 1; targetDepth < 8; targetDepth++) {
 		timer.start();
 		auto oldHash = board.hashKey;
 		NegaMax(-oo, oo, targetDepth, forPlayer, forPlayer);
@@ -159,20 +159,38 @@ void SearchTest::nextMove(MoveList& mlist, const MoveList::iterator& nextMove, c
 	// 3. Killer-Moves
 	// Sort moves according to previously determined alpha-beta values
 	
-	int maxValue = -oo;
-	MoveList::iterator maxMove = nextMove; 
-	for (auto move = nextMove; move != mlist.end(); move++) {
-		board.makeMove<HASH>(*move, side);
-		auto entry = transpositionHash.getEntry(board.hashKey);
-	
-		if (entry.value > maxValue) {
-			maxValue = entry.value;
-			maxMove  = move;
-		}
-		board.unMakeMove<HASH>(*move, side);
-	}
+	if (side == white) {
+		int maxValue = -oo;
+		MoveList::iterator maxMove = nextMove;
+		for (auto move = nextMove; move != mlist.end(); move++) {
+			board.makeMove<HASH>(*move, side);
+			auto entry = transpositionHash.getEntry(board.hashKey);
 
-	iter_swap(nextMove, maxMove);
+			if (entry.value > maxValue) {
+				maxValue = entry.value;
+				maxMove = move;
+			}
+			board.unMakeMove<HASH>(*move, side);
+		}
+
+		iter_swap(nextMove, maxMove);
+	}
+	else {
+		int minValue = oo;
+		MoveList::iterator minMove = nextMove;
+		for (auto move = nextMove; move != mlist.end(); move++) {
+			board.makeMove<HASH>(*move, side);
+			auto entry = transpositionHash.getEntry(board.hashKey);
+
+			if (entry.value < minValue) {
+				minValue = entry.value;
+				minMove = move;
+			}
+			board.unMakeMove<HASH>(*move, side);
+		}
+
+		iter_swap(nextMove, minMove);
+	}
 
 	// MVV-LVA
 	//for (auto iter = moveList.rend(); iter > MoveList::reverse_iterator(nextMove); iter++) {
@@ -292,6 +310,7 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color sid
 
 template<color side> bool SearchTest::isCheckmate()
 {
+	// TODO: makemove<POS> does not produce same results in this function as makemove<FULL>
 	MoveList ml;
 	board.generateMoveList(ml, side, true);
 	bool checkOnThisDepth = board.wasInCheck;
@@ -300,12 +319,10 @@ template<color side> bool SearchTest::isCheckmate()
 	auto invalid = 0;
 
 	for (auto& move : ml) {
-		board.makeMove<POS>(move, side);
-		//board.print();
-		board.updateAllAttacks();
+		board.makeMove<FULL>(move, side);
 		if (board.isKingLeftInCheck(side, move, checkOnThisDepth, pinnedOnThisDepth))
 			invalid++;
-		board.unMakeMove<POS>(move, side);
+		board.unMakeMove<FULL>(move, side);
 	}
 	return invalid == ml.size() ? true : false;
 }
