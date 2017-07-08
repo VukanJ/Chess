@@ -130,7 +130,7 @@ public:
 	//Move distributeNegaMax(color forPlayer);
 	int NegaMax(int alpha, int beta, int depth, color aiColor, color side);
 	int QuiescenceSearch(int alpha, int beta, int depth, color aiColor, color side);
-	MoveList::iterator nextMove(MoveList&, MoveList::iterator&, color);
+	void nextMove(MoveList&, const MoveList::iterator&, color);
 	
 	void extractPrincipalVariation(const U64& startKey, int maxPrintDepth, color aiColor);
 	Move getMaxRootMove(color side);

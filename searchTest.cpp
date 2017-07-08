@@ -5,6 +5,10 @@ SearchTest::SearchTest()
 	targetDepth(1), evalcnt(0), negaMaxCnt(0), 
 	storedBoards(0), hashAccess(0), moveCnt(0), finished(0), ordering(0.9){}
 
+// TODO: Zugzwang detection
+// TODO: Quiescence search 
+// TODO: Move sorting
+
 void SearchTest::test()
 {
 	genChessData data;
@@ -14,10 +18,10 @@ void SearchTest::test()
 	//string FEN = "r4r1k/1bpq1p1n/p1np4/1p1Bb1BQ/P7/6R1/1P3PPP/1N2R1K1 w - - 1 0"; // Mate in 8
 	
 	//string FEN = "*";
-	//string FEN = "2r2k1r/pB3pp1/4p3/Q1p1P3/3P4/2P1q1p1/PP3RP1/5RK1 w - - 1 0"; // Mate in 3
+	string FEN = "2r2k1r/pB3pp1/4p3/Q1p1P3/3P4/2P1q1p1/PP3RP1/5RK1 w - - 1 0"; // Mate in 3
 
 	//string FEN = "8/pk1B4/p7/2K1p3/8/8/4Q3/8 w - - 1 0"; // Bh3 a5 Qa6 Kxa6 Bc8#
-	string FEN = "k7/pp1K4/N7/8/8/8/8/7B w - - 1 0";
+	//string FEN = "k7/pp1K4/N7/8/8/8/8/7B w - - 1 0";
 
 	//string FEN = "7R/8/8/k1K5/8/8/8/8 w - - 1 0"; // Mate in 0.5
 
@@ -26,7 +30,7 @@ void SearchTest::test()
 	board.setupBoard(FEN);
 	board.print();
 
-	auto bestMove = getBestMove(white);
+	auto bestMove = getBestMove(black);
 }
 
 Move SearchTest::getMaxRootMove(color side)
@@ -59,12 +63,14 @@ Move SearchTest::getMaxRootMove(color side)
 Move SearchTest::getBestMove(color forPlayer)
 {
 	Move bestMove;
-	Timer timer;
-	auto oldHash = board.hashKey;
+	Timer timer, totalTimer;
 
-	for (targetDepth = 1; targetDepth < 20; targetDepth++) {
+	totalTimer.start();
+	for (targetDepth = 1; targetDepth < 14; targetDepth++) {
 		timer.start();
+		auto oldHash = board.hashKey;
 		NegaMax(-oo, oo, targetDepth, forPlayer, forPlayer);
+		assert(oldHash == board.hashKey);
 		timer.stop();
 		
 		cout << "D:{" << targetDepth << '}';
@@ -74,7 +80,8 @@ Move SearchTest::getBestMove(color forPlayer)
 		extractPrincipalVariation(board.hashKey, targetDepth, forPlayer);
 		cout << ".\n";
 	}
-	assert(oldHash == board.hashKey);
+	totalTimer.stop();
+	cout << "Total time = " << totalTimer.getTime()*1e-6 << endl;
 	return bestMove;
 }
 
@@ -144,26 +151,29 @@ Move SearchTest::getBestMove(color forPlayer)
 //	return bestMove->first;
 //}
 
-MoveList::iterator SearchTest::nextMove(MoveList& moveList, MoveList::iterator& nextMove, color side)
+void SearchTest::nextMove(MoveList& mlist, const MoveList::iterator& nextMove, color side)
 {
 	// Sorting scheme:
 	// 1. Alpha Beta Value
 	// 2. MVV-LVA
 	// 3. Killer-Moves
 	// Sort moves according to previously determined alpha-beta values
+	
 	int maxValue = -oo;
 	MoveList::iterator maxMove = nextMove; 
-	for (auto move = nextMove; move < moveList.end(); move++) {
-		board.makeMove<HASH_ONLY>(*move, side);
-		int value = transpositionHash.getEntry(board.hashKey).value;
-		if (value > maxValue) {
-			maxValue = value;
+	for (auto move = nextMove; move != mlist.end(); move++) {
+		board.makeMove<HASH>(*move, side);
+		auto entry = transpositionHash.getEntry(board.hashKey);
+	
+		if (entry.value > maxValue) {
+			maxValue = entry.value;
 			maxMove  = move;
 		}
-		board.unMakeMove<HASH_ONLY>(*move, side);
+		board.unMakeMove<HASH>(*move, side);
 	}
-	swap(nextMove, maxMove);
-	return nextMove;
+
+	iter_swap(nextMove, maxMove);
+
 	// MVV-LVA
 	//for (auto iter = moveList.rend(); iter > MoveList::reverse_iterator(nextMove); iter++) {
 	//	if (iter->mtype() == CAPTURE || iter->mtype() == C_PROMOTION) {
@@ -202,20 +212,24 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color sid
 	Move bestMove;
 
 	if (!movelist.empty()) {
-		for (auto move = movelist.begin(); move != movelist.end(); move++) {
+		//for (auto move = movelist.begin(); move != movelist.end(); move++) {
+		MoveList::iterator move = movelist.begin();
+		for (auto i = 0; i < movelist.size(); ++i){
+			nextMove(movelist, move, side);
 			board.makeMove<FULL>(*move, side);
 
 			board.updateAllAttacks();
 			if (board.isKingLeftInCheck(side, *move, checkOnThisDepth, pinnedOnThisDepth)) {
 				board.unMakeMove<FULL>(*move, side);
+				move = next(move);
 				continue;
 			}
 
 			int score;
 			if ((side == white && board.pieces[bk] & board.whiteAtt && isCheckmate<black>())
 				|| (side == black && board.pieces[wk] & board.blackAtt && isCheckmate<white>())) {
-				entry.search_depth == oo;
-				score = oo;
+				entry.search_depth = depth;
+				score = oo - targetDepth + depth;
 			}
 			else {
 				score = -NegaMax(-beta, -alpha, depth - 1, aiColor, !side);
@@ -232,11 +246,12 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color sid
 			if (alpha >= beta) {
 				break; // Alpha beta cutoff
 			}
+			move = next(move);
 		}
 		if (bestMove.invalid()) {
 			// Bestmove wasnt set => all moves were skipped 
 			// Stalemate, end of game path
-			entry.search_depth = oo;
+			entry.search_depth = depth;
 			entry.flags = EXACT_VALUE;
 			entry.value = 0;
 			return 0;
@@ -246,21 +261,20 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color sid
 		// This player has no possible legal moves
 		board.updateAllAttacks();
 		if (board.isKingInCheck(side)) {
-			entry.value = -oo;       // Checkmate -> end of game path
-			entry.search_depth = oo; // This evaluation always prevails
+			entry.value = -oo + targetDepth - depth;       // Checkmate -> end of game path
+			entry.search_depth = depth; // This evaluation always prevails
 			entry.flags = EXACT_VALUE;
 			return -oo;
 		}
 		else {
 			entry.value = 0;         // Stalemate -> end of game path
-			entry.search_depth = oo; // This evaluation always prevails
+			entry.search_depth = depth; // This evaluation always prevails
 			entry.flags = EXACT_VALUE;
 			return 0;
 		}
 	}
 
 	// Store board in transposition table
-
 	entry.bestMove = bestMove;
 	entry.value = bestValue;
 	entry.search_depth = depth;
@@ -286,12 +300,12 @@ template<color side> bool SearchTest::isCheckmate()
 	auto invalid = 0;
 
 	for (auto& move : ml) {
-		board.makeMove<POS_ONLY>(move, side);
+		board.makeMove<POS>(move, side);
 		//board.print();
 		board.updateAllAttacks();
 		if (board.isKingLeftInCheck(side, move, checkOnThisDepth, pinnedOnThisDepth))
 			invalid++;
-		board.unMakeMove<POS_ONLY>(move, side);
+		board.unMakeMove<POS>(move, side);
 	}
 	return invalid == ml.size() ? true : false;
 }

@@ -83,6 +83,7 @@ void Board::initHash()
 	random_device r_device;
 	mt19937_64 generator(r_device());
 	//generator.seed(42);
+
 	uniform_int_distribution<U64> distr;
 	randomSet = vector<vector<U64>>(14, vector<U64>(64, 0));
 	// Index 0-11: Piece type
@@ -154,10 +155,10 @@ void Board::updateAttack(piece p)
 	U64 mask = 0;
 	switch (p){
 		case bp:
-			pawnFill(black);
+			pawnFill<black>();
 			break;
 		case wp:
-			pawnFill(white);
+			pawnFill<white>();
 			break;
 		case br: case wr:
 			attacks[p] = 0x0;
@@ -203,7 +204,7 @@ U64 inline Board::floodFill(U64 propagator, U64 empty, dir direction) const
 {
 	// Calculates all attacks including attacked pieces for sliding pieces
 	// (Queen, Rook, bishop)(s)
-	// Not used in-game
+	// Not used in-game (!)
 	U64 flood = propagator;
 	U64 wrap = noWrap[direction];
 	empty &= wrap;
@@ -217,7 +218,7 @@ U64 inline Board::floodFill(U64 propagator, U64 empty, dir direction) const
 	return rotate_l64(flood, r_shift) & wrap;
 }
 
-void Board::pawnFill(color side)
+template<color side> void Board::pawnFill()
 {
 	if (side == black){
 		attacks[bp] = bpMove = 0x0;

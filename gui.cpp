@@ -21,7 +21,7 @@ Gui::Gui(AI& _ai, color aiColor) : chessBoard(_ai.chessBoard)
 	// Load Textures, crop sprites
 	pieceTex.loadFromFile("Chess_Pieces_Sprite.png");
 	pieces = vector<sf::Sprite>(12, sf::Sprite(pieceTex));
-	size = HEIGHT / 8;
+	size = static_cast<float>(HEIGHT) / 8;
 	orig_size = sf::Vector2f((float)pieceTex.getSize().x / 6.0f, (float)pieceTex.getSize().y / 2.0f);
 	scale = sf::Vector2f(size / orig_size.x, size / orig_size.y);
 

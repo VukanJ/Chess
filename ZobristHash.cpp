@@ -31,6 +31,4 @@ void ZobristHash::clear()
 	}
 }
 
-// struct entry
-
 ZobristHash::entry::entry() : value(-oo), search_depth(-1), flags(0x0) {}
