@@ -588,7 +588,7 @@ Benchmark::Benchmark() : totalTotalPerftMoveCount(0), performingAll(false)
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
 
-	testBoard = Board("8/pk1B4/p7/2K1p3/8/8/4Q3/8 w - - 1 0");
+	testBoard = Board("r4r1k/1bpq1p1n/p1np4/1p1Bb1BQ/P7/6R1/1P3PPP/1N2R1K1 w - - 1 0");
 
 	// Now: 7r/8/8/2K5/R4k2/8/8/r6R b - - 1 0
 	//testBoard.print();

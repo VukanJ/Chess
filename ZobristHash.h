@@ -27,9 +27,9 @@ private:
 	{
 		entry();
 		int value;
-		int search_depth;
+		short search_depth;
 		Move bestMove;
-		U8 flags;
+		U8 flags : 3, terminal : 1, d : 3;
 	};
 	vector<entry> entries; // Hash table
 	size_t hashSize;

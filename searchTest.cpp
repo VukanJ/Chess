@@ -25,7 +25,8 @@ void SearchTest::test()
 
 	//string FEN = "7R/8/8/k1K5/8/8/8/8 w - - 1 0"; // Mate in 0.5
 
-	//string FEN = "5n2/K7/8/2B5/kP6/N1r5/R1P5/1Q6 w - - 1 0";
+	// Mate in 4, Albert Becker vs. Eduard Glass 1928
+	//string FEN = "rk6/N4ppp/Qp2q3/3p4/8/8/5PPP/2R3K1 w - - 1 0";
 
 	board.setupBoard(FEN);
 	board.print();
@@ -66,10 +67,10 @@ Move SearchTest::getBestMove(color forPlayer)
 	Timer timer, totalTimer;
 
 	totalTimer.start();
-	for (targetDepth = 1; targetDepth < 8; targetDepth++) {
+	for (targetDepth = 1; targetDepth < 10; targetDepth++) {
 		timer.start();
 		auto oldHash = board.hashKey;
-		NegaMax(-oo, oo, targetDepth, forPlayer, forPlayer);
+		NegaMax(-oo, oo, targetDepth, 0, forPlayer, forPlayer);
 		assert(oldHash == board.hashKey);
 		timer.stop();
 		
@@ -80,76 +81,11 @@ Move SearchTest::getBestMove(color forPlayer)
 		extractPrincipalVariation(board.hashKey, targetDepth, forPlayer);
 		cout << ".\n";
 	}
+	board.print();
 	totalTimer.stop();
 	cout << "Total time = " << totalTimer.getTime()*1e-6 << endl;
 	return bestMove;
 }
-
-//Move SearchTest::distributeNegaMax(color forPlayer)
-//{
-//	typedef pair<Move, int> MoveValue;
-//	static vector<MoveValue> RootMoveList;
-//	MoveList moveList;
-//	board.updateAllAttacks();
-//
-//	bool checkOnThisDepth = board.wasInCheck;
-//	U64 pinnedOnThisDepth = board.pinned;
-//
-//	if (targetDepth == 1) {
-//		board.generateMoveList(moveList, forPlayer, true);
-//		
-//
-//		checkOnThisDepth = board.wasInCheck;
-//		pinnedOnThisDepth = board.pinned;
-//
-//		for (auto move = moveList.begin(); move != moveList.end(); ) {
-//			board.makeMove<PROPER>(*move, forPlayer);
-//			moveCnt++;
-//			auto& entry = transpositionHash.getEntry(board.hashKey);
-//			if (board.isKingLeftInCheck(forPlayer, *move, checkOnThisDepth, pinnedOnThisDepth)) {
-//				board.unMakeMove<PROPER>(*move, forPlayer);
-//				move = moveList.erase(move);
-//				continue;
-//			}
-//			board.unMakeMove<PROPER>(*move, forPlayer);
-//			//entry.search_depth = 0;
-//			//entry.value = board.evaluate(forPlayer);
-//			//entry.bestMove = *move;
-//			//entry.flags = EXACT_VALUE;
-//			move++;
-//		}
-//		// Initialize
-//		RootMoveList.resize(moveList.size());
-//		for (int i = 0; i < moveList.size(); ++i)
-//			RootMoveList[i] = pair<Move, int>(moveList[i], -oo);
-//	}
-//
-//	for (auto& move_value : RootMoveList) {
-//
-//		board.makeMove<PROPER>(move_value.first, forPlayer);
-//		auto& entry = transpositionHash.getEntry(board.hashKey);
-//		if (entry.search_depth >= targetDepth) {
-//			move_value.second = entry.value;
-//		}
-//		else {
-//			move_value.second = -NegaMax(-oo, oo, targetDepth - 1, forPlayer, forPlayer == white ? black : white);
-//		}
-//		board.unMakeMove<PROPER>(move_value.first, forPlayer);
-//	}
-//
-//	auto bestMove = max_element(RootMoveList.begin(), RootMoveList.end(),
-//		[](const MoveValue move1, const MoveValue move2) {
-//		return move1.second < move2.second;
-//	});
-//
-//	// Update Root Node
-//	auto& RootEntry = transpositionHash.getEntry(board.hashKey);
-//	RootEntry.search_depth = targetDepth;
-//	RootEntry.bestMove = bestMove->first;
-//	RootEntry.value = bestMove->second;
-//
-//	return bestMove->first;
-//}
 
 void SearchTest::nextMove(MoveList& mlist, const MoveList::iterator& nextMove, color side)
 {
@@ -164,9 +100,9 @@ void SearchTest::nextMove(MoveList& mlist, const MoveList::iterator& nextMove, c
 		MoveList::iterator maxMove = nextMove;
 		for (auto move = nextMove; move != mlist.end(); move++) {
 			board.makeMove<HASH>(*move, side);
-			auto entry = transpositionHash.getEntry(board.hashKey);
+			const auto& entry = transpositionHash.getEntry(board.hashKey);
 
-			if (entry.value > maxValue) {
+			if (entry.search_depth != -1 && entry.value > maxValue) {
 				maxValue = entry.value;
 				maxMove = move;
 			}
@@ -180,7 +116,7 @@ void SearchTest::nextMove(MoveList& mlist, const MoveList::iterator& nextMove, c
 		MoveList::iterator minMove = nextMove;
 		for (auto move = nextMove; move != mlist.end(); move++) {
 			board.makeMove<HASH>(*move, side);
-			auto entry = transpositionHash.getEntry(board.hashKey);
+			const auto& entry = transpositionHash.getEntry(board.hashKey);
 
 			if (entry.value < minValue) {
 				minValue = entry.value;
@@ -200,12 +136,12 @@ void SearchTest::nextMove(MoveList& mlist, const MoveList::iterator& nextMove, c
 	//}
 }
 
-int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color side)
+int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color aiColor, color side)
 {
 	int oldAlpha = alpha;
 	auto &entry = transpositionHash.getEntry(board.hashKey);
 
-	if (entry.search_depth >= depth) {
+	if (entry.search_depth >= depth || entry.terminal == 1) {
 		if (entry.flags & EXACT_VALUE) {
 			return entry.value;
 		}
@@ -217,8 +153,8 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color sid
 			return entry.value;
 	}
 
-	if (depth == 0) {
-		return board.evaluate(side) - targetDepth + depth;
+	if (depth == 0 || entry.terminal == 1) {
+		return board.evaluate(side) - ply;
 	}
 
 	int bestValue = -oo;
@@ -230,16 +166,16 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color sid
 	Move bestMove;
 
 	if (!movelist.empty()) {
-		//for (auto move = movelist.begin(); move != movelist.end(); move++) {
-		MoveList::iterator move = movelist.begin();
-		for (auto i = 0; i < movelist.size(); ++i){
-			nextMove(movelist, move, side);
+		for(auto& move = movelist.begin(); move != movelist.end(); move++){
+		//MoveList::iterator move = movelist.begin();
+		//for (auto i = 0; i < movelist.size(); ++i){
+			//nextMove(movelist, move, side);
 			board.makeMove<FULL>(*move, side);
-
 			board.updateAllAttacks();
+
 			if (board.isKingLeftInCheck(side, *move, checkOnThisDepth, pinnedOnThisDepth)) {
 				board.unMakeMove<FULL>(*move, side);
-				move = next(move);
+				//move = next(move);
 				continue;
 			}
 
@@ -247,10 +183,11 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color sid
 			if ((side == white && board.pieces[bk] & board.whiteAtt && isCheckmate<black>())
 				|| (side == black && board.pieces[wk] & board.blackAtt && isCheckmate<white>())) {
 				entry.search_depth = depth;
-				score = oo - targetDepth + depth;
+				entry.terminal = true;
+				score = oo - ply;
 			}
 			else {
-				score = -NegaMax(-beta, -alpha, depth - 1, aiColor, !side);
+				score = -NegaMax(-beta, -alpha, depth - 1, ply + 1, aiColor, !side);
 			}
 			board.unMakeMove<FULL>(*move, side);
 			if (score >= bestValue) {
@@ -264,29 +201,31 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color sid
 			if (alpha >= beta) {
 				break; // Alpha beta cutoff
 			}
-			move = next(move);
+			//move = next(move);
 		}
 		if (bestMove.invalid()) {
 			// Bestmove wasnt set => all moves were skipped 
 			// Stalemate, end of game path
+			entry.terminal = true;
 			entry.search_depth = depth;
 			entry.flags = EXACT_VALUE;
 			entry.value = 0;
 			return 0;
 		}
 	}
-	if (movelist.empty()) {
+	else {
 		// This player has no possible legal moves
-		board.updateAllAttacks();
 		if (board.isKingInCheck(side)) {
-			entry.value = -oo + targetDepth - depth;       // Checkmate -> end of game path
-			entry.search_depth = depth; // This evaluation always prevails
+			entry.terminal = true;
+			entry.value = -oo + ply; // Checkmate -> end of game path
+			entry.search_depth = depth;
 			entry.flags = EXACT_VALUE;
-			return -oo;
+			return -oo + ply;
 		}
 		else {
+			entry.terminal = true;
 			entry.value = 0;         // Stalemate -> end of game path
-			entry.search_depth = depth; // This evaluation always prevails
+			entry.search_depth = depth; 
 			entry.flags = EXACT_VALUE;
 			return 0;
 		}
@@ -308,6 +247,17 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, color aiColor, color sid
 	return bestValue;
 }
 
+void SearchTest::invertChessboard()
+{
+	for (int i = 0; i < 6; ++i)
+		swap(board.pieces[i], board.pieces[i + 6]);
+	for (auto& piece : board.pieces)
+		piece = _byteswap_uint64(piece);
+	board.updateAllAttacks();
+	transpositionHash.clear();
+	board.print();
+}
+
 template<color side> bool SearchTest::isCheckmate()
 {
 	// TODO: makemove<POS> does not produce same results in this function as makemove<FULL>
@@ -319,10 +269,10 @@ template<color side> bool SearchTest::isCheckmate()
 	auto invalid = 0;
 
 	for (auto& move : ml) {
-		board.makeMove<FULL>(move, side);
+		board.makeMove<POS>(move, side);
 		if (board.isKingLeftInCheck(side, move, checkOnThisDepth, pinnedOnThisDepth))
 			invalid++;
-		board.unMakeMove<FULL>(move, side);
+		board.unMakeMove<POS>(move, side);
 	}
 	return invalid == ml.size() ? true : false;
 }

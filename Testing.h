@@ -127,14 +127,17 @@ public:
 	SearchTest();
 	void test(); // Custom function
 	Move getBestMove(color forPlayer);
-	int NegaMax(int alpha, int beta, int depth, color aiColor, color side);
+	int NegaMax(int alpha, int beta, int depth, int ply, color aiColor, color side);
 	int QuiescenceSearch(int alpha, int beta, int depth, color aiColor, color side);
 	void nextMove(MoveList&, const MoveList::iterator&, color);
 	
 	void extractPrincipalVariation(const U64& startKey, int maxPrintDepth, color aiColor);
 	Move getMaxRootMove(color side);
 	template<color side> bool isCheckmate();
+	void testSorting(MoveList&, color side);
 private:
+	void invertChessboard(); // For evaluation symmetry testing
+
 	int targetDepth;
 	Board board;
 	ZobristHash transpositionHash;
