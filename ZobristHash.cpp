@@ -31,4 +31,4 @@ void ZobristHash::clear()
 	}
 }
 
-ZobristHash::entry::entry() : value(-oo), search_depth(-1), flags(0x0) {}
+ZobristHash::entry::entry() : value(-oo), search_depth(-1), flags(0x0), terminal(0), d(0){}

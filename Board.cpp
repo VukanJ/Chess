@@ -473,14 +473,14 @@ int Board::evaluate(color side)
 	 * Queen  -> 900 cp
 	 * Rook   -> 500 cp
 	 * Bishop -> 300 cp
-	 * Knight -> 300 cp
+	 * Knight -> 280 cp
 	 * Pawn   -> 100 cp
 	 * King   ->   0 cp
 	 */
 	total_boardValue += 900 * (popcount(pieces[wq]) - popcount(pieces[bq]))
 		              + 500 * (popcount(pieces[wr]) - popcount(pieces[br]))
 		              + 300 * (popcount(pieces[wb]) - popcount(pieces[bb]))
-		              + 300 * (popcount(pieces[wn]) - popcount(pieces[bn]))
+		              + 280 * (popcount(pieces[wn]) - popcount(pieces[bn]))
 		              + 100 * (popcount(pieces[wp]) - popcount(pieces[bp]));
 
 	// *************************** POSITION ***************************
@@ -525,16 +525,16 @@ int Board::evaluate(color side)
 	//total_boardValue += psh / 10;
 
 	// *************************** MOBILITY ***************************
-	// Determines how many squares are accessible, worth 10 cp each
+	// Determines how many squares are accessible, worth 1 cp each
 	int mobility = 0;
 	for_white(i) mobility += popcount(attacks[i] ^ blackPos);
 	for_black(i) mobility -= popcount(attacks[i] ^ whitePos);
 	total_boardValue += mobility;
 	mobility = 0;
-	// Measure "hostiliy" = number of attacked pieces of opponent. 15cp each
+	// Measure "hostiliy" = number of attacked pieces of opponent. 2 cp each
 	for_white(i) mobility += popcount(attacks[i] & blackPos);
 	for_black(i) mobility += popcount(attacks[i] & whitePos);
-	total_boardValue += mobility;
+	total_boardValue += mobility*2;
 	// ~~~ Blocked Pawns ~~~
 	// Determines how many pawns are blocked per player color, penalty of 4 cp for each
 	total_boardValue += 4 * (popcount((pieces[bp] >> 8) & allPos)
@@ -549,15 +549,14 @@ int Board::evaluate(color side)
 	// Measures number of fields the king can escape to. This should only be
 	// active in the endgame -> Leads to a quicker checkmate and less transpositions
 	if (endGameValue > 0.5) {
-		//cout << "OK\n";
 		mask = pieces[wk];
 
 		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
 	
-		total_boardValue += 10 * popcount(mask & ~blackAtt);
+		total_boardValue += 4 * popcount(mask & ~blackAtt);
 		mask = pieces[bk];
 		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
-		total_boardValue -= 10 * popcount(mask & ~whiteAtt);
+		total_boardValue -= 4 * popcount(mask & ~whiteAtt);
 	}
 
 	// Pawn shield. Count number of pawns in front of kings in a 2x3 area 0x707
