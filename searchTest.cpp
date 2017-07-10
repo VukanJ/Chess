@@ -1,12 +1,12 @@
 #include "Testing.h"
 
-SearchTest::SearchTest() 
+SearchTest::SearchTest()
 	: transpositionHash(ZobristHash(1e7)),
-	targetDepth(1), evalcnt(0), negaMaxCnt(0), 
+	targetDepth(1), evalcnt(0), negaMaxCnt(0),
 	storedBoards(0), hashAccess(0), moveCnt(0), finished(0), ordering(0.9){}
 
 // TODO: Zugzwang detection
-// TODO: Quiescence search 
+// TODO: Quiescence search
 // TODO: Move sorting
 
 void SearchTest::test()
@@ -16,7 +16,7 @@ void SearchTest::test()
 
 	//string FEN = "4B3/5p2/qpN4K/r2R1Q2/1Pk5/4P3/1R6/1Nnr3b w - - 1 0"; // Mate in two
 	//string FEN = "r4r1k/1bpq1p1n/p1np4/1p1Bb1BQ/P7/6R1/1P3PPP/1N2R1K1 w - - 1 0"; // Mate in 8
-	
+
 	//string FEN = "*";
 	string FEN = "2r2k1r/pB3pp1/4p3/Q1p1P3/3P4/2P1q1p1/PP3RP1/5RK1 w - - 1 0"; // Mate in 3
 
@@ -73,7 +73,7 @@ Move SearchTest::getBestMove(color forPlayer)
 		NegaMax(-oo, oo, targetDepth, 0, forPlayer, forPlayer);
 		assert(oldHash == board.hashKey);
 		timer.stop();
-		
+
 		cout << "D:{" << targetDepth << '}';
 		cout << " T:{" << (int)(timer.getTime()*1e-6) << "} ";
 		int val = transpositionHash.getValue(board.hashKey);
@@ -94,7 +94,7 @@ void SearchTest::nextMove(MoveList& mlist, const MoveList::iterator& nextMove, c
 	// 2. MVV-LVA
 	// 3. Killer-Moves
 	// Sort moves according to previously determined alpha-beta values
-	
+
 	if (side == white) {
 		int maxValue = -oo;
 		MoveList::iterator maxMove = nextMove;
@@ -166,7 +166,7 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color aiColor, 
 	Move bestMove;
 
 	if (!movelist.empty()) {
-		for(auto& move = movelist.begin(); move != movelist.end(); move++){
+		for(auto move = movelist.begin(); move != movelist.end(); move++){
 		//MoveList::iterator move = movelist.begin();
 		//for (auto i = 0; i < movelist.size(); ++i){
 			//nextMove(movelist, move, side);
@@ -204,7 +204,7 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color aiColor, 
 			//move = next(move);
 		}
 		if (bestMove.invalid()) {
-			// Bestmove wasnt set => all moves were skipped 
+			// Bestmove wasnt set => all moves were skipped
 			// Stalemate, end of game path
 			entry.terminal = true;
 			entry.search_depth = depth;
@@ -225,7 +225,7 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color aiColor, 
 		else {
 			entry.terminal = true;
 			entry.value = 0;         // Stalemate -> end of game path
-			entry.search_depth = depth; 
+			entry.search_depth = depth;
 			entry.flags = EXACT_VALUE;
 			return 0;
 		}
@@ -249,6 +249,7 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color aiColor, 
 
 void SearchTest::invertChessboard()
 {
+	/*
 	for (int i = 0; i < 6; ++i)
 		swap(board.pieces[i], board.pieces[i + 6]);
 	for (auto& piece : board.pieces)
@@ -256,6 +257,7 @@ void SearchTest::invertChessboard()
 	board.updateAllAttacks();
 	transpositionHash.clear();
 	board.print();
+	*/
 }
 
 template<color side> bool SearchTest::isCheckmate()
