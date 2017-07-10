@@ -17,7 +17,7 @@ const uint WIDTH = 800, HEIGHT = 600; // GUI SIZE
 void testing();
 void benchmark();
 
-int main(int argc, char* argv)
+int main(int argc, char* argv[])
 {
 	sayHello();
 	testing();
