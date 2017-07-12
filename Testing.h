@@ -132,15 +132,14 @@ public:
 	void nextMove(MoveList&, const MoveList::iterator&, color);
 	
 	void extractPrincipalVariation(const U64& startKey, int maxPrintDepth, color aiColor);
-	Move getMaxRootMove(color side);
 	template<color side> bool isCheckmate();
-	void testSorting(MoveList&, color side);
 private:
 	void invertChessboard(); // For evaluation symmetry testing
 
 	int targetDepth;
 	Board board;
 	ZobristHash transpositionHash;
+	PVTable pvTable;
 	long evalcnt, negaMaxCnt, storedBoards, hashAccess, moveCnt;
 	double finished;
 	double ordering;

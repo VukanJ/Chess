@@ -83,7 +83,6 @@ int main(int argc, char* argv[])
 }
 
 void testing(){
-
 	//Benchmark benchmark;
 	SearchTest searchTest;
 	searchTest.test();

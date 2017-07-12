@@ -550,7 +550,7 @@ int Board::evaluate(color side)
 	// active in the endgame -> Leads to a quicker checkmate and less transpositions
 	if (endGameValue > 0.5) {
 		mask = pieces[wk];
-
+	
 		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
 	
 		total_boardValue += 4 * popcount(mask & ~blackAtt);
