@@ -82,7 +82,7 @@ void Board::initHash()
 	// Generates constant table of random 64Bit numbers.
 	random_device r_device;
 	mt19937_64 generator(r_device());
-	//generator.seed(42);
+	generator.seed(42);
 
 	uniform_int_distribution<U64> distr;
 	randomSet = vector<vector<U64>>(14, vector<U64>(64, 0));
