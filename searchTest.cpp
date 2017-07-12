@@ -31,13 +31,14 @@ void SearchTest::test()
 	// https://www.sparkchess.com/chess-puzzles.html
 	// string FEN = "4r1k1/pQ3pp1/7p/4q3/4r3/P7/1P2nPPP/2BR1R1K b - - 1 0";
 	// string FEN = "4Rnk1/pr3ppp/1p3q2/5NQ1/2p5/8/P4PPP/6K1 w - - 1 0"; // Nf5h6  qx{N}f6h6  Rx{n}e8f8  kx{R}g8f8  Qg5d8
-	// string FEN = "4k2r/1R3R2/p3p1pp/4b3/1BnNr3/8/P1P5/5K2 w - - 1 0";
-	// string FEN = "7r/p3ppk1/3p4/2p1P1Kp/2Pb4/3P1QPq/PP5P/R6R b - - 0 1";
+	//string FEN = "4k2r/1R3R2/p3p1pp/4b3/1BnNr3/8/P1P5/5K2 w - - 1 0";
+	//string FEN = "7r/p3ppk1/3p4/2p1P1Kp/2Pb4/3P1QPq/PP5P/R6R b - - 0 1";
 	
 	board.setupBoard(FEN);
 	board.print();
 
-	auto bestMove = getBestMove(white);
+	aiColor = white;
+	auto bestMove = getBestMove(aiColor);
 }
 
 Move SearchTest::getBestMove(color forPlayer)
@@ -49,7 +50,7 @@ Move SearchTest::getBestMove(color forPlayer)
 	for (targetDepth = 1; targetDepth < 9; targetDepth++) {
 		timer.start();
 		auto oldHash = board.hashKey;
-		NegaMax(-oo, oo, targetDepth, 0, forPlayer, forPlayer);
+		NegaMax(-oo, oo, targetDepth, 0, forPlayer);
 		assert(oldHash == board.hashKey);
 		timer.stop();
 
@@ -74,7 +75,7 @@ void SearchTest::nextMove(MoveList& mlist, const MoveList::iterator& nextMove, c
 	// 3. Killer-Moves
 	// Sort moves according to previously determined alpha-beta values
 
-	return;
+	//return;
 
 	if (side == white) {
 		int maxValue = -oo;
@@ -82,7 +83,7 @@ void SearchTest::nextMove(MoveList& mlist, const MoveList::iterator& nextMove, c
 		for (auto move = nextMove; move != mlist.end(); move++) {
 			board.makeMove<HASH>(*move, side);
 			const auto& entry = transpositionHash.getEntry(board.hashKey);
-
+		
 			if (entry.search_depth != -1 && entry.value > maxValue) {
 				maxValue = entry.value;
 				maxMove = move;
@@ -117,7 +118,7 @@ void SearchTest::nextMove(MoveList& mlist, const MoveList::iterator& nextMove, c
 	//}
 }
 
-int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color aiColor, color side)
+int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color side)
 {
 	int oldAlpha = alpha;
 	auto &entry = transpositionHash.getEntry(board.hashKey);
@@ -139,13 +140,16 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color aiColor, 
 	}
 
 	if (depth == 0) {
-		// return Quiescence(...)
-		return board.evaluate(side);
+		if(ply > 2)
+			return QuiescenceSearch(alpha, beta, 0, side);
+		else
+		    return board.evaluate(side);
 	}
 	// Check if repetition
 
 	MoveList movelist;
-	board.generateMoveList(movelist, side, true);
+	board.generateMoveList<ALL>(movelist, side);
+
 	bool checkedOnThisDepth = board.wasInCheck;
 	U64 pinnedOnThisDepth = board.pinned;
 
@@ -162,7 +166,7 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color aiColor, 
 			continue;
 		}
 		legalMoves++;
-		score = -NegaMax(-beta, -alpha, depth - 1, ply + 1, aiColor, !side);
+		score = -NegaMax(-beta, -alpha, depth - 1, ply + 1, !side);
 
 		board.unMakeMove<FULL>(*move, side);
 		board.updateAllAttacks(); // Maybe not needed
@@ -175,6 +179,7 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color aiColor, 
 		}
 	}
 	if (legalMoves == 0) {
+		// No legal moves found. 
 		if ((   side == white && board.pieces[wk] & board.blackAtt)
 			|| (side == black && board.pieces[bk] & board.whiteAtt)) {
 			// Checkmate, end of game path
@@ -203,6 +208,41 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color aiColor, 
 	else if (alpha >= beta)
 		entry.flags = LOWER_BOUND;
 	else entry.flags = EXACT_VALUE;
+
+	return alpha;
+}
+
+int SearchTest::QuiescenceSearch(int alpha, int beta, int ply, color side)
+{
+	int standingPat = board.evaluate(side);
+	if (ply > 4) {
+		return standingPat;
+	}
+	if (standingPat >= beta) 
+		return beta;
+	if (alpha < standingPat)
+		alpha = standingPat;
+
+	MoveList mlist;
+	board.generateMoveList<CAPTURES_ONLY>(mlist, side);
+
+	bool checkOnThisDepth = board.wasInCheck;
+	U64 pinnedOnThisDepth = board.pinned;
+
+	for (const auto& capture : mlist) {
+		board.makeMove<FULL>(capture, side);
+		if (board.isKingLeftInCheck(side, capture, checkOnThisDepth, pinnedOnThisDepth)) {
+			board.unMakeMove<FULL>(capture, side);
+			continue;
+		}
+
+		int score = -QuiescenceSearch(-beta, -alpha, ply + 1, !side);
+		board.unMakeMove<FULL>(capture, side);
+		if (score >= beta)
+			return beta;
+		if (score > alpha)
+			alpha = score;
+	}
 
 	return alpha;
 }
@@ -237,11 +277,6 @@ template<color side> bool SearchTest::isCheckmate()
 		board.unMakeMove<POS>(move, side);
 	}
 	return invalid == ml.size() ? true : false;
-}
-
-int SearchTest::QuiescenceSearch(int alpha, int beta, int depth, color aiColor, color side)
-{
-	return 0;
 }
 
 void SearchTest::extractPrincipalVariation(const U64& key, int maxPrintDepth, color side)

@@ -44,8 +44,8 @@ ZobristHash::entry::entry() : value(-oo), search_depth(-1), flags(0x0), terminal
 
 PVTable::PVTable()
 {
-	pventries.resize(static_cast<size_t>(5e6));
-	hashSize = static_cast<size_t>(5e6);
+	pventries.resize(static_cast<size_t>(3e6));
+	hashSize = static_cast<size_t>(3e6);
 }
 
 PVTable::PVTable(size_t size)
@@ -63,4 +63,10 @@ void PVTable::addPVMove(const U64& key, const Move& move)
 PVTable::PVEntry& PVTable::operator[](const U64& key)
 {
 	return pventries[key % hashSize];
+}
+
+void PVTable::clear()
+{
+	for (auto& entry : pventries) 
+		entry.bestmove = Move();
 }
