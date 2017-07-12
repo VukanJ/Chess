@@ -28,7 +28,7 @@ private:
 		entry();
 		int value;
 		short search_depth;
-		Move bestMove;
+		//Move bestMove;
 		U8 flags : 3, terminal : 1, d : 3;
 	};
 	vector<entry> entries; // Hash table
@@ -36,9 +36,26 @@ private:
 public:
 	ZobristHash();
 	ZobristHash(size_t hashSize);
-	entry& getEntry(const U64& Key);
+	entry& getEntry(const U64& key);
 	int getValue(const U64& key) const;
+	bool isRepetition(const U64& key, int depth) const;
 	void clear();
+};
+
+class PVTable
+{
+private:
+	struct PVEntry 
+	{
+		Move bestmove;
+	};
+	vector<PVEntry> pventries;
+	size_t hashSize;
+public:
+	PVTable();
+	PVTable(size_t hashSize);
+	void addPVMove(const U64& key, const Move& best);
+	PVEntry getEntry(const U64& key);
 };
 
 #endif

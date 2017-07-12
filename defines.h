@@ -29,6 +29,7 @@ U8 constexpr move_metadata(U8 TYPE, U8 DATA) { return TYPE | (DATA << 4); }
 	#endif
 	#include <intrin.h>
 	// Compiler intrinsics compatible with WIN32
+
 	int  inline popcount(U64 x) { return (int)__popcnt64(x); } // Population count, implicit conversion to int
 	U8 inline bitScan_rev64(ulong& index, U64 const mask) {
 		if (!_BitScanReverse64(&index, mask)){
