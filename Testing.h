@@ -127,13 +127,13 @@ public:
 	SearchTest();
 	void test(); // Custom function
 	Move getBestMove(color forPlayer);
-	int NegaMax(int alpha, int beta, int depth, int ply, color aiColor, color side);
-	int QuiescenceSearch(int alpha, int beta, int depth, color aiColor, color side);
+private:
+	int NegaMax(int alpha, int beta, int depth, int ply, color side);
+	int QuiescenceSearch(int alpha, int beta, int ply, color side);
 	void nextMove(MoveList&, const MoveList::iterator&, color);
-	
+
 	void extractPrincipalVariation(const U64& startKey, int maxPrintDepth, color aiColor);
 	template<color side> bool isCheckmate();
-private:
 	void invertChessboard(); // For evaluation symmetry testing
 
 	int targetDepth;
@@ -143,6 +143,8 @@ private:
 	long evalcnt, negaMaxCnt, storedBoards, hashAccess, moveCnt;
 	double finished;
 	double ordering;
+
+	color aiColor;
 };
 
 #endif

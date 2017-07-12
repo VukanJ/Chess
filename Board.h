@@ -42,7 +42,7 @@ public:
 	void setupBoard(string FEN);
 
 	// Move making and move generation
-	void generateMoveList(MoveList&, color, bool addQuietMoves);
+	template<moveGenType> void generateMoveList(MoveList&, color);
 
 	U64 inline   rookAttacks(long pos, const U64 blockers) const;
 	U64 inline bishopAttacks(long pos, const U64 blockers) const;

@@ -168,7 +168,7 @@ void UnitTest::testPawnFill()
 	ai.chessBoard.setupBoard("8/4p3/3N1N2/88888 w - - 1 0");
 	auto hashKey = ai.chessBoard.hashKey;
 	MoveList moveList;
-	ai.chessBoard.generateMoveList(moveList, black, true);
+	ai.chessBoard.generateMoveList<ALL>(moveList, black);
 	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == CAPTURE && move.from > move.to; }) == 2);
 	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == MOVE && move.from > move.to; }) == 1);
 	for (auto& m : moveList) {
@@ -180,7 +180,7 @@ void UnitTest::testPawnFill()
 	ai.chessBoard.setupBoard("8/8/3n1n2/4P3/8888 w - - 1 0");
 	hashKey = ai.chessBoard.hashKey;
 	moveList.clear();
-	ai.chessBoard.generateMoveList(moveList, white, true);
+	ai.chessBoard.generateMoveList<ALL>(moveList, white);
 	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == CAPTURE && move.from < move.to; }) == 2);
 	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == MOVE && move.from < move.to; }) == 1);
 	for (auto& m : moveList) {
@@ -199,7 +199,7 @@ void UnitTest::testCastling()
 
 	MoveList moveList;
 	AI ai("r3k2r/8/8/8/8/8/8/R3K2R w - - 1 0", black, 10);
-	ai.chessBoard.generateMoveList(moveList, black, true);
+	ai.chessBoard.generateMoveList<ALL>(moveList, black);
 
 	assert(!any_of(moveList.begin(), moveList.end(), [](Move& move) {
 		return move.flags == BCASTLE || move.flags == BCASTLE_2; }));
@@ -207,7 +207,7 @@ void UnitTest::testCastling()
 	ai.chessBoard.setupBoard("r3k2r/8/8/8/8/8/8/R3K2R w KkQq - 1 0");
 
 	moveList.clear();
-	ai.chessBoard.generateMoveList(moveList, black, true);
+	ai.chessBoard.generateMoveList<ALL>(moveList, black);
 	auto hashKey = ai.chessBoard.hashKey;
 	assert(find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == BCASTLE;   }) != moveList.end()
 		&& find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == BCASTLE_2; }) != moveList.end());
@@ -224,7 +224,7 @@ void UnitTest::testCastling()
 	assert(ai.chessBoard.hashKey == hashKey);
 
 	moveList.clear();
-	ai.chessBoard.generateMoveList(moveList, white, true);
+	ai.chessBoard.generateMoveList<ALL>(moveList, white);
 	hashKey = ai.chessBoard.hashKey;
 	assert(find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == WCASTLE;   }) != moveList.end()
 		&& find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == WCASTLE_2; }) != moveList.end());
@@ -276,7 +276,7 @@ void UnitTest::testCastling()
 
 	moveList.clear();
 	ai.chessBoard.setupBoard("r3k2r/pppppppp/8888/PPPPPPPP/R3K2R w KkQq - 1 0");
-	ai.chessBoard.generateMoveList(moveList, white, true);
+	ai.chessBoard.generateMoveList<ALL>(moveList, white);
 	assert(ai.chessBoard.castlingRights == 0b1111);
 	auto rookMove = getMove(moveList, 0, 1);
 	assert(rookMove != moveList.end());
@@ -287,7 +287,7 @@ void UnitTest::testCastling()
 	assert(ai.chessBoard.castlingRights == 0b1011);
 
 	moveList.clear();
-	ai.chessBoard.generateMoveList(moveList, white, true);
+	ai.chessBoard.generateMoveList<ALL>(moveList, white);
 	assert(ai.chessBoard.castlingRights == 0b1011);
 	rookMove = getMove(moveList, 1, 0);
 	assert(rookMove != moveList.end());
@@ -320,7 +320,7 @@ void UnitTest::testEnpassent()
 		ai.chessBoard.updateAllAttacks();
 
 		movelist.clear();
-		ai.chessBoard.generateMoveList(movelist, black, true);
+		ai.chessBoard.generateMoveList<ALL>(movelist, black);
 		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
 		assert(ep != movelist.end());
 		assert(ep->from == h4 + pos && ep->to == 15 + pos && ep->pieces == bp);
@@ -342,7 +342,7 @@ void UnitTest::testEnpassent()
 		ai.chessBoard.updateAllAttacks();
 
 		movelist.clear();
-		ai.chessBoard.generateMoveList(movelist, black, true);
+		ai.chessBoard.generateMoveList<ALL>(movelist, black);
 		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
 		assert(ep != movelist.end());
 		assert(ep->from == h4 + pos && ep->to == 17+pos && ep->pieces == bp);
@@ -366,7 +366,7 @@ void UnitTest::testEnpassent()
 		ai.chessBoard.updateAllAttacks();
 
 		movelist.clear();
-		ai.chessBoard.generateMoveList(movelist, white, true);
+		ai.chessBoard.generateMoveList<ALL>(movelist, white);
 		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
 		assert(ep != movelist.end());
 		assert(ep->from == h5 + pos && ep->to == g6 + pos && ep->pieces == wp);
@@ -388,7 +388,7 @@ void UnitTest::testEnpassent()
 		ai.chessBoard.updateAllAttacks();
 
 		movelist.clear();
-		ai.chessBoard.generateMoveList(movelist, white, true);
+		ai.chessBoard.generateMoveList<ALL>(movelist, white);
 		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
 		assert(ep != movelist.end());
 		assert(ep->from == h5 + pos && ep->to == a5 + pos && ep->pieces == wp);
@@ -430,8 +430,8 @@ void UnitTest::testProm()
 	ai.chessBoard.updateAllAttacks();
 	ai.chessBoard.print();
 	MoveList whiteMoves, blackMoves;
-	ai.chessBoard.generateMoveList(whiteMoves, white, true);
-	ai.chessBoard.generateMoveList(blackMoves, black, true);
+	ai.chessBoard.generateMoveList<ALL>(whiteMoves, white);
+	ai.chessBoard.generateMoveList<ALL>(blackMoves, black);
 	assert(count_if(whiteMoves.begin(), whiteMoves.end(), [](Move& move) {return move.flags == PROMOTION; })   == 8);
 	assert(count_if(whiteMoves.begin(), whiteMoves.end(), [](Move& move) {return move.flags == C_PROMOTION; }) == 4);
 	assert(count_if(blackMoves.begin(), blackMoves.end(), [](Move& move) {return move.flags == PROMOTION; })   == 8);
@@ -457,7 +457,7 @@ void UnitTest::specialTest()
 	ai.chessBoard.print();
 	MoveList movelist;
 
-	ai.chessBoard.generateMoveList(movelist, white, true);
+	ai.chessBoard.generateMoveList<ALL>(movelist, white);
 
 	exit(0);
 }
@@ -633,7 +633,7 @@ void Benchmark::benchmarkMoveGeneration()
 
 	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
 	for (int i = 0; i < testSize; i++) {
-		samplePlayer.chessBoard.generateMoveList(moves, black, true);
+		samplePlayer.chessBoard.generateMoveList<ALL>(moves, black);
 		moves.clear();
 	}
 	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
@@ -661,7 +661,7 @@ void Benchmark::benchmarkMovemaking()
 
 	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5 w - - 1 0", black);
 	MoveList moves;
-	samplePlayer.chessBoard.generateMoveList(moves, black, true);
+	samplePlayer.chessBoard.generateMoveList<ALL>(moves, black);
 	auto& boardref = samplePlayer.chessBoard;
 	size_t numOfMoves = moves.size();
 	int testsize = (int)6e6;
@@ -759,7 +759,7 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 	MoveList movelist;
 	movelist.reserve(20);
 	testBoard.updateAllAttacks();
-	testBoard.generateMoveList(movelist, side, true);
+	testBoard.generateMoveList<ALL>(movelist, side);
 	// Store pairs of root moves and number of possible moves after them
 	bool checkmate = true;
 	bool checkOnThisDepth = testBoard.wasInCheck;
@@ -985,7 +985,7 @@ Move DataBaseTest::distributeNegaMax(color forPlayer)
 	U64 pinnedOnThisDepth = testBoard.pinned;
 
 	if (targetDepth == 1) {
-		testBoard.generateMoveList(moveList, forPlayer, true);
+		testBoard.generateMoveList<ALL>(moveList, forPlayer);
 
 		checkOnThisDepth = testBoard.wasInCheck;
 		pinnedOnThisDepth = testBoard.pinned;
@@ -1056,7 +1056,7 @@ int DataBaseTest::NegaMax(int alpha, int beta, int depth, color aiColor, color s
 	MoveList movelist;
 	movelist.reserve(32);
 	testBoard.updateAllAttacks();
-	testBoard.generateMoveList(movelist, side, true);
+	testBoard.generateMoveList<ALL>(movelist, side);
 	//stable_sort(movelist.begin(), movelist.end(), [&, this](const Move& m1, const Move& m2) { // Sort moves
 	//	testBoard.makeMove<HASH_ONLY>(m1, side);
 	//	int value1 = transposition_hash.getValue(testBoard.hashKey);

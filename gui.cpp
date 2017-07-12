@@ -191,7 +191,7 @@ bool Gui::isUserMoveValid_completeMoveInfo(Move& inputMove)
 	// -> Generates all possible moves and tries to find a match.
 
 	MoveList possibleMoves;
-	chessBoard.generateMoveList(possibleMoves, humanColor, true);
+	chessBoard.generateMoveList<ALL>(possibleMoves, humanColor);
 
 	MoveList::iterator matchingMove = find_if(possibleMoves.begin(), possibleMoves.end(), [&](const Move& pmove) {
 		U8 pflags = pmove.flags & 0xF;
