@@ -55,7 +55,7 @@ public:
 	PVTable();
 	PVTable(size_t hashSize);
 	void addPVMove(const U64& key, const Move& best);
-	PVEntry getEntry(const U64& key);
+	PVEntry& operator[](const U64& key);
 };
 
 #endif
