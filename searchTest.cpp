@@ -16,7 +16,7 @@ void SearchTest::test()
 	//string FEN = "4B3/5p2/qpN4K/r2R1Q2/1Pk5/4P3/1R6/1Nnr3b w - - 1 0"; // Mate in two
 	//string FEN = "r4r1k/1bpq1p1n/p1np4/1p1Bb1BQ/P7/6R1/1P3PPP/1N2R1K1 w - - 1 0"; // Mate in 8
 
-	//string FEN = "*";
+	string FEN = "*";
 	//string FEN = "2r2k1r/pB3pp1/4p3/Q1p1P3/3P4/2P1q1p1/PP3RP1/5RK1 w - - 1 0"; // Mate in 3
 
 	//string FEN = "8/pk1B4/p7/2K1p3/8/8/4Q3/8 w - - 1 0"; // Bh3 a5 Qa6 Kxa6 Bc8#
@@ -29,8 +29,8 @@ void SearchTest::test()
 	//string FEN = "rk6/N4ppp/Qp2q3/3p4/8/8/5PPP/2R3K1 w - - 1 0"; // Rc1c8  qx{R}e6c8  Qx{p}a6b6  qc8b7  Na7c6  kb8c8  Qb6d8
 
 	// https://www.sparkchess.com/chess-puzzles.html
-	// string FEN = "4r1k1/pQ3pp1/7p/4q3/4r3/P7/1P2nPPP/2BR1R1K b - - 1 0";
-	string FEN = "4Rnk1/pr3ppp/1p3q2/5NQ1/2p5/8/P4PPP/6K1 w - - 1 0"; // Nf5h6  qx{N}f6h6  Rx{n}e8f8  kx{R}g8f8  Qg5d8
+	//string FEN = "4r1k1/pQ3pp1/7p/4q3/4r3/P7/1P2nPPP/2BR1R1K b - - 1 0";
+	//string FEN = "4Rnk1/pr3ppp/1p3q2/5NQ1/2p5/8/P4PPP/6K1 w - - 1 0"; // Nf5h6  qx{N}f6h6  Rx{n}e8f8  kx{R}g8f8  Qg5d8
 	//string FEN = "4k2r/1R3R2/p3p1pp/4b3/1BnNr3/8/P1P5/5K2 w - - 1 0";
 	//string FEN = "4r3/pbpn2n1/1p1prp1k/8/2PP2PB/P5N1/2B2R1P/R5K1 w - - 1 0"; // Mate in 2
 	// string FEN = "7r/p3ppk1/3p4/2p1P1Kp/2Pb4/3P1QPq/PP5P/R6R b - - 0 1";
@@ -38,7 +38,7 @@ void SearchTest::test()
 	board.setupBoard(FEN);
 	board.print();
 
-	aiColor = white;
+	aiColor = black;
 	auto bestMove = getBestMove(aiColor);
 }
 
@@ -48,7 +48,7 @@ Move SearchTest::getBestMove(color forPlayer)
 	Timer timer, totalTimer;
 
 	totalTimer.start();
-	for (targetDepth = 1; targetDepth < 8; targetDepth++) {
+	for (targetDepth = 1; targetDepth < 9; targetDepth++) {
 		timer.start();
 		auto oldHash = board.hashKey;
 		NegaMax(-oo, oo, targetDepth, 0, forPlayer);
@@ -132,9 +132,9 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color side)
 		//return board.evaluate(side);
 		return QuiescenceSearch(alpha, beta, 0, side);
 	}
-	// Check if repetition
 
 	MoveList movelist;
+	board.updateAllAttacks();
 	board.generateMoveList<ALL>(movelist, side);
 
 	bool checkedOnThisDepth = board.wasInCheck;
@@ -144,20 +144,19 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color side)
 	Move bestMove;
 
 	for (const auto& move : movelist) {
-		//nextMove(movelist, movelist[moveIdx], side);
 		board.makeMove<FULL>(move, side);
-		board.updateAllAttacks();
+		//board.updateAllAttacks();
 
 		if (board.isKingLeftInCheck(side, move, checkedOnThisDepth, pinnedOnThisDepth)) {
 			board.unMakeMove<FULL>(move, side);
-			board.updateAllAttacks();
+			//board.updateAllAttacks();
 			continue;
 		}
 		legalMoves++;
 		score = -NegaMax(-beta, -alpha, depth - 1, ply + 1, !side);
 
 		board.unMakeMove<FULL>(move, side);
-		board.updateAllAttacks(); // Maybe not needed
+		//board.updateAllAttacks(); // Maybe not needed
 		if (score > alpha) {
 			if (score >= beta) {
 				return beta; // Beta Cutoff
@@ -168,6 +167,7 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color side)
 	}
 	if (legalMoves == 0) {
 		// No legal moves found. 
+		board.updateAllAttacks();
 		if ((side == white && board.pieces[wk] & board.blackAtt)
 			|| (side == black && board.pieces[bk] & board.whiteAtt)) {
 			// Checkmate, end of game path
@@ -212,6 +212,7 @@ int SearchTest::QuiescenceSearch(int alpha, int beta, int ply, color side)
 		alpha = standingPat;
 
 	MoveList mlist;
+	board.updateAllAttacks();
 	board.generateMoveList<CAPTURES_ONLY>(mlist, side);
 
 	// MVA-LLV scheme
@@ -226,16 +227,13 @@ int SearchTest::QuiescenceSearch(int alpha, int beta, int ply, color side)
 
 	for (const auto& capture : mlist) {
 		board.makeMove<FULL>(capture, side);
-		board.updateAllAttacks();
 		if (board.isKingLeftInCheck(side, capture, checkOnThisDepth, pinnedOnThisDepth)) {
 			board.unMakeMove<FULL>(capture, side);
-			board.updateAllAttacks();
 			continue;
 		}
 
 		int score = -QuiescenceSearch(-beta, -alpha, ply + 1, !side);
 		board.unMakeMove<FULL>(capture, side);
-		board.updateAllAttacks();
 		if (score >= beta)
 			return beta;
 		if (score > alpha)
