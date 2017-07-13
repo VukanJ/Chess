@@ -34,7 +34,7 @@ void SearchTest::test()
 	//string FEN = "4k2r/1R3R2/p3p1pp/4b3/1BnNr3/8/P1P5/5K2 w - - 1 0";
 	//string FEN = "4r3/pbpn2n1/1p1prp1k/8/2PP2PB/P5N1/2B2R1P/R5K1 w - - 1 0"; // Mate in 2
 	// string FEN = "7r/p3ppk1/3p4/2p1P1Kp/2Pb4/3P1QPq/PP5P/R6R b - - 0 1";
-	
+
 	board.setupBoard(FEN);
 	board.print();
 
@@ -86,7 +86,7 @@ void SearchTest::nextMove(MoveList& mlist, const MoveList::iterator& nextMove, c
 	for (auto move = nextMove; move != mlist.end(); move++) {
 		board.makeMove<HASH>(*move, side);
 		const auto& entry =transpositionHash.getEntry(board.hashKey);
-	
+
 		if (entry.search_depth != -1 && (side == black ? -1 : 1) *entry.value > maxValue) {
 			maxValue = entry.value;
 			maxMove = move;
@@ -166,7 +166,7 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color side)
 		}
 	}
 	if (legalMoves == 0) {
-		// No legal moves found. 
+		// No legal moves found.
 		board.updateAllAttacks();
 		if ((side == white && board.pieces[wk] & board.blackAtt)
 			|| (side == black && board.pieces[bk] & board.whiteAtt)) {
@@ -206,7 +206,7 @@ int SearchTest::QuiescenceSearch(int alpha, int beta, int ply, color side)
 	//if (ply > 2) {
 	//	return standingPat;
 	//}
-	if (standingPat >= beta) 
+	if (standingPat >= beta)
 		return beta;
 	if (alpha < standingPat)
 		alpha = standingPat;
@@ -218,7 +218,7 @@ int SearchTest::QuiescenceSearch(int alpha, int beta, int ply, color side)
 	// MVA-LLV scheme
 	negaMaxCnt++;
 	stable_sort(mlist.begin(), mlist.end(), [](const Move& m1, const Move& m2) {
-		return captureScore[m1.movePiece() % 6][m1.targetPiece() % 6] 
+		return captureScore[m1.movePiece() % 6][m1.targetPiece() % 6]
 			 > captureScore[m2.movePiece() % 6][m2.targetPiece() % 6];
 	});
 
@@ -259,7 +259,7 @@ template<color side> bool SearchTest::isCheckmate()
 {
 	// TODO: makemove<POS> does not produce same results in this function as makemove<FULL>
 	MoveList ml;
-	board.generateMoveList(ml, side, true);
+	board.generateMoveList<ALL>(ml, side);
 	bool checkOnThisDepth = board.wasInCheck;
 	U64 pinnedOnThisDepth = board.pinned;
 
