@@ -27,7 +27,7 @@ bool ZobristHash::isRepetition(const U64& key, int depth) const
 {
 	// Stored node was found again at greater depth => Repetition
 	auto& entry = entries[key % hashSize];
-	return entry.search_depth != -1 && entry.search_depth < depth;
+	return entry.search_depth != -1 && entry.search_depth <= depth;
 }
 
 void ZobristHash::clear()

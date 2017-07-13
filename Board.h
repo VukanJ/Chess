@@ -57,6 +57,7 @@ public:
 	template<makeMoveType mmt> void unMakeMove(const Move&, color side);
 
 	void updateAllAttacks();
+	void updateAllAttacks(const Move&);
 	void updatePinnedPieces(color side);
 	bool isKingInCheck(color kingColor) const;
 	bool isKingLeftInCheck(color KingColor, const Move& lastMove, bool, U64 currentlyPinned);
