@@ -26,13 +26,14 @@ void SearchTest::test()
 
 	// Mate in 4, Albert Becker vs. Eduard Glass 1928
 	// Time: 37s, (+primitive TT) -> 24s, (+TT lookup) -> 9s
-	string FEN = "rk6/N4ppp/Qp2q3/3p4/8/8/5PPP/2R3K1 w - - 1 0"; // Rc1c8  qx{R}e6c8  Qx{p}a6b6  qc8b7  Na7c6  kb8c8  Qb6d8
+	//string FEN = "rk6/N4ppp/Qp2q3/3p4/8/8/5PPP/2R3K1 w - - 1 0"; // Rc1c8  qx{R}e6c8  Qx{p}a6b6  qc8b7  Na7c6  kb8c8  Qb6d8
 
 	// https://www.sparkchess.com/chess-puzzles.html
 	// string FEN = "4r1k1/pQ3pp1/7p/4q3/4r3/P7/1P2nPPP/2BR1R1K b - - 1 0";
-	// string FEN = "4Rnk1/pr3ppp/1p3q2/5NQ1/2p5/8/P4PPP/6K1 w - - 1 0"; // Nf5h6  qx{N}f6h6  Rx{n}e8f8  kx{R}g8f8  Qg5d8
+	string FEN = "4Rnk1/pr3ppp/1p3q2/5NQ1/2p5/8/P4PPP/6K1 w - - 1 0"; // Nf5h6  qx{N}f6h6  Rx{n}e8f8  kx{R}g8f8  Qg5d8
 	//string FEN = "4k2r/1R3R2/p3p1pp/4b3/1BnNr3/8/P1P5/5K2 w - - 1 0";
-	//string FEN = "7r/p3ppk1/3p4/2p1P1Kp/2Pb4/3P1QPq/PP5P/R6R b - - 0 1";
+	//string FEN = "4r3/pbpn2n1/1p1prp1k/8/2PP2PB/P5N1/2B2R1P/R5K1 w - - 1 0"; // Mate in 2
+	// string FEN = "7r/p3ppk1/3p4/2p1P1Kp/2Pb4/3P1QPq/PP5P/R6R b - - 0 1";
 	
 	board.setupBoard(FEN);
 	board.print();
@@ -47,7 +48,7 @@ Move SearchTest::getBestMove(color forPlayer)
 	Timer timer, totalTimer;
 
 	totalTimer.start();
-	for (targetDepth = 1; targetDepth < 9; targetDepth++) {
+	for (targetDepth = 1; targetDepth < 8; targetDepth++) {
 		timer.start();
 		auto oldHash = board.hashKey;
 		NegaMax(-oo, oo, targetDepth, 0, forPlayer);
@@ -60,6 +61,8 @@ Move SearchTest::getBestMove(color forPlayer)
 		cout << "PV: " << '(' << (abs(val) == oo ? (val > 0 ? "oo" : "-oo") : to_string(val)) << ") ";
 		extractPrincipalVariation(board.hashKey, targetDepth, forPlayer);
 		cout << ".\n";
+		cout << negaMaxCnt << " Nodes\n";
+		negaMaxCnt = 0;
 	}
 	board.print();
 	totalTimer.stop();
@@ -77,38 +80,23 @@ void SearchTest::nextMove(MoveList& mlist, const MoveList::iterator& nextMove, c
 
 	//return;
 
-	if (side == white) {
-		int maxValue = -oo;
-		MoveList::iterator maxMove = nextMove;
-		for (auto move = nextMove; move != mlist.end(); move++) {
-			board.makeMove<HASH>(*move, side);
-			const auto& entry = transpositionHash.getEntry(board.hashKey);
-		
-			if (entry.search_depth != -1 && entry.value > maxValue) {
-				maxValue = entry.value;
-				maxMove = move;
-			}
-			board.unMakeMove<HASH>(*move, side);
+	/*
+	int maxValue = -oo;
+	MoveList::iterator maxMove = nextMove;
+	for (auto move = nextMove; move != mlist.end(); move++) {
+		board.makeMove<HASH>(*move, side);
+		const auto& entry =transpositionHash.getEntry(board.hashKey);
+	
+		if (entry.search_depth != -1 && (side == black ? -1 : 1) *entry.value > maxValue) {
+			maxValue = entry.value;
+			maxMove = move;
 		}
-
-		iter_swap(nextMove, maxMove);
+		board.unMakeMove<HASH>(*move, side);
 	}
-	else {
-		int minValue = oo;
-		MoveList::iterator minMove = nextMove;
-		for (auto move = nextMove; move != mlist.end(); move++) {
-			board.makeMove<HASH>(*move, side);
-			const auto& entry = transpositionHash.getEntry(board.hashKey);
 
-			if (entry.value < minValue) {
-				minValue = entry.value;
-				minMove = move;
-			}
-			board.unMakeMove<HASH>(*move, side);
-		}
+	iter_swap(nextMove, maxMove);
+	*/
 
-		iter_swap(nextMove, minMove);
-	}
 
 	// MVV-LVA
 	//for (auto iter = moveList.rend(); iter > MoveList::reverse_iterator(nextMove); iter++) {
@@ -120,6 +108,7 @@ void SearchTest::nextMove(MoveList& mlist, const MoveList::iterator& nextMove, c
 
 int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color side)
 {
+	negaMaxCnt++;
 	int oldAlpha = alpha;
 	auto &entry = transpositionHash.getEntry(board.hashKey);
 
@@ -140,10 +129,8 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color side)
 	}
 
 	if (depth == 0) {
-		if(ply > 2)
-			return QuiescenceSearch(alpha, beta, 0, side);
-		else
-		    return board.evaluate(side);
+		//return board.evaluate(side);
+		return QuiescenceSearch(alpha, beta, 0, side);
 	}
 	// Check if repetition
 
@@ -156,31 +143,32 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color side)
 	int legalMoves = 0, score = 0;
 	Move bestMove;
 
-	for (auto move = movelist.begin(); move != movelist.end(); move++) {
-		board.makeMove<FULL>(*move, side);
+	for (const auto& move : movelist) {
+		//nextMove(movelist, movelist[moveIdx], side);
+		board.makeMove<FULL>(move, side);
 		board.updateAllAttacks();
 
-		if (board.isKingLeftInCheck(side, *move, checkedOnThisDepth, pinnedOnThisDepth)) {
-			board.unMakeMove<FULL>(*move, side);
+		if (board.isKingLeftInCheck(side, move, checkedOnThisDepth, pinnedOnThisDepth)) {
+			board.unMakeMove<FULL>(move, side);
 			board.updateAllAttacks();
 			continue;
 		}
 		legalMoves++;
 		score = -NegaMax(-beta, -alpha, depth - 1, ply + 1, !side);
 
-		board.unMakeMove<FULL>(*move, side);
+		board.unMakeMove<FULL>(move, side);
 		board.updateAllAttacks(); // Maybe not needed
 		if (score > alpha) {
 			if (score >= beta) {
 				return beta; // Beta Cutoff
 			}
 			alpha = score;
-			bestMove = *move;
+			bestMove = move;
 		}
 	}
 	if (legalMoves == 0) {
 		// No legal moves found. 
-		if ((   side == white && board.pieces[wk] & board.blackAtt)
+		if ((side == white && board.pieces[wk] & board.blackAtt)
 			|| (side == black && board.pieces[bk] & board.whiteAtt)) {
 			// Checkmate, end of game path
 			entry.search_depth = depth;
@@ -215,9 +203,9 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color side)
 int SearchTest::QuiescenceSearch(int alpha, int beta, int ply, color side)
 {
 	int standingPat = board.evaluate(side);
-	if (ply > 4) {
-		return standingPat;
-	}
+	//if (ply > 2) {
+	//	return standingPat;
+	//}
 	if (standingPat >= beta) 
 		return beta;
 	if (alpha < standingPat)
@@ -226,24 +214,33 @@ int SearchTest::QuiescenceSearch(int alpha, int beta, int ply, color side)
 	MoveList mlist;
 	board.generateMoveList<CAPTURES_ONLY>(mlist, side);
 
+	// MVA-LLV scheme
+	negaMaxCnt++;
+	stable_sort(mlist.begin(), mlist.end(), [](const Move& m1, const Move& m2) {
+		return captureScore[m1.movePiece() % 6][m1.targetPiece() % 6] 
+			 > captureScore[m2.movePiece() % 6][m2.targetPiece() % 6];
+	});
+
 	bool checkOnThisDepth = board.wasInCheck;
 	U64 pinnedOnThisDepth = board.pinned;
 
 	for (const auto& capture : mlist) {
 		board.makeMove<FULL>(capture, side);
+		board.updateAllAttacks();
 		if (board.isKingLeftInCheck(side, capture, checkOnThisDepth, pinnedOnThisDepth)) {
 			board.unMakeMove<FULL>(capture, side);
+			board.updateAllAttacks();
 			continue;
 		}
 
 		int score = -QuiescenceSearch(-beta, -alpha, ply + 1, !side);
 		board.unMakeMove<FULL>(capture, side);
+		board.updateAllAttacks();
 		if (score >= beta)
 			return beta;
 		if (score > alpha)
 			alpha = score;
 	}
-
 	return alpha;
 }
 
