@@ -5,6 +5,7 @@
 #include <fstream>
 #include <random>
 #include <memory>
+#include <numeric>
 #include <stack>
 #include <climits>
 #include <string>
@@ -110,15 +111,14 @@ private:
 	long evalcnt, negaMaxCnt, storedBoards, hashAccess, moveCnt;
 };
 
-// p n b r q 
-constexpr int valueMapping[6] = {0, 3, 1, 2, 5, 4};
 const vector<vector<int>> captureScore = {
-	//       p    n    b    r    q
-	/* p */ {104, 204, 304, 404, 504},
-	/* n */ {103, 203, 303, 403, 503},
-	/* b */ {102, 202, 302, 402, 502},
-	/* r */ {101, 201, 301, 401, 501},
-	/* q */ {100, 200, 300, 400, 500}
+	//       p    r    n    b    k    q
+	/* p */ {104, 404, 204, 304, 0,   504},
+	/* r */ {101, 401, 201, 301, 0,   501},
+	/* n */ {103, 403, 203, 303, 0,   503},
+	/* b */ {102, 402, 202, 302, 0,   502},
+	/* k */ {0, 0, 0, 0, 0, 0},
+	/* q */ {100, 400, 200, 300, 0, 500}
 };
 
 class SearchTest
