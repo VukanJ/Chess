@@ -137,15 +137,15 @@ void inline Board::pawnMoves(MoveList& moveList) const
 				}
 			}
 			// Enpassent
-			if (b_enpassent) {
-				// There surely exists an enpassent move
-				if ((bit_at(24 + b_enpassent) & pieces[bp]) & (_row << 24)) {
+			if (b_enpassant) {
+				// There surely exists an enpassant move
+				if ((bit_at(24 + b_enpassant) & pieces[bp]) & (_row << 24)) {
 					// black pawn right of ep square
-					moveList.emplace_back(24 + b_enpassent, 15 + b_enpassent, ENPASSENT, bp);
+					moveList.emplace_back(24 + b_enpassant, 15 + b_enpassant, ENPASSANT, bp);
 				}
-				if (bit_at(22 + b_enpassent) & pieces[bp] & (_row << 24)) {
+				if (bit_at(22 + b_enpassant) & pieces[bp] & (_row << 24)) {
 					// black pawn left of ep square
-					moveList.emplace_back(22 + b_enpassent, 15 + b_enpassent, ENPASSENT, bp);
+					moveList.emplace_back(22 + b_enpassant, 15 + b_enpassant, ENPASSANT, bp);
 				}
 			}
 		}
@@ -193,15 +193,15 @@ void inline Board::pawnMoves(MoveList& moveList) const
 					}
 				}
 			}
-			if (w_enpassent) {
-				// There surely exists an enpassent move
-				if ((bit_at(30 + w_enpassent) & pieces[wp]) & (_row << 32)) {
+			if (w_enpassant) {
+				// There surely exists an enpassant move
+				if ((bit_at(30 + w_enpassant) & pieces[wp]) & (_row << 32)) {
 					// white pawn right of ep square
-					moveList.emplace_back(30 + w_enpassent, 39 + w_enpassent, ENPASSENT, wp);
+					moveList.emplace_back(30 + w_enpassant, 39 + w_enpassant, ENPASSANT, wp);
 				 }
-				 if (bit_at(32 + w_enpassent) & pieces[wp] & (_row << 32)) {
+				 if (bit_at(32 + w_enpassant) & pieces[wp] & (_row << 32)) {
 					// white pawn left of ep square
-					moveList.emplace_back(32 + w_enpassent, 39 + w_enpassent, ENPASSENT, wp);
+					moveList.emplace_back(32 + w_enpassant, 39 + w_enpassant, ENPASSANT, wp);
 				}
 			}
 		}

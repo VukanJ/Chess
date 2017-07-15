@@ -51,14 +51,14 @@ void Board::makeMove(const Move& move, color side)
 				: (whitePos = ((whitePos ^ bit_at(move.from)) | bit_at(move.to)));
 		}
 		if (mmt == FULL) {
-			// The other player can then sometimes perform enpassent (if other pawn is available)
+			// The other player can then sometimes perform enpassant (if other pawn is available)
 			if (move.pieces == bp && (0x5ull << (move.to - 1)) & (_row << 32) & pieces[wp]) {
-				w_enpassent = (move.from % 8) + 1;
-				b_enpassent = 0; // Maybe unnecessary
+				w_enpassant = (move.from % 8) + 1;
+				b_enpassant = 0; // Maybe unnecessary
 			}
 			else if (move.pieces == wp && (0x5ull << (move.to - 1)) & (_row << 24) & pieces[bp]) {
-				b_enpassent = (move.from % 8) + 1;
-				w_enpassent = 0;
+				b_enpassant = (move.from % 8) + 1;
+				w_enpassant = 0;
 			}
 		}
 		break;
@@ -167,7 +167,7 @@ void Board::makeMove(const Move& move, color side)
 			whitePos |= 0x30ull;
 		}
 		break;
-	case ENPASSENT:
+	case ENPASSANT:
 		if (move.pieces == bp) {
 			if (mmt & HASH) {
 				// Update hashkey
@@ -185,8 +185,8 @@ void Board::makeMove(const Move& move, color side)
 				whitePos ^= bit_at(move.to + 8);
 			}
 			if (mmt == FULL) {
-				// No more enpassent squares after enpassent
-				b_enpassent = 0;
+				// No more enpassant squares after enpassant
+				b_enpassant = 0;
 			}
 		}
 		else {
@@ -204,7 +204,7 @@ void Board::makeMove(const Move& move, color side)
 				blackPos ^= bit_at(move.to - 8);
 			}
 			if (mmt == FULL) {
-				w_enpassent = 0;
+				w_enpassant = 0;
 			}
 		}
 		break;
@@ -215,9 +215,9 @@ void Board::makeMove(const Move& move, color side)
 	}
 
 	if (mmt == FULL) {
-		// No enpassent squares after any other move than double pawn push
+		// No enpassant squares after any other move than double pawn push
 		if (move.mtype() != PAWN2) {
-			b_enpassent = w_enpassent = 0;
+			b_enpassant = w_enpassant = 0;
 		}
 		// Check if castling still permitted
 		U8 cast = move.castlingRights();
@@ -281,7 +281,7 @@ void Board::unMakeMove(const Move& move, color side)
 			(side == black ? blackPos : whitePos) ^= bit_at(move.from) | bit_at(move.to);
 		}
 		if (mmt == FULL) {
-			b_enpassent = w_enpassent = 0x0;
+			b_enpassant = w_enpassant = 0x0;
 		}
 		break;
 	case PROMOTION:
@@ -396,7 +396,7 @@ void Board::unMakeMove(const Move& move, color side)
 			castlingRights = move.oldCastlingRights();
 		}
 		break;
-	case ENPASSENT:
+	case ENPASSANT:
 		if (move.movePiece() == bp) {
 			if (mmt & HASH) {
 				// Update hashkey
@@ -414,7 +414,7 @@ void Board::unMakeMove(const Move& move, color side)
 				whitePos |= bit_at(move.to + 8);
 			}
 			if (mmt == FULL) {
-				b_enpassent = (move.to % 8) + 1;
+				b_enpassant = (move.to % 8) + 1;
 			}
 		}
 		else {
@@ -433,7 +433,7 @@ void Board::unMakeMove(const Move& move, color side)
 				blackPos |= bit_at(move.to - 8);
 			}
 			if (mmt == FULL) {
-				w_enpassent = (move.to % 8) + 1;
+				w_enpassant = (move.to % 8) + 1;
 			}
 		}
 		break;

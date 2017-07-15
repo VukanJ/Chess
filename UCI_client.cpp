@@ -95,16 +95,32 @@ void UCIclient::parsePosition(vector<string>& inputList)
 	if (inputList.empty()) {
 		return;
 	}
-	if (*inputList.begin() == "fen") {
+	if (*inputList.begin() == "startpos") {
+		inputList.erase(inputList.begin()); // "startpos"
+		// Standard starting position
+		ai.setFen("*");
+	}
+	else if (*inputList.begin() == "fen") {
+		// Custom initial position
 		inputList.erase(inputList.begin()); // "fen"
-		if (inputList.size() != 6) {
+		if (inputList.size() < 6) {
 			cerr << "Invalid fen!\n";
 			return;
 		}
 		string FEN;
 		for (int i = 0; i < 6; ++i) 
 			FEN += inputList[i] + ' ';
+		inputList.erase(inputList.begin(), inputList.begin() + 6);
 		ai.setFen(FEN);
 		ai.printAscii();
+	}
+	if (inputList.empty()) { 
+		// ready
+		return; 
+	}
+	else if (inputList[0] == "moves") {
+		inputList.erase(inputList.begin()); // "moves"
+		for (auto& l : inputList) cout << l << endl;
+		// Play given moves
 	}
 }

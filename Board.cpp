@@ -2,7 +2,7 @@
 
 Board::Board()
 	: whitePos(0x0), blackPos(0x0), whiteAtt(0x0), blackAtt(0x0), hashKey(0x0),
-	castlingRights(0x0), b_enpassent(0x0), w_enpassent(0x0), pieces(vector<U64>(12, 0x0)),
+	castlingRights(0x0), b_enpassant(0x0), w_enpassant(0x0), pieces(vector<U64>(12, 0x0)),
 	attacks(vector<U64>(12, 0x0)), wpMove(0x0), bpMove(0x0), wpDanger(0x0), bpDanger(0x0),
 	allPos(0x0), pinned(0x0), wasInCheck(false){}
 
@@ -17,11 +17,11 @@ void Board::setupBoard(string FEN)
 	for (auto& p : pieces)  p = 0x0;
 	for (auto& a : attacks) a = 0x0;
 	blackPos = whitePos
-		 = bpMove = wpMove = b_enpassent = w_enpassent = castlingRights = 0x0;
+		 = bpMove = wpMove = b_enpassant = w_enpassant = castlingRights = 0x0;
 	wasInCheck = false;
 
 	// Sets up Board according to FEN
-	// FEN = [position(white's perspective) sideToMove castlingrights enpassentSquares NofHalfMoves MoveNumber]
+	// FEN = [position(white's perspective) sideToMove castlingrights enpassantSquares NofHalfMoves MoveNumber]
 	if (FEN[0] == '*') { // Standard starting position
 		for (int i = 0; i < 12; i++)
 			pieces[i] = standardPosition[i];
@@ -476,7 +476,7 @@ void Board::print() const
 	cout << ' ' << string(17, (char)(219)) << '\n';
 	cout << "  a b c d e f g h\n";
 #else
-	auto repChar = [](int c) {for (int i = 0; i < c; i++)cout << "\u2588"; };
+	auto repChar = [](int c) {for (int i = 0; i < c; i++) cout << "\u2588"; };
 	repChar(10); cout << '\n';
 	for (auto r : asciiBoard) {
 		cout << "\u2588";

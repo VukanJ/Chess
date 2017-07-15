@@ -14,7 +14,7 @@ enum moveType {
 	PAWN2,       // Double pawn push
 	PROMOTION,   // Pawn promotion
 	C_PROMOTION, // Capture and promotion
-	ENPASSENT,   // Enpassent
+	ENPASSANT,   // Enpassent
 	WCASTLE,     // White castle o-o
 	WCASTLE_2,   // White castle o-o-o
 	BCASTLE,     // Black castle o-o
@@ -73,11 +73,11 @@ static string shortNotation(const Move& move)
 {
 	// returns string with mainly from to square information
 	switch (move.mtype()) {
-	case BCASTLE:   return "o-o";
-	case WCASTLE:   return "O-O";
-	case BCASTLE_2: return "o-o-o";
-	case WCASTLE_2: return "O-O-O";
-	case ENPASSENT: return "e.p.";
+	case BCASTLE:   return "e8g8";
+	case WCASTLE:   return "e1g1";
+	case BCASTLE_2: return "e8c8";
+	case WCASTLE_2: return "e1c1";
+	case ENPASSANT: return "e.p.";
 	}
 	if (move.flags == 255) return "_voidMove_";
 	string moveStr = squareNames[move.from] + squareNames[move.to];

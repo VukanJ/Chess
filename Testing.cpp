@@ -150,7 +150,7 @@ void UnitTest::testGenerationAlgorithms()
 	testCastling();
 	cout << "Testing pawn promotion...\n";
 	//testProm();
-	cout << "Testing enpassent...\n";
+	cout << "Testing enpassant...\n";
 	testEnpassent();
 }
 
@@ -300,17 +300,17 @@ void UnitTest::testCastling()
 
 void UnitTest::testEnpassent()
 {
-	// Test enpassent move system
+	// Test enpassant move system
 	AI ai("4k3/pppppppp8888PPPPPPPP/4K3 w - - 1 0", white, 10);
 	MoveList movelist;
 	ai.board.updateAllAttacks();
 
 	auto hashKey = ai.board.hashKey;
 
-	// Test all possible enpassent moves for black
+	// Test all possible enpassant moves for black
 	Move pawn2;            // pawn that is captured
-	Move otherpawn;        // pawn, that performs enpassent
-	MoveList::iterator ep; // enpassent
+	Move otherpawn;        // pawn, that performs enpassant
+	MoveList::iterator ep; // enpassant
 	for (int pos = 1; pos < 8; ++pos) {
 		otherpawn = Move(h7 + pos, h4 + pos, MOVE, bp);
 		pawn2 = Move(7 + pos, 23 + pos, PAWN2, wp);
@@ -321,7 +321,7 @@ void UnitTest::testEnpassent()
 
 		movelist.clear();
 		ai.board.generateMoveList<ALL>(movelist, black);
-		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
+		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSANT; });
 		assert(ep != movelist.end());
 		assert(ep->from == h4 + pos && ep->to == 15 + pos && ep->pieces == bp);
 		ai.board.makeMove<FULL>(*ep, black);
@@ -343,7 +343,7 @@ void UnitTest::testEnpassent()
 
 		movelist.clear();
 		ai.board.generateMoveList<ALL>(movelist, black);
-		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
+		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSANT; });
 		assert(ep != movelist.end());
 		assert(ep->from == h4 + pos && ep->to == 17+pos && ep->pieces == bp);
 
@@ -367,7 +367,7 @@ void UnitTest::testEnpassent()
 
 		movelist.clear();
 		ai.board.generateMoveList<ALL>(movelist, white);
-		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
+		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSANT; });
 		assert(ep != movelist.end());
 		assert(ep->from == h5 + pos && ep->to == g6 + pos && ep->pieces == wp);
 		ai.board.makeMove<FULL>(*ep,   white);
@@ -389,7 +389,7 @@ void UnitTest::testEnpassent()
 
 		movelist.clear();
 		ai.board.generateMoveList<ALL>(movelist, white);
-		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
+		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSANT; });
 		assert(ep != movelist.end());
 		assert(ep->from == h5 + pos && ep->to == a5 + pos && ep->pieces == wp);
 		ai.board.makeMove<FULL>(*ep,   white);
@@ -409,19 +409,19 @@ void UnitTest::testEnpassent()
 	pawn2 = Move(c2, c5, MOVE, wp);
 	ai.board.makeMove<FULL>(pawn2, white);
 	ai.board.print();
-	cout << (int)ai.board.w_enpassent << endl;
+	cout << (int)ai.board.w_enpassant << endl;
 	ai.board.makeMove<FULL>(m1, black);
 	ai.board.print();
-	cout << (int)ai.board.w_enpassent << endl;
+	cout << (int)ai.board.w_enpassant << endl;
 	ai.board.makeMove<FULL>(dummy, white);
 	ai.board.print();
-	cout << (int)ai.board.w_enpassent << endl;
+	cout << (int)ai.board.w_enpassant << endl;
 	ai.board.makeMove<FULL>(m2, black);
 	ai.board.print();
-	cout << (int)ai.board.w_enpassent << endl;
+	cout << (int)ai.board.w_enpassant << endl;
 	ai.board.unMakeMove<FULL>(m2, black);
 	ai.board.print();
-	cout << (int)ai.board.w_enpassent << endl;
+	cout << (int)ai.board.w_enpassant << endl;
 }
 
 void UnitTest::testProm()
@@ -777,7 +777,7 @@ void Benchmark::perft(int depth, const int targetDepth, color side)
 				continue;
 			}
 
-			if (move.flags == ENPASSENT && depth == 1) perftEPCount++;
+			if (move.flags == ENPASSANT && depth == 1) perftEPCount++;
 
 			checkmate = false; // Moves were found
 			perft(depth - 1, targetDepth, static_cast<color>(!side));

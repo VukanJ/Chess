@@ -67,8 +67,8 @@ public:
 	// Raw data: (public for easy access)
 	vector<U64> pieces, attacks;
 	U8 castlingRights, // Castling rights
-		b_enpassent,     // Possible e.p. squares for black
-		w_enpassent;     // Possible e.p. squares for white
+		b_enpassant,     // Possible e.p. squares for black
+		w_enpassant;     // Possible e.p. squares for white
 
 	U64 wpMove, bpMove,             // Squares pawns can move to (quietly)
 		wpDanger, bpDanger,         // Empty squares, that are attacked by pawns
