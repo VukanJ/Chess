@@ -1,6 +1,6 @@
 #include "gui.h"
 
-Gui::Gui(AI& _ai, color aiColor) : chessBoard(_ai.chessBoard)
+Gui::Gui(AI& _ai, color aiColor) : chessBoard(_ai.board)
 {
 	humanColor = aiColor == black ? white : black;
 	drawOptions = 0x0;

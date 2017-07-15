@@ -5,9 +5,8 @@ AI::AI(string FEN, color computerColor)
 {
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
-	chessBoard = Board(FEN);
-	transposition_hash = ZobristHash(static_cast<size_t>(1e7));
-	//debug();
+	board.setupBoard(FEN);
+	transpositionHash = ZobristHash(static_cast<size_t>(1e7));
 }
 
 AI::AI(string FEN, color computerColor, uint hashSize)
@@ -15,14 +14,13 @@ AI::AI(string FEN, color computerColor, uint hashSize)
 {
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
-	chessBoard = Board(FEN);
-	transposition_hash = ZobristHash(hashSize);
-	//debug();
+	board.setupBoard(FEN);
+	transpositionHash = ZobristHash(hashSize);
 }
 
 void AI::printBoard()
 {
-	chessBoard.print();
+	board.print();
 }
 
 void AI::bindGui(Gui* guiPtr)
@@ -30,11 +28,12 @@ void AI::bindGui(Gui* guiPtr)
 	gui = guiPtr;
 }
 
+/*
 string AI::boardToString() const
 {
 	string board = string(64, '_');
 	int c = 0;
-	for (auto p : chessBoard.pieces) {
+	for (auto p : board.pieces) {
 		for_bits(pos, p) {
 			board[63 - pos] = names[c];
 		}
@@ -47,53 +46,157 @@ void AI::writeToHistory(const Move& move)
 {
 	gameHistory.push_back(pair<string, Move>(boardToString(), move));
 }
+*/
 
 void AI::printDebug(string showPieces)
 {
-	chessBoard.print();
+	board.print();
 	for (auto p : showPieces){
 		auto drawPiece = getPieceIndex(p);
 		///printBitboard(chessBoard.pieces[drawPiece]);
 		///printBitboard(chessBoard.attacks[drawPiece]);
-		if (chessBoard.pieces[drawPiece])
-			printBitboardFigAttack(chessBoard.pieces[drawPiece], chessBoard.attacks[drawPiece], p);
+		if (board.pieces[drawPiece])
+			printBitboardFigAttack(board.pieces[drawPiece], board.attacks[drawPiece], p);
 	}
 }
 
-void AI::Play(sf::RenderWindow& window)
+int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 {
+	int oldAlpha = alpha;
+	auto &entry = transpositionHash.getEntry(board.hashKey);
 
+	// Check if move was already evaluated
+	if (entry.search_depth >= depth || entry.terminal == 1) {
+		if (entry.flags & EXACT_VALUE) {
+			return entry.value;
+		}
+		else if (entry.flags & LOWER_BOUND) {
+			alpha = max(alpha, entry.value);
+		}
+		else if (entry.flags & UPPER_BOUND) {
+			beta = min(beta, entry.value);
+		}
+		if (alpha >= beta) {
+			return entry.value;
+		}
+	}
+
+	if (depth == 0) {
+		board.updateAllAttacks();
+		//return board.evaluate(side);
+		return QuiescenceSearch(alpha, beta, 0, side);
+	}
+
+	MoveList movelist;
+	board.updateAllAttacks();
+	board.generateMoveList<ALL>(movelist, side);
+
+	bool checkedOnThisDepth = board.wasInCheck;
+	U64 pinnedOnThisDepth = board.pinned;
+
+	int legalMoves = 0, score = 0;
+	Move bestMove;
+
+	for (const auto& move : movelist) {
+		board.makeMove<FULL>(move, side);
+
+		if (board.isKingLeftInCheck(side, move, checkedOnThisDepth, pinnedOnThisDepth)) {
+			board.unMakeMove<FULL>(move, side);
+			continue;
+		}
+		legalMoves++;
+		score = -NegaMax(-beta, -alpha, depth - 1, ply + 1, !side);
+
+		board.unMakeMove<FULL>(move, side);
+
+		if (score > alpha) {
+			if (score >= beta) {
+				return beta; // Beta Cutoff
+			}
+			alpha = score;
+			bestMove = move;
+		}
+	}
+	if (legalMoves == 0) {
+		// No legal moves found.
+		board.updateAllAttacks();
+		if ((side == white && board.pieces[wk] & board.blackAtt)
+			|| (side == black && board.pieces[bk] & board.whiteAtt)) {
+			// Checkmate, end of game path
+			entry.search_depth = depth;
+			entry.terminal = true;
+			score = -oo + ply;
+			return score;
+		}
+		else {
+			// Stalemate, end of game path
+			entry.search_depth = depth;
+			entry.terminal = true;
+			score = 0;
+			return 0;
+		}
+	}
+	if (alpha > oldAlpha) {
+		// Better move found
+		pvTable.addPVMove(board.hashKey, bestMove);
+		entry.value = alpha;
+		entry.search_depth = depth;
+	}
+	if (alpha < oldAlpha) {
+		entry.flags = UPPER_BOUND;
+	}
+	else if (alpha >= beta)
+		entry.flags = LOWER_BOUND;
+	else entry.flags = EXACT_VALUE;
+
+	return alpha;
 }
 
-/*
-void AI::sortMoves(MoveList& list)
+int AI::QuiescenceSearch(int alpha, int beta, int ply, color side)
 {
+	int standingPat = board.evaluate(side);
+	if (standingPat >= beta)
+		return beta;
+	if (alpha < standingPat)
+		alpha = standingPat;
 
+	MoveList mlist;
+	board.updateAllAttacks();
+	board.generateMoveList<CAPTURES_ONLY>(mlist, side);
+
+	// MVA-LLV scheme (search best captures first)
+
+	stable_sort(mlist.begin(), mlist.end(), [](const Move& m1, const Move& m2) {
+		return captureScore[m1.movePiece() % 6][m1.targetPiece() % 6]
+	         > captureScore[m2.movePiece() % 6][m2.targetPiece() % 6];
+	});
+
+	bool checkOnThisDepth = board.wasInCheck;
+	U64 pinnedOnThisDepth = board.pinned;
+
+	for (const auto& capture : mlist) {
+		board.makeMove<FULL>(capture, side);
+		if (board.isKingLeftInCheck(side, capture, checkOnThisDepth, pinnedOnThisDepth)) {
+			board.unMakeMove<FULL>(capture, side);
+			continue;
+		}
+
+		int score = -QuiescenceSearch(-beta, -alpha, ply + 1, !side);
+		board.unMakeMove<FULL>(capture, side);
+		if (score >= beta)
+			return beta;
+		if (score > alpha)
+			alpha = score;
+	}
+	return alpha;
 }
 
-pair<Move, int> AI::distributeNegaMax()
+void AI::extractPrincipalVariation(const U64& key, int maxPrintDepth, color side)
 {
-	
-}
-
-int AI::NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side)
-{
-
-}
-*/
-
-const Board& AI::getBoardRef()
-{
-	return chessBoard;
-}
-
-Board* AI::getBoardPtr()
-{
-	return &chessBoard;
-	//return static_cast<const Board*>(&chessBoard);
-}
-
-void AI::resetGame()
-{
-	gameHistory.clear();
+	const auto& entry = pvTable[key];
+	if (maxPrintDepth == 0 || entry.bestmove.invalid()) return;
+	board.makeMove<FULL>(entry.bestmove, side);
+	cout << moveString(entry.bestmove) << "  ";
+	extractPrincipalVariation(board.hashKey, maxPrintDepth - 1, !side);
+	board.unMakeMove<FULL>(entry.bestmove, side);
 }

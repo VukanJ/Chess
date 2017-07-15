@@ -157,37 +157,37 @@ void UnitTest::testGenerationAlgorithms()
 void UnitTest::testPawnFill()
 {
 	AI ai("8/7p/P7/2P5/8/1p4p1/P2PP2P/8 w - - 1 0", black, 10);
-	assert(ai.chessBoard.attacks[wp] == 0x80200099db0000ull);
-	assert(ai.chessBoard.attacks[bp] == 0x1010000c300ull);
-	ai.chessBoard.setupBoard("8/p2pp2p/1P4P1/8/8/pp4p1/7P/8 w - - 1 0");
-	assert(ai.chessBoard.attacks[wp] == 0xc3000001030000);
-	assert(ai.chessBoard.attacks[bp] == 0xdb990000c300);
+	assert(ai.board.attacks[wp] == 0x80200099db0000ull);
+	assert(ai.board.attacks[bp] == 0x1010000c300ull);
+	ai.board.setupBoard("8/p2pp2p/1P4P1/8/8/pp4p1/7P/8 w - - 1 0");
+	assert(ai.board.attacks[wp] == 0xc3000001030000);
+	assert(ai.board.attacks[bp] == 0xdb990000c300);
 
 	// Is pawn capture oriented correctly
 
-	ai.chessBoard.setupBoard("8/4p3/3N1N2/88888 w - - 1 0");
-	auto hashKey = ai.chessBoard.hashKey;
+	ai.board.setupBoard("8/4p3/3N1N2/88888 w - - 1 0");
+	auto hashKey = ai.board.hashKey;
 	MoveList moveList;
-	ai.chessBoard.generateMoveList<ALL>(moveList, black);
+	ai.board.generateMoveList<ALL>(moveList, black);
 	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == CAPTURE && move.from > move.to; }) == 2);
 	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == MOVE && move.from > move.to; }) == 1);
 	for (auto& m : moveList) {
-		ai.chessBoard.makeMove<FULL>(m, black);
-		ai.chessBoard.unMakeMove<FULL>(m, black);
+		ai.board.makeMove<FULL>(m, black);
+		ai.board.unMakeMove<FULL>(m, black);
 	}
-	assert(hashKey == ai.chessBoard.hashKey);
+	assert(hashKey == ai.board.hashKey);
 
-	ai.chessBoard.setupBoard("8/8/3n1n2/4P3/8888 w - - 1 0");
-	hashKey = ai.chessBoard.hashKey;
+	ai.board.setupBoard("8/8/3n1n2/4P3/8888 w - - 1 0");
+	hashKey = ai.board.hashKey;
 	moveList.clear();
-	ai.chessBoard.generateMoveList<ALL>(moveList, white);
+	ai.board.generateMoveList<ALL>(moveList, white);
 	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == CAPTURE && move.from < move.to; }) == 2);
 	assert(count_if(moveList.begin(), moveList.end(), [](Move& move) {return move.flags == MOVE && move.from < move.to; }) == 1);
 	for (auto& m : moveList) {
-		ai.chessBoard.makeMove<FULL>(m, white);
-		ai.chessBoard.unMakeMove<FULL>(m, white);
+		ai.board.makeMove<FULL>(m, white);
+		ai.board.unMakeMove<FULL>(m, white);
 	}
-	assert(hashKey == ai.chessBoard.hashKey);
+	assert(hashKey == ai.board.hashKey);
 
 }
 
@@ -199,46 +199,46 @@ void UnitTest::testCastling()
 
 	MoveList moveList;
 	AI ai("r3k2r/8/8/8/8/8/8/R3K2R w - - 1 0", black, 10);
-	ai.chessBoard.generateMoveList<ALL>(moveList, black);
+	ai.board.generateMoveList<ALL>(moveList, black);
 
 	assert(!any_of(moveList.begin(), moveList.end(), [](Move& move) {
 		return move.flags == BCASTLE || move.flags == BCASTLE_2; }));
 
-	ai.chessBoard.setupBoard("r3k2r/8/8/8/8/8/8/R3K2R w KkQq - 1 0");
+	ai.board.setupBoard("r3k2r/8/8/8/8/8/8/R3K2R w KkQq - 1 0");
 
 	moveList.clear();
-	ai.chessBoard.generateMoveList<ALL>(moveList, black);
-	auto hashKey = ai.chessBoard.hashKey;
+	ai.board.generateMoveList<ALL>(moveList, black);
+	auto hashKey = ai.board.hashKey;
 	assert(find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == BCASTLE;   }) != moveList.end()
 		&& find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == BCASTLE_2; }) != moveList.end());
-	Move boo(ai.chessBoard.castlingRights, BCASTLE);
-	Move bOO(ai.chessBoard.castlingRights, BCASTLE_2);
-	ai.chessBoard.makeMove<FULL>(boo,   black);
-	assert(ai.chessBoard.castlingRights == 0b1100);
-	ai.chessBoard.unMakeMove<FULL>(boo, black);
-	assert(ai.chessBoard.castlingRights == 0b1111);
-	ai.chessBoard.makeMove<FULL>(bOO,   black);
-	assert(ai.chessBoard.castlingRights == 0b1100);
-	ai.chessBoard.unMakeMove<FULL>(bOO, black);
-	assert(ai.chessBoard.castlingRights == 0b1111);
-	assert(ai.chessBoard.hashKey == hashKey);
+	Move boo(ai.board.castlingRights, BCASTLE);
+	Move bOO(ai.board.castlingRights, BCASTLE_2);
+	ai.board.makeMove<FULL>(boo,   black);
+	assert(ai.board.castlingRights == 0b1100);
+	ai.board.unMakeMove<FULL>(boo, black);
+	assert(ai.board.castlingRights == 0b1111);
+	ai.board.makeMove<FULL>(bOO,   black);
+	assert(ai.board.castlingRights == 0b1100);
+	ai.board.unMakeMove<FULL>(bOO, black);
+	assert(ai.board.castlingRights == 0b1111);
+	assert(ai.board.hashKey == hashKey);
 
 	moveList.clear();
-	ai.chessBoard.generateMoveList<ALL>(moveList, white);
-	hashKey = ai.chessBoard.hashKey;
+	ai.board.generateMoveList<ALL>(moveList, white);
+	hashKey = ai.board.hashKey;
 	assert(find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == WCASTLE;   }) != moveList.end()
 		&& find_if(moveList.begin(), moveList.end(), [](Move& move) { return move.flags == WCASTLE_2; }) != moveList.end());
-	Move woo(ai.chessBoard.castlingRights, WCASTLE);
-	Move wOO(ai.chessBoard.castlingRights, WCASTLE_2);
-	ai.chessBoard.makeMove<FULL>(woo,   white);
-	assert(ai.chessBoard.castlingRights == 0b0011);
-	ai.chessBoard.unMakeMove<FULL>(woo, white);
-	assert(ai.chessBoard.castlingRights == 0b1111);
-	ai.chessBoard.makeMove<FULL>(wOO,   white);
-	assert(ai.chessBoard.castlingRights == 0b0011);
-	ai.chessBoard.unMakeMove<FULL>(wOO, white);
-	assert(ai.chessBoard.castlingRights == 0b1111);
-	assert(ai.chessBoard.hashKey == hashKey);
+	Move woo(ai.board.castlingRights, WCASTLE);
+	Move wOO(ai.board.castlingRights, WCASTLE_2);
+	ai.board.makeMove<FULL>(woo,   white);
+	assert(ai.board.castlingRights == 0b0011);
+	ai.board.unMakeMove<FULL>(woo, white);
+	assert(ai.board.castlingRights == 0b1111);
+	ai.board.makeMove<FULL>(wOO,   white);
+	assert(ai.board.castlingRights == 0b0011);
+	ai.board.unMakeMove<FULL>(wOO, white);
+	assert(ai.board.castlingRights == 0b1111);
+	assert(ai.board.hashKey == hashKey);
 	// Check partial loss of castling rights
 
 	Move Rook1(a1, a2, move_metadata(MOVE, castle_Q), wr);
@@ -246,56 +246,56 @@ void UnitTest::testCastling()
 	Move rook1(a8, a7, move_metadata(MOVE, castle_q), br);
 	Move rook2(h8, h7, move_metadata(MOVE, castle_k), br);
 
-	hashKey = ai.chessBoard.hashKey;
+	hashKey = ai.board.hashKey;
 
-	ai.chessBoard.makeMove<FULL>(Rook1, white);
-	ai.chessBoard.unMakeMove<FULL>(Rook1, white);
-	ai.chessBoard.makeMove<FULL>(Rook2, white);
-	ai.chessBoard.unMakeMove<FULL>(Rook2, white);
-	assert(hashKey == ai.chessBoard.hashKey);
+	ai.board.makeMove<FULL>(Rook1, white);
+	ai.board.unMakeMove<FULL>(Rook1, white);
+	ai.board.makeMove<FULL>(Rook2, white);
+	ai.board.unMakeMove<FULL>(Rook2, white);
+	assert(hashKey == ai.board.hashKey);
 
-	ai.chessBoard.makeMove<FULL>(rook1, black);
-	ai.chessBoard.unMakeMove<FULL>(rook1, black);
-	ai.chessBoard.makeMove<FULL>(rook2, black);
-	ai.chessBoard.unMakeMove<FULL>(rook2, black);
-	assert(hashKey == ai.chessBoard.hashKey);
+	ai.board.makeMove<FULL>(rook1, black);
+	ai.board.unMakeMove<FULL>(rook1, black);
+	ai.board.makeMove<FULL>(rook2, black);
+	ai.board.unMakeMove<FULL>(rook2, black);
+	assert(hashKey == ai.board.hashKey);
 
-	ai.chessBoard.setupBoard("8/8/8/8/8/8/7r/R3K2R w KQ - 1 0");
-	hashKey = ai.chessBoard.hashKey;
+	ai.board.setupBoard("8/8/8/8/8/8/7r/R3K2R w KQ - 1 0");
+	hashKey = ai.board.hashKey;
 	// Metadata should be filled in by MoveGenerator
 	Move captureRook2(h2, h1, move_metadata(CAPTURE, castle_K), wr);
 	Move captureRook1(a2, a1, move_metadata(CAPTURE, castle_Q), wr);
-	ai.chessBoard.makeMove<FULL>(captureRook1,   black);
-	assert(ai.chessBoard.castlingRights == 0b0100);
-	ai.chessBoard.unMakeMove<FULL>(captureRook1, black);
+	ai.board.makeMove<FULL>(captureRook1,   black);
+	assert(ai.board.castlingRights == 0b0100);
+	ai.board.unMakeMove<FULL>(captureRook1, black);
 
-	ai.chessBoard.makeMove<FULL>(captureRook2,   black);
-	ai.chessBoard.unMakeMove<FULL>(captureRook2, black);
-	assert(hashKey == ai.chessBoard.hashKey);
+	ai.board.makeMove<FULL>(captureRook2,   black);
+	ai.board.unMakeMove<FULL>(captureRook2, black);
+	assert(hashKey == ai.board.hashKey);
 	// Rook moves back and forth (Lead to incorrect castling right update in the past)
 
 	moveList.clear();
-	ai.chessBoard.setupBoard("r3k2r/pppppppp/8888/PPPPPPPP/R3K2R w KkQq - 1 0");
-	ai.chessBoard.generateMoveList<ALL>(moveList, white);
-	assert(ai.chessBoard.castlingRights == 0b1111);
+	ai.board.setupBoard("r3k2r/pppppppp/8888/PPPPPPPP/R3K2R w KkQq - 1 0");
+	ai.board.generateMoveList<ALL>(moveList, white);
+	assert(ai.board.castlingRights == 0b1111);
 	auto rookMove = getMove(moveList, 0, 1);
 	assert(rookMove != moveList.end());
-	ai.chessBoard.makeMove<FULL>(*rookMove, white);
-	ai.chessBoard.updateAllAttacks();
-	ai.chessBoard.print();
-	printBits(ai.chessBoard.castlingRights);
-	assert(ai.chessBoard.castlingRights == 0b1011);
+	ai.board.makeMove<FULL>(*rookMove, white);
+	ai.board.updateAllAttacks();
+	ai.board.print();
+	printBits(ai.board.castlingRights);
+	assert(ai.board.castlingRights == 0b1011);
 
 	moveList.clear();
-	ai.chessBoard.generateMoveList<ALL>(moveList, white);
-	assert(ai.chessBoard.castlingRights == 0b1011);
+	ai.board.generateMoveList<ALL>(moveList, white);
+	assert(ai.board.castlingRights == 0b1011);
 	rookMove = getMove(moveList, 1, 0);
 	assert(rookMove != moveList.end());
-	ai.chessBoard.makeMove<FULL>(*rookMove, white);
-	ai.chessBoard.updateAllAttacks();
-	ai.chessBoard.print();
-	printBits(ai.chessBoard.castlingRights);
-	assert(ai.chessBoard.castlingRights == 0b1011);
+	ai.board.makeMove<FULL>(*rookMove, white);
+	ai.board.updateAllAttacks();
+	ai.board.print();
+	printBits(ai.board.castlingRights);
+	assert(ai.board.castlingRights == 0b1011);
 }
 
 void UnitTest::testEnpassent()
@@ -303,9 +303,9 @@ void UnitTest::testEnpassent()
 	// Test enpassent move system
 	AI ai("4k3/pppppppp8888PPPPPPPP/4K3 w - - 1 0", white, 10);
 	MoveList movelist;
-	ai.chessBoard.updateAllAttacks();
+	ai.board.updateAllAttacks();
 
-	auto hashKey = ai.chessBoard.hashKey;
+	auto hashKey = ai.board.hashKey;
 
 	// Test all possible enpassent moves for black
 	Move pawn2;            // pawn that is captured
@@ -315,149 +315,149 @@ void UnitTest::testEnpassent()
 		otherpawn = Move(h7 + pos, h4 + pos, MOVE, bp);
 		pawn2 = Move(7 + pos, 23 + pos, PAWN2, wp);
 
-		ai.chessBoard.makeMove<FULL>(otherpawn, black);
-		ai.chessBoard.makeMove<FULL>(pawn2, white);
-		ai.chessBoard.updateAllAttacks();
+		ai.board.makeMove<FULL>(otherpawn, black);
+		ai.board.makeMove<FULL>(pawn2, white);
+		ai.board.updateAllAttacks();
 
 		movelist.clear();
-		ai.chessBoard.generateMoveList<ALL>(movelist, black);
+		ai.board.generateMoveList<ALL>(movelist, black);
 		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
 		assert(ep != movelist.end());
 		assert(ep->from == h4 + pos && ep->to == 15 + pos && ep->pieces == bp);
-		ai.chessBoard.makeMove<FULL>(*ep, black);
-		ai.chessBoard.unMakeMove<FULL>(*ep, black);
+		ai.board.makeMove<FULL>(*ep, black);
+		ai.board.unMakeMove<FULL>(*ep, black);
 
-		ai.chessBoard.unMakeMove<FULL>(pawn2, white);
-		ai.chessBoard.unMakeMove<FULL>(otherpawn, black);
-		ai.chessBoard.updateAllAttacks();
+		ai.board.unMakeMove<FULL>(pawn2, white);
+		ai.board.unMakeMove<FULL>(otherpawn, black);
+		ai.board.updateAllAttacks();
 
-		assert(hashKey == ai.chessBoard.hashKey);
+		assert(hashKey == ai.board.hashKey);
 	}
 	for (int pos = 0; pos < 7; ++pos) {
 		otherpawn = Move(h7 + pos, h4 + pos, MOVE, bp);
 		pawn2 = Move(9 + pos, 25 + pos, PAWN2, wp);
 
-		ai.chessBoard.makeMove<FULL>(otherpawn, black);
-		ai.chessBoard.makeMove<FULL>(pawn2, white);
-		ai.chessBoard.updateAllAttacks();
+		ai.board.makeMove<FULL>(otherpawn, black);
+		ai.board.makeMove<FULL>(pawn2, white);
+		ai.board.updateAllAttacks();
 
 		movelist.clear();
-		ai.chessBoard.generateMoveList<ALL>(movelist, black);
+		ai.board.generateMoveList<ALL>(movelist, black);
 		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
 		assert(ep != movelist.end());
 		assert(ep->from == h4 + pos && ep->to == 17+pos && ep->pieces == bp);
 
-		ai.chessBoard.makeMove<FULL>(*ep, black);
-		ai.chessBoard.unMakeMove<FULL>(*ep, black);
+		ai.board.makeMove<FULL>(*ep, black);
+		ai.board.unMakeMove<FULL>(*ep, black);
 
-		ai.chessBoard.unMakeMove<FULL>(pawn2, white);
-		ai.chessBoard.unMakeMove<FULL>(otherpawn, black);
-		ai.chessBoard.updateAllAttacks();
+		ai.board.unMakeMove<FULL>(pawn2, white);
+		ai.board.unMakeMove<FULL>(otherpawn, black);
+		ai.board.updateAllAttacks();
 
-		assert(hashKey == ai.chessBoard.hashKey);
+		assert(hashKey == ai.board.hashKey);
 	}
-	ai.chessBoard.updateAllAttacks();
+	ai.board.updateAllAttacks();
 	for (int pos = 0; pos < 7; ++pos) {
 		otherpawn = Move(h2 + pos, h5 + pos, MOVE, wp);
 		pawn2 = Move(g7 + pos, g5 + pos, PAWN2, bp);
 
-		ai.chessBoard.makeMove<FULL>(otherpawn, white);
-		ai.chessBoard.makeMove<FULL>(pawn2, black);
-		ai.chessBoard.updateAllAttacks();
+		ai.board.makeMove<FULL>(otherpawn, white);
+		ai.board.makeMove<FULL>(pawn2, black);
+		ai.board.updateAllAttacks();
 
 		movelist.clear();
-		ai.chessBoard.generateMoveList<ALL>(movelist, white);
+		ai.board.generateMoveList<ALL>(movelist, white);
 		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
 		assert(ep != movelist.end());
 		assert(ep->from == h5 + pos && ep->to == g6 + pos && ep->pieces == wp);
-		ai.chessBoard.makeMove<FULL>(*ep,   white);
-		ai.chessBoard.unMakeMove<FULL>(*ep, white);
+		ai.board.makeMove<FULL>(*ep,   white);
+		ai.board.unMakeMove<FULL>(*ep, white);
 
-		ai.chessBoard.unMakeMove<FULL>(pawn2, black);
-		ai.chessBoard.unMakeMove<FULL>(otherpawn, white);
-		ai.chessBoard.updateAllAttacks();
+		ai.board.unMakeMove<FULL>(pawn2, black);
+		ai.board.unMakeMove<FULL>(otherpawn, white);
+		ai.board.updateAllAttacks();
 
-		assert(hashKey == ai.chessBoard.hashKey);
+		assert(hashKey == ai.board.hashKey);
 	}
 	for (int pos = 1; pos < 8; ++pos) {
 		otherpawn = Move(h2 + pos, h5 + pos, MOVE, wp);
 		pawn2 = Move(h7 - 1 + pos, h5 - 1 + pos, PAWN2, bp);
 
-		ai.chessBoard.makeMove<FULL>(otherpawn, white);
-		ai.chessBoard.makeMove<FULL>(pawn2, black);
-		ai.chessBoard.updateAllAttacks();
+		ai.board.makeMove<FULL>(otherpawn, white);
+		ai.board.makeMove<FULL>(pawn2, black);
+		ai.board.updateAllAttacks();
 
 		movelist.clear();
-		ai.chessBoard.generateMoveList<ALL>(movelist, white);
+		ai.board.generateMoveList<ALL>(movelist, white);
 		ep = find_if(movelist.begin(), movelist.end(), [](const Move& m) {return m.flags == ENPASSENT; });
 		assert(ep != movelist.end());
 		assert(ep->from == h5 + pos && ep->to == a5 + pos && ep->pieces == wp);
-		ai.chessBoard.makeMove<FULL>(*ep,   white);
-		ai.chessBoard.unMakeMove<FULL>(*ep, white);
+		ai.board.makeMove<FULL>(*ep,   white);
+		ai.board.unMakeMove<FULL>(*ep, white);
 
-		ai.chessBoard.unMakeMove<FULL>(pawn2, black);
-		ai.chessBoard.unMakeMove<FULL>(otherpawn, white);
-		ai.chessBoard.updateAllAttacks();
+		ai.board.unMakeMove<FULL>(pawn2, black);
+		ai.board.unMakeMove<FULL>(otherpawn, white);
+		ai.board.updateAllAttacks();
 
-		assert(hashKey == ai.chessBoard.hashKey);
+		assert(hashKey == ai.board.hashKey);
 	}
-	ai.chessBoard.print();
+	ai.board.print();
 	Move m1(b7, b5, PAWN2, bp);
 	Move m2(d7, d5, PAWN2, bp);
 	Move dummy(h2, h3, MOVE, wp);
 
 	pawn2 = Move(c2, c5, MOVE, wp);
-	ai.chessBoard.makeMove<FULL>(pawn2, white);
-	ai.chessBoard.print();
-	cout << (int)ai.chessBoard.w_enpassent << endl;
-	ai.chessBoard.makeMove<FULL>(m1, black);
-	ai.chessBoard.print();
-	cout << (int)ai.chessBoard.w_enpassent << endl;
-	ai.chessBoard.makeMove<FULL>(dummy, white);
-	ai.chessBoard.print();
-	cout << (int)ai.chessBoard.w_enpassent << endl;
-	ai.chessBoard.makeMove<FULL>(m2, black);
-	ai.chessBoard.print();
-	cout << (int)ai.chessBoard.w_enpassent << endl;
-	ai.chessBoard.unMakeMove<FULL>(m2, black);
-	ai.chessBoard.print();
-	cout << (int)ai.chessBoard.w_enpassent << endl;
+	ai.board.makeMove<FULL>(pawn2, white);
+	ai.board.print();
+	cout << (int)ai.board.w_enpassent << endl;
+	ai.board.makeMove<FULL>(m1, black);
+	ai.board.print();
+	cout << (int)ai.board.w_enpassent << endl;
+	ai.board.makeMove<FULL>(dummy, white);
+	ai.board.print();
+	cout << (int)ai.board.w_enpassent << endl;
+	ai.board.makeMove<FULL>(m2, black);
+	ai.board.print();
+	cout << (int)ai.board.w_enpassent << endl;
+	ai.board.unMakeMove<FULL>(m2, black);
+	ai.board.print();
+	cout << (int)ai.board.w_enpassent << endl;
 }
 
 void UnitTest::testProm()
 {
 	AI ai("5n2/1P4P1/8/8/8/8/1p4p1/5N w - - 1 0", black, 10);
-	ai.chessBoard.updateAllAttacks();
-	ai.chessBoard.print();
+	ai.board.updateAllAttacks();
+	ai.board.print();
 	MoveList whiteMoves, blackMoves;
-	ai.chessBoard.generateMoveList<ALL>(whiteMoves, white);
-	ai.chessBoard.generateMoveList<ALL>(blackMoves, black);
+	ai.board.generateMoveList<ALL>(whiteMoves, white);
+	ai.board.generateMoveList<ALL>(blackMoves, black);
 	assert(count_if(whiteMoves.begin(), whiteMoves.end(), [](Move& move) {return move.flags == PROMOTION; })   == 8);
 	assert(count_if(whiteMoves.begin(), whiteMoves.end(), [](Move& move) {return move.flags == C_PROMOTION; }) == 4);
 	assert(count_if(blackMoves.begin(), blackMoves.end(), [](Move& move) {return move.flags == PROMOTION; })   == 8);
 	assert(count_if(blackMoves.begin(), blackMoves.end(), [](Move& move) {return move.flags == C_PROMOTION; }) == 4);
-	auto hashKey = ai.chessBoard.hashKey;
+	auto hashKey = ai.board.hashKey;
 	for (auto& m : blackMoves) {
-		ai.chessBoard.makeMove<FULL>(m, black);
-		ai.chessBoard.unMakeMove<FULL>(m, black);
+		ai.board.makeMove<FULL>(m, black);
+		ai.board.unMakeMove<FULL>(m, black);
 	}
-	assert(hashKey == ai.chessBoard.hashKey);
+	assert(hashKey == ai.board.hashKey);
 	for (auto& m : whiteMoves) {
-		ai.chessBoard.makeMove<FULL>(m, white);
-		ai.chessBoard.unMakeMove<FULL>(m, white);
+		ai.board.makeMove<FULL>(m, white);
+		ai.board.unMakeMove<FULL>(m, white);
 	}
-	assert(hashKey == ai.chessBoard.hashKey);
+	assert(hashKey == ai.board.hashKey);
 }
 
 void UnitTest::specialTest()
 {
 	AI ai("k7/8/3K4/8/8/6q1/8/5N2 w - - 1 0", white);
 
-	ai.chessBoard.updateAllAttacks();
-	ai.chessBoard.print();
+	ai.board.updateAllAttacks();
+	ai.board.print();
 	MoveList movelist;
 
-	ai.chessBoard.generateMoveList<ALL>(movelist, white);
+	ai.board.generateMoveList<ALL>(movelist, white);
 
 	exit(0);
 }
@@ -633,7 +633,7 @@ void Benchmark::benchmarkMoveGeneration()
 
 	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
 	for (int i = 0; i < testSize; i++) {
-		samplePlayer.chessBoard.generateMoveList<ALL>(moves, black);
+		samplePlayer.board.generateMoveList<ALL>(moves, black);
 		moves.clear();
 	}
 	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
@@ -661,8 +661,8 @@ void Benchmark::benchmarkMovemaking()
 
 	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5 w - - 1 0", black);
 	MoveList moves;
-	samplePlayer.chessBoard.generateMoveList<ALL>(moves, black);
-	auto& boardref = samplePlayer.chessBoard;
+	samplePlayer.board.generateMoveList<ALL>(moves, black);
+	auto& boardref = samplePlayer.board;
 	size_t numOfMoves = moves.size();
 	int testsize = (int)6e6;
 	vector<double> measurement;

@@ -28,43 +28,35 @@ friend class UnitTest;
 friend class Gui;
 friend class DataBaseTest;
 
-
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Master functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-	//pair<Move, int> distributeNegaMax();
-	//int NegaMax_Search(nodePtr& node, int alpha, int beta, int depth, color side);
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-
-	//void sortMoves(nodePtr&, color side);
-
-	Board chessBoard;
+	Board board;
 	color sideToMove;
 	int targetDepth; // Needed for iterative deepening
 
-	ZobristHash transposition_hash;
+	ZobristHash transpositionHash;
+	PVTable pvTable;
 	Gui* gui;
 
 	// Gamehistory contains string board representation for
 	// exact comparison. (Hash can be overwritten)
-	string boardToString() const;
-	vector<pair<string, Move>> gameHistory;
+	//string boardToString() const;
+	//vector<pair<string, Move>> gameHistory;
+	// Chess playing functions
+	int NegaMax(int alpha, int beta, int depth, int ply, color side);
+	int QuiescenceSearch(int alpha, int beta, int ply, color side);
+	void extractPrincipalVariation(const U64& startKey, int maxPrintDepth, color side);
+
 public:
 	AI(string FEN, color computerColor);
 	AI(string FEN, color computerColor, uint hashSize);
+	Move getBestMove(color forPlayer);
+
 	void printDebug(string show = "prnbkqPRNBKQ");
-	void printBoard();
 	void bindGui(Gui* gui);
-
-	void Play(sf::RenderWindow& window); // Play
-
-	const Board& getBoardRef();
-
-	Board* getBoardPtr();
+	void printBoard();
 
 	void writeToHistory(const Move& move);
 	// Piece color of computer
-	const color aiColor;
-
-	void resetGame();
+	color aiColor;
 };
 
 #endif

@@ -111,16 +111,6 @@ private:
 	long evalcnt, negaMaxCnt, storedBoards, hashAccess, moveCnt;
 };
 
-const vector<vector<int>> captureScore = {
-	//       p    r    n    b    k    q
-	/* p */ {104, 404, 204, 304, 0,   504},
-	/* r */ {101, 401, 201, 301, 0,   501},
-	/* n */ {103, 403, 203, 303, 0,   503},
-	/* b */ {102, 402, 202, 302, 0,   502},
-	/* k */ {0, 0, 0, 0, 0, 0},
-	/* q */ {100, 400, 200, 300, 0,   500}
-};
-
 class SearchTest
 {
 public:
