@@ -5,6 +5,7 @@
 #include "info.h"
 #include "AI.h"
 //#include "gui.h"
+#include "UCI_client.h"
 #include "ZobristHash.h"
 #include "Testing.h"
 
@@ -83,6 +84,8 @@ int main(int argc, char* argv[])
 }
 
 void testing(){
+	UCIclient uciClient;
+	uciClient.UCI_IO_loop();
 	//Benchmark benchmark;
 	SearchTest searchTest;
 	searchTest.test();
