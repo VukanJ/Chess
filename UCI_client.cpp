@@ -99,6 +99,7 @@ void UCIclient::parsePosition(vector<string>& inputList)
 	}
 	if (*inputList.begin() == "startpos") {
 		inputList.erase(inputList.begin()); // "startpos"
+		ai.sideToMove = white;
 		// Standard starting position
 		ai.setFen("*");
 	}
@@ -126,7 +127,7 @@ void UCIclient::parsePosition(vector<string>& inputList)
 		inputList.erase(inputList.begin()); // "moves"
 		ai.playStringMoves(inputList, ai.sideToMove);
 	}
-	ai.printAscii();
+	//ai.printAscii();
 }
 
 void UCIclient::go(vector<string>& inputList)
@@ -144,6 +145,11 @@ void UCIclient::go(vector<string>& inputList)
 		}
 		bestMoves = ai.getBestMove(ai.sideToMove, stoi(inputList[1]));
 	}
-	cout << "bestMove " << shortNotation(bestMoves.first)
+	else {
+		bestMoves = ai.getBestMove(ai.sideToMove, 5);
+	}
+	cout << "bestmove " << shortNotation(bestMoves.first)
 		 << " ponder " << shortNotation(bestMoves.second) << '\n';
+	ai.resetHash(); // TODO: ?
+	//cout << "info " << shortNotation(bestMoves.first) << '\n';
 }

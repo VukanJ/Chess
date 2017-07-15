@@ -239,3 +239,9 @@ void AI::playStringMoves(const vector<string>& moves, color side)
 	board.playStringMoves(moves, side);
 	sideToMove = moves.size() % 2 == 0 ? sideToMove : !sideToMove;
 }
+
+void AI::resetHash()
+{
+	//transpositionHash.clear();
+	//pvTable.clear();
+}

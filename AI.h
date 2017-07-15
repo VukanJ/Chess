@@ -52,6 +52,7 @@ public:
 	pair<Move, Move> getBestMove(color forPlayer, int maxDepth);
 	void playStringMoves(const vector<string>& moves, color side);
 	void reset();
+	void resetHash();
 
 	void printDebug(string show = "prnbkqPRNBKQ");
 	void bindGui(Gui* gui);
