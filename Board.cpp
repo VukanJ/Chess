@@ -200,24 +200,6 @@ void Board::updateAttack(piece p)
 	}
 }
 
-U64 inline Board::floodFill(U64 propagator, U64 empty, dir direction) const
-{
-	// Calculates all attacks including attacked pieces for sliding pieces
-	// (Queen, Rook, bishop)(s)
-	// Not used in-game (!)
-	U64 flood = propagator;
-	U64 wrap = noWrap[direction];
-	empty &= wrap;
-	auto r_shift = shift[direction];
-	flood |= propagator = rotate_l64(propagator, r_shift) & empty;
-	flood |= propagator = rotate_l64(propagator, r_shift) & empty;
-	flood |= propagator = rotate_l64(propagator, r_shift) & empty;
-	flood |= propagator = rotate_l64(propagator, r_shift) & empty;
-	flood |= propagator = rotate_l64(propagator, r_shift) & empty;
-	flood |= rotate_l64(propagator, r_shift) & empty;
-	return rotate_l64(flood, r_shift) & wrap;
-}
-
 template<color side> void Board::pawnFill()
 {
 	if (side == black){
@@ -482,13 +464,17 @@ void Board::print() const
 		}
 	}
 #ifdef _WIN32 // Since Unicode is not really supported in C++ yet
-	cout << string(10, (char)(219)) << endl;
+	char rowNum = '8';
+	cout << ' ' << string(17, (char)(219)) << '\n';
 	for (auto r : asciiBoard) {
-		cout << char(219);
-		for (auto c : r) cout << c;
+		cout << rowNum-- << char(219);
+		for (auto c : r) 
+			cout << c << ' ';
+		cout << '\b';
 		cout << char(219) << '\n';
 	}
-	cout << string(10, (char)(219)) << '\n';
+	cout << ' ' << string(17, (char)(219)) << '\n';
+	cout << "  a b c d e f g h\n";
 #else
 	auto repChar = [](int c) {for (int i = 0; i < c; i++)cout << "\u2588"; };
 	repChar(10); cout << '\n';

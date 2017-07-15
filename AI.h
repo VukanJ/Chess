@@ -25,8 +25,8 @@ class AI
 {
 friend class Benchmark;
 friend class UnitTest;
-friend class Gui;
 friend class DataBaseTest;
+friend class Gui;
 
 	Board board;
 	color sideToMove;
@@ -48,11 +48,14 @@ friend class DataBaseTest;
 public:
 	AI(string FEN, color computerColor);
 	AI(string FEN, color computerColor, uint hashSize);
+	void setFen(string);
 	Move getBestMove(color forPlayer);
+	void reset();
 
 	void printDebug(string show = "prnbkqPRNBKQ");
 	void bindGui(Gui* gui);
 	void printBoard();
+	void printAscii();
 
 	void writeToHistory(const Move& move);
 	// Piece color of computer

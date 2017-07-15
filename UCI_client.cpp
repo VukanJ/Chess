@@ -17,6 +17,7 @@ UCIclient::UCIclient() : ai(AI("*", black))
 		{"ponderhit",  hostCommandCode::ponderhit },
 		{"quit",       hostCommandCode::quit }
 	};
+	ai.printAscii();
 }
 
 void UCIclient::UCI_IO_loop()
@@ -54,8 +55,11 @@ void UCIclient::UCI_IO_loop()
 			/* Engine does not require registering */
 			break;
 		case hostCommandCode::ucinewgame:
+			uciNewGame();
+			cout << "readyok\n";
 			break;
 		case hostCommandCode::position:
+			parsePosition(inputList);
 			break;
 		case hostCommandCode::go:
 			break;
@@ -79,7 +83,28 @@ void UCIclient::printEngineID() const
 		    "uciok\n";
 }
 
-void UCIclient::startNewGame()
+void UCIclient::uciNewGame()
 {
+	// Resets hash tables and sets position to standard starting position
+	ai.reset();
+}
 
+void UCIclient::parsePosition(vector<string>& inputList)
+{
+	inputList.erase(inputList.begin()); // "position"
+	if (inputList.empty()) {
+		return;
+	}
+	if (*inputList.begin() == "fen") {
+		inputList.erase(inputList.begin()); // "fen"
+		if (inputList.size() != 6) {
+			cerr << "Invalid fen!\n";
+			return;
+		}
+		string FEN;
+		for (int i = 0; i < 6; ++i) 
+			FEN += inputList[i] + ' ';
+		ai.setFen(FEN);
+		ai.printAscii();
+	}
 }

@@ -22,8 +22,9 @@ public:
 
 	AI ai;
 private:
-	void startNewGame();
+	void uciNewGame();
 	void printEngineID() const;
+	void parsePosition(vector<string>&);
 	enum class hostCommandCode {
 		uci = 1, debug, isready, setoption, registerEngine,
 		ucinewgame, position, go, stop, ponderhit, quit

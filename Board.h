@@ -30,10 +30,6 @@ private:
 	// Init
 	void initHash(); // Used only for Init!, the hashkey is updated for each move
 
-	// Flooding algorithm
-	enum dir {n, e, s, w, ne, se, sw, nw};
-	U64 inline floodFill(U64 propagator, U64 empty, dir) const;
-
 	template <color> void pawnFill();
 public:
 	Board();

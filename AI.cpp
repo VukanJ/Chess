@@ -200,3 +200,21 @@ void AI::extractPrincipalVariation(const U64& key, int maxPrintDepth, color side
 	extractPrincipalVariation(board.hashKey, maxPrintDepth - 1, !side);
 	board.unMakeMove<FULL>(entry.bestmove, side);
 }
+
+void AI::reset()
+{
+	transpositionHash.clear();
+	pvTable.clear();
+	board.setupBoard("*");
+	aiColor = black;
+}
+
+void AI::setFen(string fenstring)
+{
+	board.setupBoard(fenstring);
+}
+
+void AI::printAscii() 
+{
+	board.print();
+}
