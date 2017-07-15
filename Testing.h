@@ -102,7 +102,7 @@ public:
 	void start_Bratko_Kopec_Test();
 private:
 	int targetDepth;
-	Move getBestMove(color forPlayer);
+	Move getBestTestMove(color forPlayer);
 	Move distributeNegaMax(color forPlayer);
 	int NegaMax(int alpha, int beta, int depth, color aiColor, color side);
 	Board testBoard;

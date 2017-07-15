@@ -60,6 +60,21 @@ void AI::printDebug(string showPieces)
 	}
 }
 
+pair<Move, Move> AI::getBestMove(color forPlayer, int maxDepth)
+{
+	Move bestMove, ponderMove;
+	vector<Move> pvLine;
+	for (targetDepth = 1; targetDepth < maxDepth; targetDepth++) {
+		NegaMax(-oo, oo, targetDepth, 0, forPlayer);
+		extractPrincipalVariation(board.hashKey, pvLine, targetDepth, forPlayer);
+		bestMove = pvLine[0];
+		if(targetDepth > 1)
+			ponderMove = pvLine[1];
+		pvLine.clear();
+	}
+	return pair<Move, Move> (bestMove, ponderMove);
+}
+
 int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 {
 	int oldAlpha = alpha;
@@ -191,13 +206,13 @@ int AI::QuiescenceSearch(int alpha, int beta, int ply, color side)
 	return alpha;
 }
 
-void AI::extractPrincipalVariation(const U64& key, int maxPrintDepth, color side)
+void AI::extractPrincipalVariation(const U64& key, vector<Move>& pvLine, int maxPrintDepth, color side)
 {
 	const auto& entry = pvTable[key];
 	if (maxPrintDepth == 0 || entry.bestmove.invalid()) return;
 	board.makeMove<FULL>(entry.bestmove, side);
-	cout << moveString(entry.bestmove) << "  ";
-	extractPrincipalVariation(board.hashKey, maxPrintDepth - 1, !side);
+	pvLine.push_back(entry.bestmove);
+	extractPrincipalVariation(board.hashKey, pvLine, maxPrintDepth - 1, !side);
 	board.unMakeMove<FULL>(entry.bestmove, side);
 }
 
@@ -217,4 +232,10 @@ void AI::setFen(string fenstring)
 void AI::printAscii() 
 {
 	board.print();
+}
+
+void AI::playStringMoves(const vector<string>& moves, color side) 
+{
+	board.playStringMoves(moves, side);
+	sideToMove = moves.size() % 2 == 0 ? sideToMove : !sideToMove;
 }

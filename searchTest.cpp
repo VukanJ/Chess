@@ -39,7 +39,7 @@ void SearchTest::test()
 	board.print();
 
 	aiColor = white;
-	auto bestMove = getBestMove(aiColor);
+	auto bestMove = SearchTest::getBestMove(aiColor);
 }
 
 Move SearchTest::getBestMove(color forPlayer)
@@ -278,32 +278,4 @@ void SearchTest::extractPrincipalVariation(const U64& key, int maxPrintDepth, co
 	cout << moveString(entry.bestmove) << "  ";
 	extractPrincipalVariation(board.hashKey, maxPrintDepth - 1, !side);
 	board.unMakeMove<FULL>(entry.bestmove, side);
-}
-
-Move AI::getBestMove(color forPlayer)
-{
-	Move bestMove;
-	Timer timer, totalTimer;
-
-	totalTimer.start();
-	for (targetDepth = 1; targetDepth < 9; targetDepth++) {
-		timer.start();
-		auto oldHash = board.hashKey;
-		NegaMax(-oo, oo, targetDepth, 0, forPlayer);
-		assert(oldHash == board.hashKey);
-		timer.stop();
-
-		cout << "D:{" << targetDepth << '}';
-		cout << " T:{" << (int)(timer.getTime()*1e-6) << "} ";
-		int val = transpositionHash.getValue(board.hashKey);
-		cout << "PV: " << '(' << (abs(val) == oo ? (val > 0 ? "oo" : "-oo") : to_string(val)) << ") ";
-		extractPrincipalVariation(board.hashKey, targetDepth, forPlayer);
-		cout << ".\n";
-		//cout << negaMaxCnt << " Nodes\n";
-		//negaMaxCnt = 0;
-	}
-	board.print();
-	totalTimer.stop();
-	cout << "Total time = " << totalTimer.getTime()*1e-6 << endl;
-	return bestMove;
 }

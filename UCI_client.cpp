@@ -62,13 +62,15 @@ void UCIclient::UCI_IO_loop()
 			parsePosition(inputList);
 			break;
 		case hostCommandCode::go:
+			go(inputList);
 			break;
 		case hostCommandCode::stop:
 			break;
 		case hostCommandCode::ponderhit:
+			/* Engine doesnt care */
 			break;
 		case hostCommandCode::quit:
-			break;
+			return;
 		default:
 			cout << "Unknown command: " << inputList[0] << '\n';
 		}
@@ -108,6 +110,7 @@ void UCIclient::parsePosition(vector<string>& inputList)
 			return;
 		}
 		string FEN;
+		ai.sideToMove = (inputList[1] == "w" ? white : black);
 		for (int i = 0; i < 6; ++i) 
 			FEN += inputList[i] + ' ';
 		inputList.erase(inputList.begin(), inputList.begin() + 6);
@@ -119,8 +122,28 @@ void UCIclient::parsePosition(vector<string>& inputList)
 		return; 
 	}
 	else if (inputList[0] == "moves") {
-		inputList.erase(inputList.begin()); // "moves"
-		for (auto& l : inputList) cout << l << endl;
 		// Play given moves
+		inputList.erase(inputList.begin()); // "moves"
+		ai.playStringMoves(inputList, ai.sideToMove);
 	}
+	ai.printAscii();
+}
+
+void UCIclient::go(vector<string>& inputList)
+{
+	pair<Move, Move> bestMoves;
+	inputList.erase(inputList.begin());
+	if (inputList.empty()) {
+		bestMoves = ai.getBestMove(ai.sideToMove, 5);
+	}
+	else if (*inputList.begin() == "depth") {
+		inputList.erase(inputList.begin()); // "depth"
+		if (inputList.empty()) {
+			cerr << "No depth specified!\n";
+			return;
+		}
+		bestMoves = ai.getBestMove(ai.sideToMove, stoi(inputList[1]));
+	}
+	cout << "bestMove " << shortNotation(bestMoves.first)
+		 << " ponder " << shortNotation(bestMoves.second) << '\n';
 }

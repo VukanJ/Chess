@@ -27,11 +27,11 @@ friend class Benchmark;
 friend class UnitTest;
 friend class DataBaseTest;
 friend class Gui;
+private:
 
-	Board board;
-	color sideToMove;
 	int targetDepth; // Needed for iterative deepening
 
+	Board board;
 	ZobristHash transpositionHash;
 	PVTable pvTable;
 	Gui* gui;
@@ -43,13 +43,14 @@ friend class Gui;
 	// Chess playing functions
 	int NegaMax(int alpha, int beta, int depth, int ply, color side);
 	int QuiescenceSearch(int alpha, int beta, int ply, color side);
-	void extractPrincipalVariation(const U64& startKey, int maxPrintDepth, color side);
+	void extractPrincipalVariation(const U64& startKey, vector<Move>& pvLine,  int maxPrintDepth, color side);
 
 public:
 	AI(string FEN, color computerColor);
 	AI(string FEN, color computerColor, uint hashSize);
 	void setFen(string);
-	Move getBestMove(color forPlayer);
+	pair<Move, Move> getBestMove(color forPlayer, int maxDepth);
+	void playStringMoves(const vector<string>& moves, color side);
 	void reset();
 
 	void printDebug(string show = "prnbkqPRNBKQ");
@@ -60,6 +61,7 @@ public:
 	void writeToHistory(const Move& move);
 	// Piece color of computer
 	color aiColor;
+	color sideToMove;
 };
 
 #endif

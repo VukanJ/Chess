@@ -486,3 +486,20 @@ void Board::print() const
 	repChar(10); cout << "\n\n";
 #endif
 }
+
+void Board::playStringMoves(const vector<string>& moves, color side)
+{
+	MoveList possibleMoves;
+	for (auto& move : moves) {
+		updateAllAttacks();
+		generateMoveList<ALL>(possibleMoves, side);
+		auto play = find_if(possibleMoves.begin(), possibleMoves.end(), [&, move](const Move& m) {
+			return shortNotation(m) == move;
+		});
+		makeMove<FULL>(*play, side);
+
+		possibleMoves.clear();
+		side = !side; // Play on alternating sides
+	}
+	updateAllAttacks();
+}

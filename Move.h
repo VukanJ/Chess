@@ -77,9 +77,8 @@ static string shortNotation(const Move& move)
 	case WCASTLE:   return "e1g1";
 	case BCASTLE_2: return "e8c8";
 	case WCASTLE_2: return "e1c1";
-	case ENPASSANT: return "e.p.";
 	}
-	if (move.flags == 255) return "_voidMove_";
+	if (move.flags == 255) return "0000";
 	string moveStr = squareNames[move.from] + squareNames[move.to];
 	if (move.flags == PROMOTION || move.flags == C_PROMOTION) {
 		moveStr += names[move.targetPiece()];

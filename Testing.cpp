@@ -940,13 +940,13 @@ void DataBaseTest::start_Bratko_Kopec_Test()
 		testBoard.setupBoard(boardStr);
 		testBoard.updateAllAttacks();
 		transposition_hash.clear();
-		bestmove = getBestMove(test[1] == "b" ? black : white);
+		bestmove = getBestTestMove(test[1] == "b" ? black : white);
 		if (++breakCount > 0) break;
 	}
 }
 
 
-Move DataBaseTest::getBestMove(color forPlayer)
+Move DataBaseTest::getBestTestMove(color forPlayer)
 {
 	Move bestMove;
 	Timer timer;

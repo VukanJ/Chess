@@ -25,6 +25,7 @@ private:
 	void uciNewGame();
 	void printEngineID() const;
 	void parsePosition(vector<string>&);
+	void go(vector<string>&);
 	enum class hostCommandCode {
 		uci = 1, debug, isready, setoption, registerEngine,
 		ucinewgame, position, go, stop, ponderhit, quit
