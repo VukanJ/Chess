@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <chrono>
 #include <typeinfo>
 #include <string>
 #include <initializer_list>
@@ -58,6 +59,26 @@ enum piece {
 	bp, br, bn, bb, bk, bq,
 	wp, wr, wn, wb, wk, wq,
 	nullPiece = -1
+};
+
+class Timer
+{
+public:
+	Timer() {
+		t1 = chrono::high_resolution_clock::now();
+		t2 = t1;
+	}
+	void start() {
+		t1 = chrono::high_resolution_clock::now();
+	}
+	void stop() {
+		t2 = chrono::high_resolution_clock::now();
+	}
+	double getTime() { // in microseconds
+		return (double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
+	}
+private:
+	chrono::high_resolution_clock::time_point t1, t2;
 };
 
 enum castlingRight { castle_k = 0x1, castle_q = 0x2, castle_K = 0x4, castle_Q = 0x8 };

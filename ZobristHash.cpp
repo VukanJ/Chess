@@ -34,11 +34,11 @@ void ZobristHash::clear()
 {
 	for (auto& entry : entries) {
 		// Invalidate entry:
-		entry.search_depth = -1;
+		entry = ZobristHash::entry();
 	}
 }
 
-ZobristHash::entry::entry() : value(-oo), search_depth(-1), flags(0x0), terminal(0), d(0){}
+ZobristHash::entry::entry() : value(-oo), search_depth(-1), flags(0x0), terminal(0), d(0), age(0) {}
 
 // Class PVTable
 
@@ -67,6 +67,6 @@ PVTable::PVEntry& PVTable::operator[](const U64& key)
 
 void PVTable::clear()
 {
-	for (auto& entry : pventries) 
+	for (auto& entry : pventries)
 		entry.bestmove = Move();
 }

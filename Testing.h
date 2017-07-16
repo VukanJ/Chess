@@ -84,17 +84,6 @@ private:
 	long totalTotalPerftMoveCount;
 };
 
-class Timer
-{
-public:
-	Timer();
-	void start();
-	void stop();
-	double getTime(); // returns microseconds
-private:
-	chrono::high_resolution_clock::time_point t1, t2;
-};
-
 class DataBaseTest
 {
 public:

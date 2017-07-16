@@ -89,6 +89,8 @@ void UCIclient::uciNewGame()
 {
 	// Resets hash tables and sets position to standard starting position
 	ai.reset();
+	ai.resetHash();
+	ai.currentAge = 0;
 }
 
 void UCIclient::parsePosition(vector<string>& inputList)
@@ -135,7 +137,7 @@ void UCIclient::go(vector<string>& inputList)
 	pair<Move, Move> bestMoves;
 	inputList.erase(inputList.begin());
 	if (inputList.empty()) {
-		bestMoves = ai.getBestMove(ai.sideToMove, 5);
+		bestMoves = ai.getBestMove(ai.sideToMove, 3, true);
 	}
 	else if (*inputList.begin() == "depth") {
 		inputList.erase(inputList.begin()); // "depth"
@@ -143,13 +145,13 @@ void UCIclient::go(vector<string>& inputList)
 			cerr << "No depth specified!\n";
 			return;
 		}
-		bestMoves = ai.getBestMove(ai.sideToMove, stoi(inputList[1]));
+		bestMoves = ai.getBestMove(ai.sideToMove, stoi(inputList[0]), true);
 	}
 	else {
-		bestMoves = ai.getBestMove(ai.sideToMove, 5);
+		bestMoves = ai.getBestMove(ai.sideToMove, 3, true);
 	}
 	cout << "bestmove " << shortNotation(bestMoves.first)
 		 << " ponder " << shortNotation(bestMoves.second) << '\n';
-	ai.resetHash(); // TODO: ?
+	ai.currentAge++;
 	//cout << "info " << shortNotation(bestMoves.first) << '\n';
 }

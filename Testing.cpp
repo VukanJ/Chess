@@ -874,27 +874,6 @@ void Benchmark::perftTestSuite()
 	cin.ignore();
 }
 
-Timer::Timer()
-{
-	t1 = chrono::high_resolution_clock::now();
-	t2 = t1;
-}
-
-void Timer::start()
-{
-	t1 = chrono::high_resolution_clock::now();
-}
-
-void Timer::stop()
-{
-	t2 = chrono::high_resolution_clock::now();
-}
-
-double Timer::getTime()
-{
-	return (double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
-}
-
 DataBaseTest::DataBaseTest() : transposition_hash(ZobristHash(1e7))
 {
 	targetDepth = 1;

@@ -27,7 +27,7 @@ private:
 	{
 		entry();
 		int value;
-		short search_depth;
+		unsigned char search_depth, age;
 		//Move bestMove;
 		U8 flags : 3, terminal : 1, d : 3;
 	};

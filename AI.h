@@ -49,7 +49,7 @@ public:
 	AI(string FEN, color computerColor);
 	AI(string FEN, color computerColor, uint hashSize);
 	void setFen(string);
-	pair<Move, Move> getBestMove(color forPlayer, int maxDepth);
+	pair<Move, Move> getBestMove(color forPlayer, int maxDepth, bool uciInfo);
 	void playStringMoves(const vector<string>& moves, color side);
 	void reset();
 	void resetHash();
@@ -60,9 +60,12 @@ public:
 	void printAscii();
 
 	void writeToHistory(const Move& move);
-	// Piece color of computer
-	color aiColor;
+	int nodesVisited;
+	int currentAge; // used to avoid clearing the hash table 
+
+	color aiColor;	// Piece color of computer
 	color sideToMove;
 };
+
 
 #endif
