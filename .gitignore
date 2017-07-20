@@ -12,3 +12,4 @@ chess2
 dump.txt
 call*
 engine
+*.log

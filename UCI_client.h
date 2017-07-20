@@ -2,6 +2,7 @@
 #define UCI_CLIENT_H
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <map>
 #include <boost/tokenizer.hpp>
@@ -18,6 +19,7 @@ class UCIclient
 {
 public:
 	UCIclient();
+	~UCIclient();
 	void UCI_IO_loop();
 
 	AI ai;
@@ -33,6 +35,7 @@ private:
 	enum class customOptions { 
 		hash // Hash size in bytes 
 	};
+	ofstream outFile;
 	map<string, customOptions>   getOptions;
 	map<string, hostCommandCode> getHostCommandCode;
 };

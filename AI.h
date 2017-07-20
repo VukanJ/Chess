@@ -65,6 +65,7 @@ public:
 
 	color aiColor;	// Piece color of computer
 	color sideToMove;
+	color initialSideToMove; // Needed for uci synchronization
 };
 
 

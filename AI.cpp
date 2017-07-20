@@ -1,10 +1,9 @@
 #include "AI.h"
 
 AI::AI(string FEN, color computerColor)
-	: aiColor(computerColor)
+	: aiColor(computerColor), initialSideToMove(white), nodesVisited(0),
+	currentAge(0)
 {
-	nodesVisited = 0;
-	currentAge = 0;
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
 	board.setupBoard(FEN);
@@ -69,18 +68,18 @@ pair<Move, Move> AI::getBestMove(color forPlayer, int maxDepth, bool uciInfo)
 	Move bestMove, ponderMove;
 	vector<Move> pvLine;
 
-	for (targetDepth = 1; targetDepth < maxDepth; targetDepth++) {
+	for (targetDepth = 1; targetDepth <= maxDepth; targetDepth++) {
 		infoTimer.start();
 		NegaMax(-oo, oo, targetDepth, 0, forPlayer);
 		extractPrincipalVariation(board.hashKey, pvLine, targetDepth, forPlayer);
 		infoTimer.stop();
 		if (uciInfo) {
-			cout << "info depth " << targetDepth
-				<< " score cp " << transpositionHash.getValue(board.hashKey)
-				<< " nodes " << nodesVisited
-				<< " nps " << (int)((double)nodesVisited / (infoTimer.getTime()*1e-6))
-				<< " time " << infoTimer.getTime()*1e-3 // milliseconds
-				<< " pv ";
+			cout << "info depth " << targetDepth                                        // Search depth
+				 << " score cp " << transpositionHash.getValue(board.hashKey)           // Score of computer
+				 << " nodes " << nodesVisited                                           // Total visited nodes
+				 << " nps " << (int)((double)nodesVisited / (infoTimer.getTime()*1e-6)) // Nodes per second
+				 << " time " << infoTimer.getTime()*1e-3                                // Computation time in milliseconds
+				 << " pv "; // Principal variation of specified depth
 			for (const auto& move : pvLine) cout << move << ' ';
 			cout << '\n';
 			nodesVisited = 0;
@@ -97,34 +96,45 @@ pair<Move, Move> AI::getBestMove(color forPlayer, int maxDepth, bool uciInfo)
 
 int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 {
-	nodesVisited++;
 	int oldAlpha = alpha;
 	auto &entry = transpositionHash.getEntry(board.hashKey);
+	nodesVisited++;
 
 	// Check if move was already evaluated
-	if (entry.age == currentAge) { // Reevaluate when "ucinewgame" was passed
-		if (entry.search_depth >= depth || entry.terminal == 1) {
-			if (entry.flags & EXACT_VALUE) {
-				return entry.value;
-			}
-			else if (entry.flags & LOWER_BOUND) {
-				alpha = max(alpha, entry.value);
-			}
-			else if (entry.flags & UPPER_BOUND) {
-				beta = min(beta, entry.value);
-			}
-			if (alpha >= beta) {
-				return entry.value;
-			}
+	if (entry.search_depth >= depth) {
+		if (entry.flags & EXACT_VALUE) {
+			return entry.value;
+		}
+		else if (entry.flags & LOWER_BOUND) {
+			alpha = max(alpha, entry.value);
+		}
+		else if (entry.flags & UPPER_BOUND) {
+			beta = min(beta, entry.value);
+		}
+		if (alpha >= beta) {
+			return entry.value;
 		}
 	}
 	if (depth == 0) {
-		return QuiescenceSearch(alpha, beta, 0, side);
+		board.updateAllAttacks();
+		return board.evaluate(side);
+		//return QuiescenceSearch(alpha, beta, 0, side);
 	}
 
 	MoveList movelist;
 	board.updateAllAttacks();
 	board.generateMoveList<ALL>(movelist, side);
+
+	// order moves
+	//stable_sort(movelist.begin(), movelist.end(), [&, this](const Move& m1, const Move& m2) {
+	//	board.makeMove<HASH>(m1, side);
+	//	int val1 = transpositionHash.getValue(board.hashKey);
+	//	board.unMakeMove<HASH>(m1, side);
+	//	board.makeMove<HASH>(m2, side);
+	//	int val2 = transpositionHash.getValue(board.hashKey);
+	//	board.unMakeMove<HASH>(m2, side);
+	//	return val1 < val2;
+	//});
 
 	bool checkedOnThisDepth = board.wasInCheck;
 	U64 pinnedOnThisDepth = board.pinned;
@@ -160,7 +170,6 @@ int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 			// Checkmate, end of game path
 			entry.search_depth = depth;
 			entry.terminal = true;
-			entry.age = currentAge;
 			score = -oo + ply;
 			return score;
 		}
@@ -168,7 +177,6 @@ int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 			// Stalemate, end of game path
 			entry.search_depth = depth;
 			entry.terminal = true;
-			entry.age = currentAge;
 			score = 0;
 			return 0;
 		}
@@ -177,7 +185,6 @@ int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 		// Better move found
 		pvTable.addPVMove(board.hashKey, bestMove);
 		entry.value = alpha;
-		entry.age = currentAge;
 		entry.search_depth = depth;
 	}
 	if (alpha < oldAlpha) {
@@ -242,6 +249,7 @@ void AI::extractPrincipalVariation(const U64& key, vector<Move>& pvLine, int max
 
 void AI::reset()
 {
+	// Time consuming. Only call when ucinewgame is passed to engine
 	transpositionHash.clear();
 	pvTable.clear();
 	board.setupBoard("*");
@@ -261,7 +269,7 @@ void AI::printAscii()
 void AI::playStringMoves(const vector<string>& moves, color side) 
 {
 	board.playStringMoves(moves, side);
-	sideToMove = moves.size() % 2 == 0 ? sideToMove : !sideToMove;
+	sideToMove = moves.size() % 2 == 0 ? initialSideToMove : !initialSideToMove;
 }
 
 void AI::resetHash()

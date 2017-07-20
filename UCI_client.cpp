@@ -4,6 +4,7 @@ UCIclient::UCIclient() : ai(AI("*", black))
 {
 	// Standard computer opponent is black
 	// Starting from standard position
+
 	getHostCommandCode = {
 		{"uci",        hostCommandCode::uci },
 		{"debug",      hostCommandCode::debug },
@@ -20,8 +21,13 @@ UCIclient::UCIclient() : ai(AI("*", black))
 	ai.printAscii();
 }
 
+UCIclient::~UCIclient()
+{
+}
+
 void UCIclient::UCI_IO_loop()
 {
+	// position fen Q7/2p2b2/2Pp4/1p1Ppk1p/7K/6P1/3R4/8 b - - 1 0
 	// Communicates with external GUI (Host)
 	string input;
 	vector<string> inputList;
@@ -31,15 +37,19 @@ void UCIclient::UCI_IO_loop()
 		inputList.clear();
 
 		getline(cin, input); // User or GUI input
-
 		// Tokenize input
 		boost::trim(input);
 		boost::escaped_list_separator<char> sep("", " ", "");
 		boost::tokenizer<boost::escaped_list_separator<char>> tokenize(input, sep);
+		outFile.open("turnierLog.log", ios::app);
 		for (auto token = tokenize.begin(); token != tokenize.end(); ++token) {
 			inputList.push_back(*token);
-		}
 
+			//cout << *token << ' ';
+			outFile << *token << ' ';
+		}
+		outFile << '\n';
+		outFile.close();
 		switch (getHostCommandCode[inputList[0]]) {
 		case hostCommandCode::uci:
 			printEngineID();
@@ -101,7 +111,7 @@ void UCIclient::parsePosition(vector<string>& inputList)
 	}
 	if (*inputList.begin() == "startpos") {
 		inputList.erase(inputList.begin()); // "startpos"
-		ai.sideToMove = white;
+		ai.initialSideToMove = white;
 		// Standard starting position
 		ai.setFen("*");
 	}
@@ -113,7 +123,7 @@ void UCIclient::parsePosition(vector<string>& inputList)
 			return;
 		}
 		string FEN;
-		ai.sideToMove = (inputList[1] == "w" ? white : black);
+		ai.initialSideToMove = (inputList[1] == "w" ? white : black);
 		for (int i = 0; i < 6; ++i) 
 			FEN += inputList[i] + ' ';
 		inputList.erase(inputList.begin(), inputList.begin() + 6);
@@ -127,7 +137,7 @@ void UCIclient::parsePosition(vector<string>& inputList)
 	else if (inputList[0] == "moves") {
 		// Play given moves
 		inputList.erase(inputList.begin()); // "moves"
-		ai.playStringMoves(inputList, ai.sideToMove);
+		ai.playStringMoves(inputList, ai.initialSideToMove);
 	}
 	//ai.printAscii();
 }
@@ -137,7 +147,7 @@ void UCIclient::go(vector<string>& inputList)
 	pair<Move, Move> bestMoves;
 	inputList.erase(inputList.begin());
 	if (inputList.empty()) {
-		bestMoves = ai.getBestMove(ai.sideToMove, 3, true);
+		bestMoves = ai.getBestMove(ai.sideToMove, 5, true);
 	}
 	else if (*inputList.begin() == "depth") {
 		inputList.erase(inputList.begin()); // "depth"
@@ -148,10 +158,9 @@ void UCIclient::go(vector<string>& inputList)
 		bestMoves = ai.getBestMove(ai.sideToMove, stoi(inputList[0]), true);
 	}
 	else {
-		bestMoves = ai.getBestMove(ai.sideToMove, 3, true);
+		bestMoves = ai.getBestMove(ai.sideToMove, 5, true);
 	}
 	cout << "bestmove " << shortNotation(bestMoves.first)
 		 << " ponder " << shortNotation(bestMoves.second) << '\n';
-	ai.currentAge++;
-	//cout << "info " << shortNotation(bestMoves.first) << '\n';
+	//ai.currentAge++;
 }

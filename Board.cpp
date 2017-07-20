@@ -371,42 +371,43 @@ int Board::evaluate(color side)
 	//// Rewards points, if positions are similar to piece-square-heuristics
 	//// Pawns:
 	U64 mask = pieces[wp];
-	int psh = 0;
-	for_bits(pos, mask)
-		psh += pieceSquareTable[0][63 - pos];
-	mask = pieces[bp];
-	for_bits(pos, mask)
-		psh -= pieceSquareTable[0][pos];
-	mask = pieces[wn];
-	for_bits(pos, mask)
-		psh += pieceSquareTable[1][63 - pos];
-	mask = pieces[bn];
-	for_bits(pos, mask)
-		psh -= pieceSquareTable[1][pos];
-	mask = pieces[wb];
-	for_bits(pos, mask)
-		psh += pieceSquareTable[2][63 - pos];
-	mask = pieces[bb];
-	for_bits(pos, mask)
-		psh -= pieceSquareTable[2][pos];
 
-	if (endGameValue > 0.8) {
-		mask = pieces[wk];
-		for_bits(pos, mask)
-			psh += pieceSquareTable[4][63 - pos];
-		mask = pieces[bk];
-		for_bits(pos, mask)
-			psh -= pieceSquareTable[4][pos];
-	}
-	else {
-		mask = pieces[wk];
-		for_bits(pos, mask)
-			psh += pieceSquareTable[3][63 - pos];
-		mask = pieces[bk];
-		for_bits(pos, mask)
-			psh -= pieceSquareTable[3][pos];
-	}
-	total_boardValue += psh / 10;
+	//int psh = 0;
+	//for_bits(pos, mask)
+	//	psh += pieceSquareTable[0][63 - pos];
+	//mask = pieces[bp];
+	//for_bits(pos, mask)
+	//	psh -= pieceSquareTable[0][pos];
+	//mask = pieces[wn];
+	//for_bits(pos, mask)
+	//	psh += pieceSquareTable[1][63 - pos];
+	//mask = pieces[bn];
+	//for_bits(pos, mask)
+	//	psh -= pieceSquareTable[1][pos];
+	//mask = pieces[wb];
+	//for_bits(pos, mask)
+	//	psh += pieceSquareTable[2][63 - pos];
+	//mask = pieces[bb];
+	//for_bits(pos, mask)
+	//	psh -= pieceSquareTable[2][pos];
+	//
+	//if (endGameValue > 0.8) {
+	//	mask = pieces[wk];
+	//	for_bits(pos, mask)
+	//		psh += pieceSquareTable[4][63 - pos];
+	//	mask = pieces[bk];
+	//	for_bits(pos, mask)
+	//		psh -= pieceSquareTable[4][pos];
+	//}
+	//else {
+	//	mask = pieces[wk];
+	//	for_bits(pos, mask)
+	//		psh += pieceSquareTable[3][63 - pos];
+	//	mask = pieces[bk];
+	//	for_bits(pos, mask)
+	//		psh -= pieceSquareTable[3][pos];
+	//}
+	//total_boardValue += psh / 10;
 
 	// *************************** MOBILITY ***************************
 	// Determines how many squares are accessible, worth 1 cp each
@@ -418,7 +419,7 @@ int Board::evaluate(color side)
 	// Measure "hostiliy" = number of attacked pieces of opponent. 2 cp each
 	for_white(i) mobility += popcount(attacks[i] & blackPos);
 	for_black(i) mobility += popcount(attacks[i] & whitePos);
-	total_boardValue += mobility*2;
+	total_boardValue += mobility;
 	// ~~~ Blocked Pawns ~~~
 	// Determines how many pawns are blocked per player color, penalty of 4 cp for each
 	total_boardValue += 4 * (popcount((pieces[bp] >> 8) & allPos)
