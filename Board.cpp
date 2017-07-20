@@ -389,7 +389,7 @@ int Board::evaluate(color side)
 	mask = pieces[bb];
 	for_bits(pos, mask)
 		psh -= pieceSquareTable[2][pos];
-	
+
 	if (endGameValue > 0.8) {
 		mask = pieces[wk];
 		for_bits(pos, mask)
@@ -434,9 +434,9 @@ int Board::evaluate(color side)
 	// active in the endgame -> Leads to a quicker checkmate and less transpositions
 	if (endGameValue > 0.5) {
 		mask = pieces[wk];
-	
+
 		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
-	
+
 		total_boardValue += 4 * popcount(mask & ~blackAtt);
 		mask = pieces[bk];
 		mask |= rookAttacks(msb(mask), allPos) | bishopAttacks(msb(mask), allPos);
@@ -464,12 +464,12 @@ void Board::print() const
 			if (b & temp) asciiBoard[count / 8][count % 8] = names[p];
 		}
 	}
-#ifdef _WIN32 // Since Unicode is not really supported in C++ yet
 	char rowNum = '8';
+#ifdef _WIN32 // Since Unicode is not really supported in C++ yet
 	cout << ' ' << string(17, (char)(219)) << '\n';
 	for (auto r : asciiBoard) {
 		cout << rowNum-- << char(219);
-		for (auto c : r) 
+		for (auto c : r)
 			cout << c << ' ';
 		cout << '\b';
 		cout << char(219) << '\n';
@@ -478,13 +478,14 @@ void Board::print() const
 	cout << "  a b c d e f g h\n";
 #else
 	auto repChar = [](int c) {for (int i = 0; i < c; i++) cout << "\u2588"; };
-	repChar(10); cout << '\n';
+	cout << ' '; repChar(17); cout << '\n';
 	for (auto r : asciiBoard) {
-		cout << "\u2588";
-		for (auto c : r) cout << c;
-		cout << "\u2588" << '\n';
+		cout << rowNum-- << "\u2588";
+		for (auto c : r) cout << c << ' ';
+		cout << '\b' << "\u2588" << '\n';
 	}
-	repChar(10); cout << "\n\n";
+	cout << ' '; repChar(17); cout << "\n";
+	cout << "  a b c d e f g h\n";
 #endif
 }
 
