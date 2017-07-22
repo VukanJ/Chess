@@ -111,7 +111,7 @@ void UCIclient::parsePosition(vector<string>& inputList)
 	}
 	if (*inputList.begin() == "startpos") {
 		inputList.erase(inputList.begin()); // "startpos"
-		ai.initialSideToMove = white;
+		ai.sideToMove = white;
 		// Standard starting position
 		ai.setFen("*");
 	}
@@ -123,7 +123,7 @@ void UCIclient::parsePosition(vector<string>& inputList)
 			return;
 		}
 		string FEN;
-		ai.initialSideToMove = (inputList[1] == "w" ? white : black);
+		ai.sideToMove = (inputList[1] == "w" ? white : black);
 		for (int i = 0; i < 6; ++i) 
 			FEN += inputList[i] + ' ';
 		inputList.erase(inputList.begin(), inputList.begin() + 6);
@@ -137,7 +137,7 @@ void UCIclient::parsePosition(vector<string>& inputList)
 	else if (inputList[0] == "moves") {
 		// Play given moves
 		inputList.erase(inputList.begin()); // "moves"
-		ai.playStringMoves(inputList, ai.initialSideToMove);
+		ai.playStringMoves(inputList, ai.sideToMove);
 	}
 	//ai.printAscii();
 }

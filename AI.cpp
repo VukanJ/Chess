@@ -1,7 +1,7 @@
 #include "AI.h"
 
 AI::AI(string FEN, color computerColor)
-	: aiColor(computerColor), initialSideToMove(white), nodesVisited(0),
+	: aiColor(computerColor), nodesVisited(0),
 	currentAge(0)
 {
 	genChessData data;
@@ -74,9 +74,13 @@ pair<Move, Move> AI::getBestMove(color forPlayer, int maxDepth, bool uciInfo)
 		extractPrincipalVariation(board.hashKey, pvLine, targetDepth, forPlayer);
 		infoTimer.stop();
 		if (uciInfo) {
+			int val = transpositionHash.getValue(board.hashKey);
 			cout << "info depth " << targetDepth                                        // Search depth
-				 << " score cp " << transpositionHash.getValue(board.hashKey)           // Score of computer
-				 << " nodes " << nodesVisited                                           // Total visited nodes
+				 << " score cp " << val;                                                // Score of computer
+			if (abs(val) > 10000) {
+				cout << " mate " << oo - abs(val);
+			}
+			cout << " nodes " << nodesVisited                                           // Total visited nodes
 				 << " nps " << (int)((double)nodesVisited / (infoTimer.getTime()*1e-6)) // Nodes per second
 				 << " time " << infoTimer.getTime()*1e-3                                // Computation time in milliseconds
 				 << " pv "; // Principal variation of specified depth
@@ -86,7 +90,7 @@ pair<Move, Move> AI::getBestMove(color forPlayer, int maxDepth, bool uciInfo)
 		}
 
 		bestMove = pvLine[0];
-		if(targetDepth > 1)
+		if(targetDepth > 1 && pvLine.size() > 1)
 			ponderMove = pvLine[1];
 		pvLine.clear();
 	}
@@ -101,6 +105,9 @@ int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 	nodesVisited++;
 
 	// Check if move was already evaluated
+	if (entry.terminal == 1) {
+		return entry.value;
+	}
 	if (entry.search_depth >= depth) {
 		if (entry.flags & EXACT_VALUE) {
 			return entry.value;
@@ -269,7 +276,7 @@ void AI::printAscii()
 void AI::playStringMoves(const vector<string>& moves, color side) 
 {
 	board.playStringMoves(moves, side);
-	sideToMove = moves.size() % 2 == 0 ? initialSideToMove : !initialSideToMove;
+	sideToMove = moves.size() % 2 == 0 ? sideToMove : !sideToMove;
 }
 
 void AI::resetHash()
