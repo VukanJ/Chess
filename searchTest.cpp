@@ -26,10 +26,10 @@ void SearchTest::test()
 
 	// Mate in 4, Albert Becker vs. Eduard Glass 1928
 	// Time: 37s, (+primitive TT) -> 24s, (+TT lookup) -> 9s
-	string FEN = "rk6/N4ppp/Qp2q3/3p4/8/8/5PPP/2R3K1 w - - 1 0"; // Rc1c8  qx{R}e6c8  Qx{p}a6b6  qc8b7  Na7c6  kb8c8  Qb6d8
+	//string FEN = "rk6/N4ppp/Qp2q3/3p4/8/8/5PPP/2R3K1 w - - 1 0"; // Rc1c8  qx{R}e6c8  Qx{p}a6b6  qc8b7  Na7c6  kb8c8  Qb6d8
 
 	// https://www.sparkchess.com/chess-puzzles.html
-	//string FEN = "4r1k1/pQ3pp1/7p/4q3/4r3/P7/1P2nPPP/2BR1R1K b - - 1 0";
+	string FEN = "4r1k1/pQ3pp1/7p/4q3/4r3/P7/1P2nPPP/2BR1R1K b - - 1 0";
 	//string FEN = "4Rnk1/pr3ppp/1p3q2/5NQ1/2p5/8/P4PPP/6K1 w - - 1 0"; // Nf5h6  qx{N}f6h6  Rx{n}e8f8  kx{R}g8f8  Qg5d8
 	//string FEN = "4k2r/1R3R2/p3p1pp/4b3/1BnNr3/8/P1P5/5K2 w - - 1 0";
 	//string FEN = "4r3/pbpn2n1/1p1prp1k/8/2PP2PB/P5N1/2B2R1P/R5K1 w - - 1 0"; // Mate in 2
@@ -129,7 +129,7 @@ int SearchTest::NegaMax(int alpha, int beta, int depth, int ply, color side)
 	}
 
 	if (depth == 0) {
-		board.updateAllAttacks();
+		//board.updateAllAttacks();
 		//return board.evaluate(side);
 		return QuiescenceSearch(alpha, beta, 0, side);
 	}

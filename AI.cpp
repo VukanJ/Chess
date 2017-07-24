@@ -133,15 +133,15 @@ int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 	board.generateMoveList<ALL>(movelist, side);
 
 	// order moves
-	//stable_sort(movelist.begin(), movelist.end(), [&, this](const Move& m1, const Move& m2) {
-	//	board.makeMove<HASH>(m1, side);
-	//	int val1 = transpositionHash.getValue(board.hashKey);
-	//	board.unMakeMove<HASH>(m1, side);
-	//	board.makeMove<HASH>(m2, side);
-	//	int val2 = transpositionHash.getValue(board.hashKey);
-	//	board.unMakeMove<HASH>(m2, side);
-	//	return val1 < val2;
-	//});
+	stable_sort(movelist.begin(), movelist.end(), [&, this](const Move& m1, const Move& m2) {
+		board.makeMove<HASH>(m1, side);
+		int val1 = transpositionHash.getValue(board.hashKey);
+		board.unMakeMove<HASH>(m1, side);
+		board.makeMove<HASH>(m2, side);
+		int val2 = transpositionHash.getValue(board.hashKey);
+		board.unMakeMove<HASH>(m2, side);
+		return val1 > val2;
+	});
 
 	bool checkedOnThisDepth = board.wasInCheck;
 	U64 pinnedOnThisDepth = board.pinned;
