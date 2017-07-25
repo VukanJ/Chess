@@ -1,6 +1,5 @@
 CC = g++
-CFLAGS = -std=c++17 -fms-extensions -Ofast -O3 -fpermissive
-LFLAGS = -lsfml-window -lsfml-graphics -lsfml-system
+CFLAGS = -std=c++17 -Wpedantic -Ofast -O3
 NAME = engine
 OBJ = $(shell find . -type f -iname "*.cpp" | sed 's/\.cpp$$/.o/1')
 DEBUG = #-g

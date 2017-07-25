@@ -8,7 +8,6 @@
 #include <stack>
 
 #include "Board.h"
-#include "gui.h"
 
 using namespace std;
 
@@ -19,14 +18,11 @@ Computer is always maximizing player.
 
 constexpr uint MAX_DEPTH = 64;
 
-class Gui;
-
 class AI
 {
 friend class Benchmark;
 friend class UnitTest;
 friend class DataBaseTest;
-friend class Gui;
 private:
 
 	int targetDepth; // Needed for iterative deepening
@@ -34,7 +30,6 @@ private:
 	Board board;
 	ZobristHash transpositionHash;
 	PVTable pvTable;
-	Gui* gui;
 
 	// Gamehistory contains string board representation for
 	// exact comparison. (Hash can be overwritten)
@@ -55,13 +50,12 @@ public:
 	void resetHash();
 
 	void printDebug(string show = "prnbkqPRNBKQ");
-	void bindGui(Gui* gui);
 	void printBoard();
 	void printAscii();
 
 	void writeToHistory(const Move& move);
 	int nodesVisited;
-	int currentAge; // used to avoid clearing the hash table 
+	int currentAge; // used to avoid clearing the hash table
 
 	color aiColor;	// Piece color of computer
 	color sideToMove;

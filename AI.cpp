@@ -24,11 +24,6 @@ void AI::printBoard()
 	board.print();
 }
 
-void AI::bindGui(Gui* guiPtr)
-{
-	gui = guiPtr;
-}
-
 /*
 string AI::boardToString() const
 {
@@ -268,12 +263,12 @@ void AI::setFen(string fenstring)
 	board.setupBoard(fenstring);
 }
 
-void AI::printAscii() 
+void AI::printAscii()
 {
 	board.print();
 }
 
-void AI::playStringMoves(const vector<string>& moves, color side) 
+void AI::playStringMoves(const vector<string>& moves, color side)
 {
 	board.playStringMoves(moves, side);
 	sideToMove = moves.size() % 2 == 0 ? sideToMove : !sideToMove;
