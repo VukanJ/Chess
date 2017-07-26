@@ -46,7 +46,7 @@ void genChessData::genConnections()
   // Generate rectangular rays
   vector<U64> rects(64, 0x0);
   for(int i = 0; i < 64; i++)
-    rects[i] |= (col << (i % 8)) ^ (row << (i / 8) * 8);
+    rects[i] |= (_col << (i % 8)) ^ (_row << (i / 8) * 8);
   // Generate Diagnoal rays
   vector<U64> diags(64, 0x0);
   for(int i = 0; i < 64; i++){

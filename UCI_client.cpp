@@ -27,63 +27,74 @@ UCIclient::~UCIclient()
 
 void UCIclient::UCI_IO_loop()
 {
-	// position fen Q7/2p2b2/2Pp4/1p1Ppk1p/7K/6P1/3R4/8 b - - 1 0
 	// Communicates with external GUI (Host)
 	string input;
 	vector<string> inputList;
 	while (true) {
 		
-		input.clear();
-		inputList.clear();
+		waitForInput(inputList);
+		interpretInput(inputList);
+		
+	}
+}
 
-		getline(cin, input); // User or GUI input
-		// Tokenize input
-		boost::trim(input);
-		boost::escaped_list_separator<char> sep("", " ", "");
-		boost::tokenizer<boost::escaped_list_separator<char>> tokenize(input, sep);
-		outFile.open("turnierLog.log", ios::app);
-		for (auto token = tokenize.begin(); token != tokenize.end(); ++token) {
-			inputList.push_back(*token);
+void UCIclient::waitForInput(vector<string>& input)
+{
+	input.clear();
+	input.clear();
+	string line;
+	getline(cin, line); // User or GUI input
+					    // Tokenize input
+	boost::trim(line);
+	boost::escaped_list_separator<char> sep("", " ", "");
+	boost::tokenizer<boost::escaped_list_separator<char>> tokenize(line, sep);
+	outFile.open("turnierLog.log", ios::app);
+	for (auto token = tokenize.begin(); token != tokenize.end(); ++token) {
+		input.push_back(*token);
 
-			//cout << *token << ' ';
-			outFile << *token << ' ';
-		}
-		outFile << '\n';
-		outFile.close();
-		switch (getHostCommandCode[inputList[0]]) {
-		case hostCommandCode::uci:
-			printEngineID();
-			break;
-		case hostCommandCode::debug:
-			break;
-		case hostCommandCode::isready:
-			cout << "readyok\n"; 
-			break;
-		case hostCommandCode::setoption:
-			break;
-		case hostCommandCode::registerEngine:
-			/* Engine does not require registering */
-			break;
-		case hostCommandCode::ucinewgame:
-			uciNewGame();
-			cout << "readyok\n";
-			break;
-		case hostCommandCode::position:
-			parsePosition(inputList);
-			break;
-		case hostCommandCode::go:
-			go(inputList);
-			break;
-		case hostCommandCode::stop:
-			break;
-		case hostCommandCode::ponderhit:
-			/* Engine doesnt care */
-			break;
-		case hostCommandCode::quit:
-			return;
-		default:
-			cout << "Unknown command: " << inputList[0] << '\n';
-		}
+		//cout << *token << ' ';
+		outFile << *token << ' ';
+	}
+	outFile << '\n';
+	outFile.close();
+}
+
+void UCIclient::interpretInput(vector<string>& inputList)
+{
+	if (inputList.empty()) return;
+	switch (getHostCommandCode[inputList[0]]) {
+	case hostCommandCode::uci:
+		printEngineID();
+		break;
+	case hostCommandCode::debug:
+		break;
+	case hostCommandCode::isready:
+		cout << "readyok\n";
+		break;
+	case hostCommandCode::setoption:
+		break;
+	case hostCommandCode::registerEngine:
+		/* Engine does not require registering */
+		break;
+	case hostCommandCode::ucinewgame:
+		uciNewGame();
+		cout << "readyok\n";
+		break;
+	case hostCommandCode::position:
+		parsePosition(inputList);
+		break;
+	case hostCommandCode::go:
+		go(inputList);
+		break;
+	case hostCommandCode::stop:
+		break;
+	case hostCommandCode::ponderhit:
+		/* Engine doesnt care */
+		break;
+	case hostCommandCode::quit:
+		return;
+	default:
+		cout << "Unknown command: " << inputList[0] << '\n';
 	}
 }
 
@@ -164,3 +175,4 @@ void UCIclient::go(vector<string>& inputList)
 		 << " ponder " << shortNotation(bestMoves.second) << '\n';
 	//ai.currentAge++;
 }
+

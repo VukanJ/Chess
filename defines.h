@@ -7,12 +7,12 @@
 #include <functional>
 #include <vector>
 
-typedef unsigned uint;
-typedef unsigned long ulong;
-typedef uint64_t U64;
-typedef uint32_t U32;
-typedef uint16_t U16;
-typedef uint8_t  U8;
+using uint = unsigned int;
+using ulong = unsigned long;
+using U64 = uint64_t;
+using U32 = uint32_t;
+using U16 = uint16_t;
+using U8 = uint8_t;
 
 constexpr int oo = 1000000000; // Alpha-Beta infinity
 
@@ -43,7 +43,7 @@ U8 constexpr move_metadata(U8 TYPE, U8 DATA) { return TYPE | (DATA << 4); }
 		}
 		return (U8)index;
 	} // Reverse Bitscan
-	U8 inline msb(U64 x) { ulong index; index = !_BitScanReverse64(&index, x) ? -1 : index; return (U8)index; }
+	U8   inline msb(U64 x) { ulong index; index = !_BitScanReverse64(&index, x) ? -1 : index; return (U8)index; }
 	U64  inline rotate_l64(U64 mask, int amount) { return _rotl64(mask, amount); } // Rotate left  (64Bit)
 	U64  inline rotate_r64(U64 mask, int amount) { return _rotr64(mask, amount); } // Rotate right (64Bit)
 

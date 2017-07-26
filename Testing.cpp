@@ -583,7 +583,7 @@ void UnitTest::testMagic()
 	*/
 }
 
-Benchmark::Benchmark() : totalTotalPerftMoveCount(0), performingAll(false)
+Benchmark::Benchmark() : totalTotalPerftMoveCount(0)
 {
 	genChessData data;
 	data.genMoveData(); // Generates bitboards needed for move generation
@@ -598,116 +598,6 @@ Benchmark::Benchmark() : totalTotalPerftMoveCount(0), performingAll(false)
 	//testBoard.generateMoveList(moves, white, true);
 
 	perftNodeCount = perftEPCount = perftMoveCount = perftCheckmateCount = totalPerftMoveCount = 0;
-}
-
-Benchmark::~Benchmark()
-{
-}
-
-void Benchmark::performAllbenchmarks()
-{
-	clog << "\t::: STARTED ALL BENCHMARK :::\n";
-	performingAll = true;
-	benchmarkMoveGeneration();
-	benchmarkMovemaking();
-	performingAll = false;
-	clog << "\t::: END OF ALL BENCHMARKS :::\n";
-}
-
-#pragma optimize( "", off ) // Never "optimize" benchmarks
-void Benchmark::benchmarkMoveGeneration()
-{
-	if (performingAll) {
-		results.push_back(result{ MOVEGEN, "generateMoveList", "", 0 });
-	}
-	else {
-		clog << "\t::: BENCHMARK :::\n";
-		clog << "Started Benchmarking Board::generateMoveList(...)\n";
-	}
-	// Measure move generation time
-	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5 w kKqQ - 1 0", black);
-	MoveList moves;
-
-	int testSize = (int)1e7;
-	moves.reserve(testSize);
-
-	chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-	for (int i = 0; i < testSize; i++) {
-		samplePlayer.board.generateMoveList<ALL>(moves, black);
-		moves.clear();
-	}
-	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-	auto deltaT_inSeconds = (double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count()*1e-6;
-
-	cout << (deltaT_inSeconds) << " Boards per second\n";
-
-	moves.clear();
-
-
-}
-#pragma optimize( "", on )
-
-#pragma optimize( "", off ) // Never "optimize" benchmarks
-void Benchmark::benchmarkMovemaking()
-{
-	// Measure move generation time
-	if (performingAll) {
-		results.push_back(result{ MAKEMOVE, "makeMove/unMakeMove", "", 0 });
-	}
-	else {
-		clog << "\t::: BENCHMARK :::\n";
-		clog << "Started Benchmarking Board::makeMove/unMakeMove(...)\n";
-	}
-
-	AI samplePlayer("1K1BQ3/2P3R1/P2P4/P3Pq1R/2n1p3/1p1r1p2/8/1kr5 w - - 1 0", black);
-	MoveList moves;
-	samplePlayer.board.generateMoveList<ALL>(moves, black);
-	auto& boardref = samplePlayer.board;
-	size_t numOfMoves = moves.size();
-	int testsize = (int)6e6;
-	vector<double> measurement;
-	measurement.reserve(testsize);
-
-	for (int i = 0; i < testsize; i++) {
-		chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-		for (auto& move : moves) {
-			boardref.makeMove<FULL>(move, black);
-			boardref.unMakeMove<FULL>(move, black);
-		}
-		chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-		measurement.push_back((double)chrono::duration_cast<chrono::microseconds>(t2 - t1).count());
-	}
-	double sum = 0;
-	for (auto& m : measurement) sum += m;
-	double averageMoveMakeTime = (sum / (numOfMoves*testsize)) * 1e-6; // in seconds
-
-	if (performingAll) {
-		results.back().msg = "Number of million moves and unmake per second: ";
-		results.back().value = averageMoveMakeTime;
-	}
-	else {
-		printf("Move making and undoing takes approx. %f microseconds\n", averageMoveMakeTime * 1e6);
-		printf("Makes %f move/unmakemoves per second\n", 1.0 / averageMoveMakeTime);
-		clog << "\t::: END OF BENCHMARK :::\n";
-	}
-}
-#pragma optimize( "", on )
-
-void Benchmark::summarize()
-{
-	clog << "\t::: BENCHMARK SUMMARY:::\n" << string(80, '~') << '\n';
-	for (auto& result : results) {
-		clog << result.name << '\n';
-		switch (result.type) {
-		case MOVEGEN:
-			clog << result.msg << '\t' << (1.0 / result.value) * 1e-6 << '\n';
-			break;
-		case MAKEMOVE:
-			clog << result.msg << '\t' << (1.0 / result.value) * 1e-6 << '\n';
-			break;
-		}
-	}
-	clog << "\t::: END OF SUMMARY :::\n" << string(80, '~') << '\n';
 }
 
 void Benchmark::testPerft(int maxdepth)
@@ -874,16 +764,8 @@ void Benchmark::perftTestSuite()
 	cin.ignore();
 }
 
-DataBaseTest::DataBaseTest() : transposition_hash(ZobristHash(1e7))
-{
-	targetDepth = 1;
-
-	evalcnt = 0;
-	negaMaxCnt = 0;
-	storedBoards = 0;
-	hashAccess = 0;
-	moveCnt = 0;
-}
+DataBaseTest::DataBaseTest() : transposition_hash(ZobristHash(static_cast<size_t>(1e7))),
+targetDepth(1), evalcnt(0), negaMaxCnt(0), storedBoards(0), hashAccess(0), moveCnt() {}
 
 void DataBaseTest::start_Bratko_Kopec_Test()
 {
@@ -923,7 +805,6 @@ void DataBaseTest::start_Bratko_Kopec_Test()
 		if (++breakCount > 0) break;
 	}
 }
-
 
 Move DataBaseTest::getBestTestMove(color forPlayer)
 {

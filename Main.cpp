@@ -9,28 +9,24 @@
 using namespace std;
 
 void testing();
-void benchmark();
 
 int main(int argc, char* argv[])
 {
 	sayHello();
-	testing();
-
-	AI computer("*", black);
+	UCIclient uciClient;
+	uciClient.UCI_IO_loop();
 
 	return 0;
 }
 
 void testing(){
-	UCIclient uciClient;
-	uciClient.UCI_IO_loop();
-	//Benchmark benchmark;
-	SearchTest searchTest;
-	searchTest.test();
+	Benchmark benchmark;
+	//SearchTest searchTest;
+	//searchTest.test();
 	//benchmark.benchmarkMovemaking();
 	//benchmark.benchmarkMoveGeneration();
 	//benchmark.testPerft(-1);
-	//benchmark.perftTestSuite();
+	benchmark.perftTestSuite();
 
 	//DataBaseTest dbt;
 	//dbt.start_Bratko_Kopec_Test();
@@ -38,11 +34,4 @@ void testing(){
 	cout << "EOP\n";
 	cin.ignore();
 	exit(0);
-}
-
-void benchmark()
-{
-	Benchmark bench;
-	bench.performAllbenchmarks();
-	bench.summarize();
 }

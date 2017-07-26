@@ -128,15 +128,7 @@ int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 	board.generateMoveList<ALL>(movelist, side);
 
 	// order moves
-	stable_sort(movelist.begin(), movelist.end(), [&, this](const Move& m1, const Move& m2) {
-		board.makeMove<HASH>(m1, side);
-		int val1 = transpositionHash.getValue(board.hashKey);
-		board.unMakeMove<HASH>(m1, side);
-		board.makeMove<HASH>(m2, side);
-		int val2 = transpositionHash.getValue(board.hashKey);
-		board.unMakeMove<HASH>(m2, side);
-		return val1 > val2;
-	});
+	sortMoves(movelist, side);
 
 	bool checkedOnThisDepth = board.wasInCheck;
 	U64 pinnedOnThisDepth = board.pinned;
@@ -197,6 +189,32 @@ int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 	else entry.flags = EXACT_VALUE;
 
 	return alpha;
+}
+
+void inline AI::sortMoves(MoveList& movelist, color side) 
+{
+	stable_sort(movelist.begin(), movelist.end(), [&, this](const Move& m1, const Move& m2) {
+		board.makeMove<HASH>(m1, side);
+		auto& e1 = transpositionHash.getEntry(board.hashKey);
+		board.unMakeMove<HASH>(m1, side);
+		board.makeMove<HASH>(m2, side);
+		auto& e2 = transpositionHash.getEntry(board.hashKey);
+		board.unMakeMove<HASH>(m2, side);
+		int val1 = 0, val2 = 0;
+		if (e1.search_depth != -1) {
+			val1 = e1.value;
+		}
+		else if(m1.mtype() == CAPTURE){
+			val1 = captureScore[m1.movePiece() % 6][m1.targetPiece() % 6] - 100000;
+		}
+		if (e2.search_depth != -1) {
+			val2 = e2.value;
+		}
+		else if (m2.mtype() == CAPTURE) {
+			val2 = captureScore[m2.movePiece() % 6][m2.targetPiece() % 6] - 100000;
+		}
+		return val1 < val2;
+	});
 }
 
 int AI::QuiescenceSearch(int alpha, int beta, int ply, color side)

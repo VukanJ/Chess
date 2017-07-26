@@ -3,16 +3,13 @@
 
 #include "misc.h"
 
-constexpr U64 col        = 0x101010101010101ull;
-constexpr U64 row        = 0xFFull;
-constexpr U64 _right     = 0x0101010101010101ull;
-constexpr U64 _left      = 0x8080808080808080ull;
-constexpr U64 _col       = 0x101010101010101ull;
-constexpr U64 _row       = 0xFFull;
-constexpr U64 _noSides   = 0x7E7E7E7E7E7E7E7Eull;
-constexpr U64 _sidesOnly = 0x8181818181818181ull;
-
-constexpr U64 _msb       = 0x1ull << 63; // Most significant bit
+constexpr U64  _right    = 0x0101010101010101ull,
+              _left      = 0x8080808080808080ull,
+              _col       = 0x101010101010101ull,
+              _row       = 0xFFull,
+              _noSides   = 0x7E7E7E7E7E7E7E7Eull,
+              _sidesOnly = 0x8181818181818181ull,
+              _msb       = 0x8000000000000000ull; // Most significant bit
 
 class genChessData final
 {
@@ -40,7 +37,6 @@ extern vector<vector<U64>> CONNECTIONS;
 
 extern vector<vector<U64>> magicRookMoveDatabase;
 extern vector<vector<U64>> magicBishopMoveDatabase;
-
 
 namespace {
 
@@ -181,7 +177,7 @@ namespace {
 		0x50080402000000,  0x20100804020000,  0x40201008040200
 	};
 
-	// Misc
+	// Magic datasets
 
 	const vector<U64> rookMagics = {
 		0x1480004000201080,  0x40002000c81000,  0x2100084411002000,
@@ -260,8 +256,8 @@ namespace {
 	};
 
 	const vector<U64> standardPosition = {
-		0xFF000000000000, 0x8100000000000000,
-		0x4200000000000000, 0x2400000000000000, 0x800000000000000, 0x1000000000000000,
+		0xFF000000000000, 0x8100000000000000, 0x4200000000000000, 
+		0x2400000000000000, 0x800000000000000, 0x1000000000000000,
 		0xFF00, 0x81, 0x42, 0x24, 0x8, 0x10
 	};
 

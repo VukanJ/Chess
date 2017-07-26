@@ -21,11 +21,12 @@ public:
 	UCIclient();
 	~UCIclient();
 	void UCI_IO_loop();
-
+	void interpretInput(vector<string>&);
 	AI ai;
 private:
 	void uciNewGame();
 	void printEngineID() const;
+	void waitForInput(vector<string>& input);
 	void parsePosition(vector<string>&);
 	void go(vector<string>&);
 	enum class hostCommandCode {

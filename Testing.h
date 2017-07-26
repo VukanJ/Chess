@@ -48,32 +48,17 @@ private:
 	void testProm();
 };
 
-#pragma optimize( "[optimization-list]", {on | off} )
-
 class Benchmark
 {
 public:
 	Benchmark();
-	~Benchmark();
-	void performAllbenchmarks();
-	void summarize();
 
 	void testPerft(int maxdepth);
 	void perftTestSuite();
-	void benchmarkMoveGeneration();
-	void benchmarkMovemaking();
 	void perft(int maxDepth, const int targetDepth, color startColor);
 private:
-	enum bType{MOVEGEN, MAKEMOVE};
-	bool performingAll;
-	struct result {
-		bType type;
-		string name;
-		string msg;
-		float value;
-	};
+
 	Board testBoard;
-	vector<result> results;
 	// perft statistics
 	long perftNodeCount;
 	long perftEPCount;

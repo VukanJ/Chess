@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <string>
 #include <algorithm>
+#include <numeric>
 #include <memory>
 #include <stack>
 
@@ -39,7 +40,7 @@ private:
 	int NegaMax(int alpha, int beta, int depth, int ply, color side);
 	int QuiescenceSearch(int alpha, int beta, int ply, color side);
 	void extractPrincipalVariation(const U64& startKey, vector<Move>& pvLine,  int maxPrintDepth, color side);
-
+	void inline sortMoves(MoveList& movelist, color side);
 public:
 	AI(string FEN, color computerColor);
 	AI(string FEN, color computerColor, uint hashSize);

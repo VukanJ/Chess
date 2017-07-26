@@ -1,7 +1,6 @@
 #include "Testing.h"
 
-SearchTest::SearchTest()
-	: transpositionHash(ZobristHash(1e7)),
+SearchTest::SearchTest() :
 	targetDepth(1), evalcnt(0), negaMaxCnt(0),
 	storedBoards(0), hashAccess(0), moveCnt(0), finished(0), ordering(0.9){}
 
