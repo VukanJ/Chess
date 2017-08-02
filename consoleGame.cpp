@@ -63,11 +63,16 @@ void ConsoleGame::interpretInput(const vector<string>& inputList)
 
 void ConsoleGame::play(const string& move)
 {
-	ai.playStringMoves({ move }, white);
-	ai.printAscii();
-	cout << "Thinking...\n";
-	Move bestMove = ai.getBestMove(black, 5, false).first;
-	ai.playStringMoves({ shortNotation(bestMove) }, black);
-	ai.printAscii();
-	cout << "Computer: " << bestMove << endl;
+	if (ai.isUserMoveValid(move, white)) {
+		ai.playStringMoves({ move }, white);
+		ai.printAscii();
+		cout << "Thinking...\n";
+		Move bestMove = ai.getBestMove(black, 5, false).first;
+		ai.playStringMoves({ shortNotation(bestMove) }, black);
+		ai.printAscii();
+		cout << "Computer: " << bestMove << endl;
+	}
+	else {
+		cout << "\"" << move << "\" is not a valid move\n";
+	}
 }

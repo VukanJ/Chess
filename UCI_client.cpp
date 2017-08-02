@@ -193,4 +193,3 @@ void UCIclient::go(vector<string>& inputList)
 	outFile.close();
 	//ai.currentAge++;
 }
-

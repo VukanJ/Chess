@@ -352,3 +352,12 @@ void AI::resetHash()
 	transpositionHash.clear();
 	pvTable.clear();
 }
+
+bool AI::isUserMoveValid(const string& usermove, color side)
+{
+	MoveList possibleMoves;
+	board.generateMoveList<ALL>(possibleMoves, side);
+	return any_of(possibleMoves.begin(), possibleMoves.end(), [&, this](const Move& move) {
+		return shortNotation(move) == usermove;
+	}) ? true : false;
+}

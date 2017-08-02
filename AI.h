@@ -48,6 +48,7 @@ public:
 	AI(string FEN, color computerColor);
 	AI(string FEN, color computerColor, uint hashSize);
 	void setFen(string);
+	bool isUserMoveValid(const string&, color side);
 	pair<Move, Move> getBestMove(color forPlayer, int maxDepth, bool uciInfo);
 	void playStringMoves(const vector<string>& moves, color side);
 	void reset();
