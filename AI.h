@@ -37,10 +37,13 @@ private:
 	//string boardToString() const;
 	//vector<pair<string, Move>> gameHistory;
 	// Chess playing functions
+
 	int NegaMax(int alpha, int beta, int depth, int ply, color side);
-	int QuiescenceSearch(int alpha, int beta, int ply, color side);
+	int QuiescenceSearch(int alpha, int beta, color side);
 	void extractPrincipalVariation(const U64& startKey, vector<Move>& pvLine,  int maxPrintDepth, color side);
 	void inline sortMoves(MoveList& movelist, color side);
+
+	template<bool firstVisit> void getNextMove(MoveList&, MoveList::iterator&, color);
 public:
 	AI(string FEN, color computerColor);
 	AI(string FEN, color computerColor, uint hashSize);

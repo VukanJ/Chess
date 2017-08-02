@@ -82,7 +82,7 @@ void Board::initHash()
 	// Generates constant table of random 64Bit numbers.
 	random_device r_device;
 	mt19937_64 generator(r_device());
-	generator.seed(42);
+	//generator.seed(42);
 
 	uniform_int_distribution<U64> distr;
 	randomSet = vector<vector<U64>>(14, vector<U64>(64, 0));
@@ -370,66 +370,66 @@ int Board::evaluate(color side)
 
 	//// Rewards points, if positions are similar to piece-square-heuristics
 	//// Pawns:
-	U64 mask = pieces[wp];
 
-	//int psh = 0;
-	//for_bits(pos, mask)
-	//	psh += pieceSquareTable[0][63 - pos];
-	//mask = pieces[bp];
-	//for_bits(pos, mask)
-	//	psh -= pieceSquareTable[0][pos];
-	//mask = pieces[wn];
-	//for_bits(pos, mask)
-	//	psh += pieceSquareTable[1][63 - pos];
-	//mask = pieces[bn];
-	//for_bits(pos, mask)
-	//	psh -= pieceSquareTable[1][pos];
-	//mask = pieces[wb];
-	//for_bits(pos, mask)
-	//	psh += pieceSquareTable[2][63 - pos];
-	//mask = pieces[bb];
-	//for_bits(pos, mask)
-	//	psh -= pieceSquareTable[2][pos];
-	//
-	//if (endGameValue > 0.8) {
-	//	mask = pieces[wk];
-	//	for_bits(pos, mask)
-	//		psh += pieceSquareTable[4][63 - pos];
-	//	mask = pieces[bk];
-	//	for_bits(pos, mask)
-	//		psh -= pieceSquareTable[4][pos];
-	//}
-	//else {
-	//	mask = pieces[wk];
-	//	for_bits(pos, mask)
-	//		psh += pieceSquareTable[3][63 - pos];
-	//	mask = pieces[bk];
-	//	for_bits(pos, mask)
-	//		psh -= pieceSquareTable[3][pos];
-	//}
-	//total_boardValue += psh / 10;
+	int psh = 0;
+	U64 mask = pieces[wp];
+	for_bits(pos, mask)
+		psh += pieceSquareTable[0][63 - pos];
+	mask = pieces[bp];
+	for_bits(pos, mask)
+		psh -= pieceSquareTable[0][pos];
+	mask = pieces[wn];
+	for_bits(pos, mask)
+		psh += pieceSquareTable[1][63 - pos];
+	mask = pieces[bn];
+	for_bits(pos, mask)
+		psh -= pieceSquareTable[1][pos];
+	mask = pieces[wb];
+	for_bits(pos, mask)
+		psh += pieceSquareTable[2][63 - pos];
+	mask = pieces[bb];
+	for_bits(pos, mask)
+		psh -= pieceSquareTable[2][pos];
+	
+	if (endGameValue > 0.8) {
+		mask = pieces[wk];
+		for_bits(pos, mask)
+			psh += pieceSquareTable[4][63 - pos];
+		mask = pieces[bk];
+		for_bits(pos, mask)
+			psh -= pieceSquareTable[4][pos];
+	}
+	else {
+		mask = pieces[wk];
+		for_bits(pos, mask)
+			psh += pieceSquareTable[3][63 - pos];
+		mask = pieces[bk];
+		for_bits(pos, mask)
+			psh -= pieceSquareTable[3][pos];
+	}
+	total_boardValue += psh;
 
 	// *************************** MOBILITY ***************************
-	// Determines how many squares are accessible, worth 1 cp each
+	// Determines how many squares are accessible, worth "0.5" cp each
 	int mobility = 0;
 	for_white(i) mobility += popcount(attacks[i] ^ blackPos);
 	for_black(i) mobility -= popcount(attacks[i] ^ whitePos);
-	total_boardValue += mobility;
-	mobility = 0;
-	// Measure "hostiliy" = number of attacked pieces of opponent. 2 cp each
-	for_white(i) mobility += popcount(attacks[i] & blackPos);
-	for_black(i) mobility += popcount(attacks[i] & whitePos);
-	total_boardValue += mobility;
+
+	total_boardValue += mobility/4;
 	// ~~~ Blocked Pawns ~~~
-	// Determines how many pawns are blocked per player color, penalty of 4 cp for each
-	total_boardValue += 4 * (popcount((pieces[bp] >> 8) & allPos)
+	// Determines how many pawns are blocked per player color, penalty of 8 cp for each
+	total_boardValue += 8 * (popcount((pieces[bp] >> 8) & allPos)
 						   - popcount((pieces[wp] << 8) & allPos));
 
 	//*************************** KING SAFETY ***************************
 	// Penalty of 50 cp if king is in check, since it generally
 	// reduces number of possible moves.
-	if (pieces[bk] & whiteAtt)      total_boardValue += 50;
-	else if (pieces[wk] & blackAtt) total_boardValue -= 50;
+	if (pieces[bk] & whiteAtt)      total_boardValue += 60;
+	else if (pieces[wk] & blackAtt) total_boardValue -= 60;
+	// Penalty if queen is being attacked, encourages engine to protect the queen
+	if (pieces[bq] & whiteAtt) total_boardValue += 50;
+	if (pieces[wq] & blackAtt) total_boardValue -= 50;
+
 	// ~~~ King freedom ~~~
 	// Measures number of fields the king can escape to. This should only be
 	// active in the endgame -> Leads to a quicker checkmate and less transpositions

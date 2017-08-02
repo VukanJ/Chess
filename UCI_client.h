@@ -19,13 +19,12 @@ class UCIclient
 {
 public:
 	UCIclient();
-	~UCIclient();
 	void UCI_IO_loop();
 	void interpretInput(vector<string>&);
+	void printEngineID() const;
 	AI ai;
 private:
 	void uciNewGame();
-	void printEngineID() const;
 	void waitForInput(vector<string>& input);
 	void parsePosition(vector<string>&);
 	void go(vector<string>&);
@@ -33,12 +32,19 @@ private:
 		uci = 1, debug, isready, setoption, registerEngine,
 		ucinewgame, position, go, stop, ponderhit, quit
 	};
+	enum class goArgument {
+		depth = 1, movetime, mate, infinite
+	};
+	enum class positionArgument {
+		startpos = 1, fen, moves 
+	};
 	enum class customOptions { 
 		hash // Hash size in bytes 
 	};
 	ofstream outFile;
-	map<string, customOptions>   getOptions;
-	map<string, hostCommandCode> getHostCommandCode;
+	map<string, customOptions>    getOptions;
+	map<string, hostCommandCode>  getHostCommandCode;
+	map<string, goArgument>       getGoArgCode;
 };
 
 

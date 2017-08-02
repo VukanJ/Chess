@@ -4,25 +4,26 @@ UCIclient::UCIclient() : ai(AI("*", black))
 {
 	// Standard computer opponent is black
 	// Starting from standard position
-
 	getHostCommandCode = {
-		{"uci",        hostCommandCode::uci },
-		{"debug",      hostCommandCode::debug },
-		{"isready",    hostCommandCode::isready },
-		{"setoption",  hostCommandCode::setoption },
-		{"register",   hostCommandCode::registerEngine },
-		{"ucinewgame", hostCommandCode::ucinewgame },
-		{"position",   hostCommandCode::position },
-		{"go",         hostCommandCode::go },
-		{"stop",       hostCommandCode::stop },
-		{"ponderhit",  hostCommandCode::ponderhit },
-		{"quit",       hostCommandCode::quit }
+		{ "uci",        hostCommandCode::uci },
+		{ "debug",      hostCommandCode::debug },
+		{ "isready",    hostCommandCode::isready },
+		{ "setoption",  hostCommandCode::setoption },
+		{ "register",   hostCommandCode::registerEngine },
+		{ "ucinewgame", hostCommandCode::ucinewgame },
+		{ "position",   hostCommandCode::position },
+		{ "go",         hostCommandCode::go },
+		{ "stop",       hostCommandCode::stop },
+		{ "ponderhit",  hostCommandCode::ponderhit },
+		{ "quit",       hostCommandCode::quit }
+	};
+	getGoArgCode = {
+		{ "depth",    goArgument::depth },
+		{ "infinite", goArgument::infinite },
+		{ "mate",     goArgument::mate },
+		{ "movetime", goArgument::movetime }
 	};
 	ai.printAscii();
-}
-
-UCIclient::~UCIclient()
-{
 }
 
 void UCIclient::UCI_IO_loop()
@@ -41,7 +42,6 @@ void UCIclient::UCI_IO_loop()
 void UCIclient::waitForInput(vector<string>& input)
 {
 	input.clear();
-	input.clear();
 	string line;
 	getline(cin, line); // User or GUI input
 					    // Tokenize input
@@ -49,11 +49,11 @@ void UCIclient::waitForInput(vector<string>& input)
 	boost::escaped_list_separator<char> sep("", " ", "");
 	boost::tokenizer<boost::escaped_list_separator<char>> tokenize(line, sep);
 	outFile.open("turnierLog.log", ios::app);
-	for (auto token = tokenize.begin(); token != tokenize.end(); ++token) {
-		input.push_back(*token);
+	for (auto token : tokenize) {
+		input.push_back(token);
 
-		//cout << *token << ' ';
-		outFile << *token << ' ';
+		//cout << token << ' ';
+		outFile << token << ' ';
 	}
 	outFile << '\n';
 	outFile.close();
@@ -139,7 +139,7 @@ void UCIclient::parsePosition(vector<string>& inputList)
 			FEN += inputList[i] + ' ';
 		inputList.erase(inputList.begin(), inputList.begin() + 6);
 		ai.setFen(FEN);
-		ai.printAscii();
+		//ai.printAscii();
 	}
 	if (inputList.empty()) { 
 		// ready
@@ -160,19 +160,38 @@ void UCIclient::go(vector<string>& inputList)
 	if (inputList.empty()) {
 		bestMoves = ai.getBestMove(ai.sideToMove, 5, true);
 	}
-	else if (*inputList.begin() == "depth") {
-		inputList.erase(inputList.begin()); // "depth"
-		if (inputList.empty()) {
-			cerr << "No depth specified!\n";
-			return;
-		}
-		bestMoves = ai.getBestMove(ai.sideToMove, stoi(inputList[0]), true);
-	}
 	else {
-		bestMoves = ai.getBestMove(ai.sideToMove, 5, true);
+		switch (getGoArgCode[*inputList.begin()]) {
+		case goArgument::depth:
+			inputList.erase(inputList.begin()); // "depth"
+			if (inputList.empty()) {
+				cerr << "No depth specified!\n";
+				return;
+			}
+			bestMoves = ai.getBestMove(ai.sideToMove, stoi(inputList[0]), true);
+			break;
+		case goArgument::infinite:
+			// Create thread, run until "stop" is passed
+			break;
+		case goArgument::movetime:
+			// Run timed NegaMax for x seconds
+			break;
+		case goArgument::mate:
+			// Search mate in x, same as search to specified depth
+			inputList.erase(inputList.begin()); // "mate"
+			if (inputList.empty()) {
+				cerr << "# Moves to mate not specified!\n";
+				return;
+			}
+			bestMoves = ai.getBestMove(ai.sideToMove, stoi(inputList[0]), true);
+			break;
+		}
 	}
 	cout << "bestmove " << shortNotation(bestMoves.first)
 		 << " ponder " << shortNotation(bestMoves.second) << '\n';
+	outFile.open("turnierLog.log", ios::app);
+	outFile << "best = " << shortNotation(bestMoves.first) << '\n';
+	outFile.close();
 	//ai.currentAge++;
 }
 

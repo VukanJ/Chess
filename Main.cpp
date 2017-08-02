@@ -4,6 +4,7 @@
 #include "AI.h"
 #include "UCI_client.h"
 #include "ZobristHash.h"
+#include "consoleGame.h"
 #include "Testing.h"
 
 using namespace std;
@@ -13,9 +14,23 @@ void testing();
 int main(int argc, char* argv[])
 {
 	sayHello();
-	UCIclient uciClient;
-	uciClient.UCI_IO_loop();
-
+	// Wait for first input to decide which mode should be started
+	while (true) {
+		string input;
+		getline(cin, input);
+		boost::trim(input);
+		if (input == "uci") {
+			UCIclient uciClient;
+			uciClient.printEngineID();
+			uciClient.UCI_IO_loop();
+		}
+		else if (input == "xboard") { /* Not supported */ }
+		else {
+			// Interactive move
+			ConsoleGame consoleGame;
+			consoleGame.ioLoop(input);
+		}
+	}
 	return 0;
 }
 

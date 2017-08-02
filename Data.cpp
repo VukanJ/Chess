@@ -42,7 +42,7 @@ void genChessData::genMagicDatabases()
 
 void genChessData::genConnections()
 {
-  cout << "Generating Bitboards...\n";
+  //cout << "Generating Bitboards...\n";
   // Generate rectangular rays
   vector<U64> rects(64, 0x0);
   for(int i = 0; i < 64; i++)

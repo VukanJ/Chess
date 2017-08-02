@@ -101,6 +101,7 @@ int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 
 	// Check if move was already evaluated
 	if (entry.terminal == 1) {
+		// Checkmate / Stalemate 
 		return entry.value;
 	}
 	if (entry.search_depth >= depth) {
@@ -118,17 +119,13 @@ int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 		}
 	}
 	if (depth == 0) {
-		board.updateAllAttacks();
-		return board.evaluate(side);
-		//return QuiescenceSearch(alpha, beta, 0, side);
+		// Evaluate board & reduce Horizon-Effekt
+		return QuiescenceSearch(alpha, beta, side);
 	}
 
 	MoveList movelist;
 	board.updateAllAttacks();
 	board.generateMoveList<ALL>(movelist, side);
-
-	// order moves
-	sortMoves(movelist, side);
 
 	bool checkedOnThisDepth = board.wasInCheck;
 	U64 pinnedOnThisDepth = board.pinned;
@@ -136,25 +133,36 @@ int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 	int legalMoves = 0, score = 0;
 	Move bestMove;
 
-	for (const auto& move : movelist) {
-		board.makeMove<FULL>(move, side);
+	// Get first best move (estimate)
+	MoveList::iterator move = movelist.begin();
+	ply == targetDepth ? getNextMove<true>(movelist, move, side)
+		               : getNextMove<false>(movelist, move, side);
+	for (; move != movelist.end(); ) {
+		board.makeMove<FULL>(*move, side);
 
-		if (board.isKingLeftInCheck(side, move, checkedOnThisDepth, pinnedOnThisDepth)) {
-			board.unMakeMove<FULL>(move, side);
+		if (board.isKingLeftInCheck(side, *move, checkedOnThisDepth, pinnedOnThisDepth)) {
+			board.unMakeMove<FULL>(*move, side);
+			// Get next best move (estimate)
+			ply == targetDepth ? getNextMove<true>(movelist, move, side)
+				               : getNextMove<false>(movelist, move, side);
+			move++;
 			continue;
 		}
 		legalMoves++;
 		score = -NegaMax(-beta, -alpha, depth - 1, ply + 1, !side);
 
-		board.unMakeMove<FULL>(move, side);
+		board.unMakeMove<FULL>(*move, side);
 
 		if (score > alpha) {
 			if (score >= beta) {
 				return beta; // Beta Cutoff
 			}
 			alpha = score;
-			bestMove = move;
+			bestMove = *move;
 		}
+		ply == targetDepth ? getNextMove<true>(movelist, move, side)
+			               : getNextMove<false>(movelist, move, side);
+		move++;
 	}
 	if (legalMoves == 0) {
 		// No legal moves found.
@@ -191,6 +199,51 @@ int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 	return alpha;
 }
 
+template<bool firstVisit> void AI::getNextMove(MoveList& mlist, MoveList::iterator& current, color side)
+{
+	int bestValue = -oo, oldBestValue = -oo;
+	MoveList::iterator move = current;
+	for (; move != mlist.end(); ++move) {
+		oldBestValue = bestValue;
+		if (firstVisit) {
+			board.makeMove<HASH>(*move, side);
+			auto& entry = transpositionHash.getEntry(board.hashKey);
+			board.unMakeMove<HASH>(*move, side);
+
+			if (entry.search_depth != -1) {
+				// I. PV + Hash moves:
+				bestValue = max(bestValue, entry.value);
+			}
+			else if (move->mtype() == CAPTURE) {
+				// II. Captures 
+				bestValue = max(bestValue, captureScore[move->movePiece() % 6][move->targetPiece() % 6] - 100000);
+			}
+			else if (move->mtype() == PAWN2 || (move->mtype() == MOVE && move->movePiece() % 6 == 0)) {
+				// III. Pawn pushes
+				bestValue = max(bestValue, -1000000);
+			}
+			if (bestValue != oldBestValue) {
+				// Improvement
+				iter_swap(current, move);
+			}
+		}
+		else {
+			if (move->mtype() == CAPTURE) {
+				// II. Captures 
+				bestValue = max(bestValue, captureScore[move->movePiece() % 6][move->targetPiece() % 6] - 100000);
+			}
+			else if (move->mtype() == PAWN2 || (move->mtype() == MOVE && move->movePiece() % 6 == 0)) {
+				// III. Pawn pushes
+				bestValue = max(bestValue, -1000000);
+			}
+			if (bestValue != oldBestValue) {
+				// Improvement
+				iter_swap(current, move);
+			}
+		}	
+	}
+}
+
 void inline AI::sortMoves(MoveList& movelist, color side) 
 {
 	stable_sort(movelist.begin(), movelist.end(), [&, this](const Move& m1, const Move& m2) {
@@ -217,8 +270,10 @@ void inline AI::sortMoves(MoveList& movelist, color side)
 	});
 }
 
-int AI::QuiescenceSearch(int alpha, int beta, int ply, color side)
+int AI::QuiescenceSearch(int alpha, int beta, color side)
 {
+	// Plays all (relevant) captures from current position
+	// Reduces Horizon Effect
 	nodesVisited++;
 	int standingPat = board.evaluate(side);
 	if (standingPat >= beta)
@@ -231,7 +286,6 @@ int AI::QuiescenceSearch(int alpha, int beta, int ply, color side)
 	board.generateMoveList<CAPTURES_ONLY>(mlist, side);
 
 	// MVA-LLV scheme (search best captures first)
-
 	stable_sort(mlist.begin(), mlist.end(), [](const Move& m1, const Move& m2) {
 		return captureScore[m1.movePiece() % 6][m1.targetPiece() % 6]
 	         > captureScore[m2.movePiece() % 6][m2.targetPiece() % 6];
@@ -247,7 +301,7 @@ int AI::QuiescenceSearch(int alpha, int beta, int ply, color side)
 			continue;
 		}
 
-		int score = -QuiescenceSearch(-beta, -alpha, ply + 1, !side);
+		int score = -QuiescenceSearch(-beta, -alpha, !side);
 		board.unMakeMove<FULL>(capture, side);
 		if (score >= beta)
 			return beta;

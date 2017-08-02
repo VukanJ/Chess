@@ -24,7 +24,6 @@ void SearchTest::test()
 	//string FEN = "7R/8/8/k1K5/8/8/8/8 w - - 1 0"; // Mate in 0.5
 
 	// Mate in 4, Albert Becker vs. Eduard Glass 1928
-	// Time: 37s, (+primitive TT) -> 24s, (+TT lookup) -> 9s
 	//string FEN = "rk6/N4ppp/Qp2q3/3p4/8/8/5PPP/2R3K1 w - - 1 0"; // Rc1c8  qx{R}e6c8  Qx{p}a6b6  qc8b7  Na7c6  kb8c8  Qb6d8
 
 	// https://www.sparkchess.com/chess-puzzles.html
