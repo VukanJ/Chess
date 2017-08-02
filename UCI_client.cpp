@@ -23,7 +23,6 @@ UCIclient::UCIclient() : ai(AI("*", black))
 		{ "mate",     goArgument::mate },
 		{ "movetime", goArgument::movetime }
 	};
-	ai.printAscii();
 }
 
 void UCIclient::UCI_IO_loop()

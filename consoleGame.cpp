@@ -46,8 +46,28 @@ void ConsoleGame::interpretInput(const vector<string>& inputList)
 {
 	if (inputList.empty()) return;
 	switch (mapToCode[inputList[0]]) {
-	case userCode::newgame: break;
+	case userCode::newgame: 
+		// Resets hash tables and sets position to standard starting position
+		ai.reset();
+		ai.resetHash();
+		ai.currentAge = 0;
+		break;
 	case userCode::setposition: break;
 	case userCode::help: cout << inGameHelp << endl; break;
+	default:
+		// Move was entered
+		play(inputList[0]);
+		break;
 	}
+}
+
+void ConsoleGame::play(const string& move)
+{
+	ai.playStringMoves({ move }, white);
+	ai.printAscii();
+	cout << "Thinking...\n";
+	Move bestMove = ai.getBestMove(black, 5, false).first;
+	ai.playStringMoves({ shortNotation(bestMove) }, black);
+	ai.printAscii();
+	cout << "Computer: " << bestMove << endl;
 }
