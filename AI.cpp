@@ -95,6 +95,11 @@ pair<Move, Move> AI::getBestMove(color forPlayer, int maxDepth, bool uciInfo)
 
 int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 {
+	// 4Rnk1/pr3ppp/1p3q2/5NQ1/2p5/8/P4PPP/6K1 w - - 1 0
+	// Consistency check:
+	// The following FEN should be recognized as Zugzwang. Search should converge after 5 half-moves
+	// r4r1k/1pqb1B1p/p3p2B/2bpP2Q/8/1NP5/PP4PP/5R1K w - - 1 0
+
 	int oldAlpha = alpha;
 	auto &entry = transpositionHash.getEntry(board.hashKey);
 	nodesVisited++;
@@ -126,7 +131,7 @@ int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 	MoveList movelist;
 	board.updateAllAttacks();
 	board.generateMoveList<ALL>(movelist, side);
-
+	sortMoves(movelist, side);
 	bool checkedOnThisDepth = board.wasInCheck;
 	U64 pinnedOnThisDepth = board.pinned;
 
@@ -134,35 +139,38 @@ int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 	Move bestMove;
 
 	// Get first best move (estimate)
+	int visited = 0;
 	MoveList::iterator move = movelist.begin();
-	ply == targetDepth ? getNextMove<true>(movelist, move, side)
-		               : getNextMove<false>(movelist, move, side);
-	for (; move != movelist.end(); ) {
-		board.makeMove<FULL>(*move, side);
+	//ply == targetDepth ? getNextMove<true>(movelist, move, side)
+	//	               : getNextMove<false>(movelist, move, side);
+	//for (; move != movelist.end(); ) {
+	for(auto& move : movelist){
+		board.makeMove<FULL>(move, side);
 
-		if (board.isKingLeftInCheck(side, *move, checkedOnThisDepth, pinnedOnThisDepth)) {
-			board.unMakeMove<FULL>(*move, side);
+		if (board.isKingLeftInCheck(side, move, checkedOnThisDepth, pinnedOnThisDepth)) {
+			board.unMakeMove<FULL>(move, side);
 			// Get next best move (estimate)
-			ply == targetDepth ? getNextMove<true>(movelist, move, side)
-				               : getNextMove<false>(movelist, move, side);
-			move++;
+			//ply == targetDepth ? getNextMove<true>(movelist, move, side)
+			//	               : getNextMove<false>(movelist, move, side);
+			//move++;
 			continue;
 		}
 		legalMoves++;
+
 		score = -NegaMax(-beta, -alpha, depth - 1, ply + 1, !side);
 
-		board.unMakeMove<FULL>(*move, side);
+		board.unMakeMove<FULL>(move, side);
 
 		if (score > alpha) {
 			if (score >= beta) {
 				return beta; // Beta Cutoff
 			}
 			alpha = score;
-			bestMove = *move;
+			bestMove = move;
 		}
-		ply == targetDepth ? getNextMove<true>(movelist, move, side)
-			               : getNextMove<false>(movelist, move, side);
-		move++;
+		//ply == targetDepth ? getNextMove<true>(movelist, move, side)
+		//	               : getNextMove<false>(movelist, move, side);
+		//move++;
 	}
 	if (legalMoves == 0) {
 		// No legal moves found.

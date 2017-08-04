@@ -30,6 +30,7 @@ void ConsoleGame::ioLoop(string initialCommand)
 
 void ConsoleGame::waitForInput(vector<string>& inputList) 
 {
+	cout << ">>> ";
 	string userInput;
 	inputList.clear();
 	getline(cin, userInput);
