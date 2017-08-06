@@ -78,7 +78,7 @@ pair<Move, Move> AI::getBestMove(color forPlayer, int maxDepth, bool uciInfo)
 			cout << " nodes " << nodesVisited                                           // Total visited nodes
 				 << " nps " << (int)((double)nodesVisited / (infoTimer.getTime()*1e-6)) // Nodes per second
 				 << " time " << infoTimer.getTime()*1e-3                                // Computation time in milliseconds
-				 << " pv "; // Principal variation of specified depth
+				 << " pv ";                                                             // Principal variation of specified depth
 			for (const auto& move : pvLine) cout << move << ' ';
 			cout << '\n';
 			nodesVisited = 0;
@@ -141,23 +141,23 @@ int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 	// Get first best move (estimate)
 	int visited = 0;
 	MoveList::iterator move = movelist.begin();
-	//ply == targetDepth ? getNextMove<true>(movelist, move, side)
-	//	               : getNextMove<false>(movelist, move, side);
-	//for (; move != movelist.end(); ) {
+
 	for(auto& move : movelist){
 		board.makeMove<FULL>(move, side);
 
 		if (board.isKingLeftInCheck(side, move, checkedOnThisDepth, pinnedOnThisDepth)) {
 			board.unMakeMove<FULL>(move, side);
 			// Get next best move (estimate)
-			//ply == targetDepth ? getNextMove<true>(movelist, move, side)
-			//	               : getNextMove<false>(movelist, move, side);
-			//move++;
 			continue;
 		}
 		legalMoves++;
 
-		score = -NegaMax(-beta, -alpha, depth - 1, ply + 1, !side);
+		if (legalMoves > 4) {
+			score = -NegaMax(-beta, -alpha, min(4, depth - 1), ply + 1, !side);
+		}
+		else {
+			score = -NegaMax(-beta, -alpha, depth - 1, ply + 1, !side);
+		}
 
 		board.unMakeMove<FULL>(move, side);
 
@@ -168,9 +168,6 @@ int AI::NegaMax(int alpha, int beta, int depth, int ply, color side)
 			alpha = score;
 			bestMove = move;
 		}
-		//ply == targetDepth ? getNextMove<true>(movelist, move, side)
-		//	               : getNextMove<false>(movelist, move, side);
-		//move++;
 	}
 	if (legalMoves == 0) {
 		// No legal moves found.

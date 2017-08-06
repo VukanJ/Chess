@@ -20,7 +20,7 @@ class UCIclient
 public:
 	UCIclient();
 	void UCI_IO_loop();
-	void interpretInput(vector<string>&);
+	bool interpretInput(vector<string>&);
 	void printEngineID() const;
 	AI ai;
 private:

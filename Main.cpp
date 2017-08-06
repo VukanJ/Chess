@@ -15,6 +15,8 @@ int main(int argc, char* argv[])
 {
 	sayHello();
 	// Wait for first input to decide which mode should be started
+	UCIclient uciClient;
+	uciClient.UCI_IO_loop();
 	while (true) {
 		string input;
 		getline(cin, input);

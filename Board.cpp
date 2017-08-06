@@ -82,7 +82,7 @@ void Board::initHash()
 	// Generates constant table of random 64Bit numbers.
 	random_device r_device;
 	mt19937_64 generator(r_device());
-	//generator.seed(42);
+	generator.seed(42);
 
 	uniform_int_distribution<U64> distr;
 	randomSet = vector<vector<U64>>(14, vector<U64>(64, 0));
@@ -410,22 +410,29 @@ int Board::evaluate(color side)
 	total_boardValue += psh;
 
 	// *************************** MOBILITY ***************************
-	// Determines how many squares are accessible, worth "0.5" cp each
+	// Determines how many squares are accessible
 	int mobility = 0;
-	for_white(i) mobility += popcount(attacks[i] ^ blackPos);
-	for_black(i) mobility -= popcount(attacks[i] ^ whitePos);
+	mobility += (popcount(whiteAtt) - popcount(blackAtt));
 
 	total_boardValue += mobility/4;
 	// ~~~ Blocked Pawns ~~~
 	// Determines how many pawns are blocked per player color, penalty of 8 cp for each
 	total_boardValue += 8 * (popcount((pieces[bp] >> 8) & allPos)
 						   - popcount((pieces[wp] << 8) & allPos));
+	//*************************** ATTACKED PIECES **********************
+	// Penalty if pieces are under attack
+	total_boardValue += 90 * (popcount(pieces[bq] & whiteAtt) - popcount(pieces[wq] & blackAtt))
+		              + 50 * (popcount(pieces[br] & whiteAtt) - popcount(pieces[wr] & blackAtt))
+		              + 30 * (popcount(pieces[bb] & whiteAtt) - popcount(pieces[wb] & blackAtt))
+		              + 28 * (popcount(pieces[bn] & whiteAtt) - popcount(pieces[wn] & blackAtt))
+		              + 10 * (popcount(pieces[bp] & whiteAtt) - popcount(pieces[wp] & blackAtt));
 
 	//*************************** KING SAFETY ***************************
 	// Penalty of 50 cp if king is in check, since it generally
 	// reduces number of possible moves.
 	if (pieces[bk] & whiteAtt)      total_boardValue += 60;
 	else if (pieces[wk] & blackAtt) total_boardValue -= 60;
+	//**************************  QUEEN SAFETY **************************
 	// Penalty if queen is being attacked, encourages engine to protect the queen
 	if (pieces[bq] & whiteAtt) total_boardValue += 50;
 	if (pieces[wq] & blackAtt) total_boardValue -= 50;

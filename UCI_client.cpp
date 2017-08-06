@@ -33,7 +33,7 @@ void UCIclient::UCI_IO_loop()
 	while (true) {
 		
 		waitForInput(inputList);
-		interpretInput(inputList);
+		if(!interpretInput(inputList)) return;
 		
 	}
 }
@@ -58,9 +58,9 @@ void UCIclient::waitForInput(vector<string>& input)
 	outFile.close();
 }
 
-void UCIclient::interpretInput(vector<string>& inputList)
+bool UCIclient::interpretInput(vector<string>& inputList)
 {
-	if (inputList.empty()) return;
+	if (inputList.empty()) return true;
 	switch (getHostCommandCode[inputList[0]]) {
 	case hostCommandCode::uci:
 		printEngineID();
@@ -91,10 +91,11 @@ void UCIclient::interpretInput(vector<string>& inputList)
 		/* Engine doesnt care */
 		break;
 	case hostCommandCode::quit:
-		return;
+		return false;
 	default:
 		cout << "Unknown command: " << inputList[0] << '\n';
 	}
+	return true;
 }
 
 void UCIclient::printEngineID() const
@@ -154,6 +155,7 @@ void UCIclient::parsePosition(vector<string>& inputList)
 
 void UCIclient::go(vector<string>& inputList)
 {
+	ai.resetHash();
 	pair<Move, Move> bestMoves;
 	inputList.erase(inputList.begin());
 	if (inputList.empty()) {
@@ -183,6 +185,9 @@ void UCIclient::go(vector<string>& inputList)
 				return;
 			}
 			bestMoves = ai.getBestMove(ai.sideToMove, stoi(inputList[0]), true);
+			break;
+		default:
+			bestMoves = ai.getBestMove(ai.sideToMove, 5, true);
 			break;
 		}
 	}
