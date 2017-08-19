@@ -374,10 +374,10 @@ int Board::evaluate(color side)
 	int psh = 0;
 	U64 mask = pieces[wp];
 	for_bits(pos, mask)
-		psh += pieceSquareTable[0][63 - pos];
+		psh += 3*pieceSquareTable[0][63 - pos];
 	mask = pieces[bp];
 	for_bits(pos, mask)
-		psh -= pieceSquareTable[0][pos];
+		psh -= 3*pieceSquareTable[0][pos];
 	mask = pieces[wn];
 	for_bits(pos, mask)
 		psh += pieceSquareTable[1][63 - pos];
