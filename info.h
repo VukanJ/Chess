@@ -37,11 +37,8 @@ void showCredits()
 {
 	//cout << string(10,'~') << "CREDITS" << string(10,'~');
 	cout << setfill('-') << left;
-	cout << setw(30) << "Author"  << "VukanJ  (github.com/VukanJ)\n";
-	cout << setw(30) << "Fonts"   << "Mozilla (github.com/mozilla)\n";
-	cout << setw(30) << "Sprites" << "jurgenwesterhof\n";
-	cout << setw(30) << "Sprite Source" << "wikimedia.org/wiki/Template:SVG_chess_pieces\n";
-	cout << setw(30) << "Code" << "C++ && SFML && C++Boost\n";
+	cout << setw(30) << "Author"  << "Vukan Jevtic (github.com/VukanJ)\n";
+	cout << setw(30) << "Code" << "C++ + SFML + C++Boost\n";
 }
 
 #endif
